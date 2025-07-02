@@ -1,0 +1,121 @@
+{
+  "Analytics": [
+    {
+      "AnalyticsID": "analytics-001",
+      "UserID": "user-001",
+      "EventType": "page_view",
+      "PageURL": "/products",
+      "Timestamp": "2024-01-15T10:30:00Z"
+    },
+    {
+      "AnalyticsID": "analytics-002",
+      "UserID": "user-001",
+      "EventType": "click",
+      "PageURL": "/products/prod-001",
+      "Timestamp": "2024-01-15T10:31:00Z"
+    },
+    {
+      "AnalyticsID": "analytics-003",
+      "UserID": "user-002",
+      "EventType": "page_view", 
+      "PageURL": "/",
+      "Timestamp": "2024-01-15T11:00:00Z"
+    },
+    {
+      "AnalyticsID": "analytics-004",
+      "UserID": "user-001",
+      "EventType": "purchase",
+      "PageURL": "/checkout",
+      "Timestamp": "2024-01-15T10:35:00Z"
+    },
+    {
+      "AnalyticsID": "analytics-005",
+      "UserID": "user-002",
+      "EventType": "search",
+      "PageURL": "/search?q=sample",
+      "Timestamp": "2024-01-15T11:05:00Z"
+    }
+  ],
+  "UserLogs": [
+    {
+      "LogID": "log-001",
+      "UserID": "user-001",
+      "Action": "login",
+      "IpAddress": "192.168.1.1",
+      "UserAgent": "Mozilla/5.0",
+      "CreatedAt": "2024-01-15T09:00:00Z"
+    },
+    {
+      "LogID": "log-002",
+      "UserID": "user-001",
+      "Action": "view_product",
+      "IpAddress": "192.168.1.1",
+      "UserAgent": "Mozilla/5.0",
+      "CreatedAt": "2024-01-15T10:30:00Z"
+    },
+    {
+      "LogID": "log-003",
+      "UserID": "user-001",
+      "Action": "add_to_cart",
+      "IpAddress": "192.168.1.1", 
+      "UserAgent": "Mozilla/5.0",
+      "CreatedAt": "2024-01-15T10:32:00Z"
+    },
+    {
+      "LogID": "log-004",
+      "UserID": "user-001",
+      "Action": "checkout",
+      "IpAddress": "192.168.1.1",
+      "UserAgent": "Mozilla/5.0",
+      "CreatedAt": "2024-01-15T10:35:00Z"
+    },
+    {
+      "LogID": "log-005",
+      "UserID": "user-001",
+      "Action": "logout",
+      "IpAddress": "192.168.1.1",
+      "UserAgent": "Mozilla/5.0",
+      "CreatedAt": "2024-01-15T11:00:00Z"
+    },
+    {
+      "LogID": "log-006",
+      "UserID": "user-002",
+      "Action": "login",
+      "IpAddress": "192.168.1.2",
+      "UserAgent": "Chrome/119.0",
+      "CreatedAt": "2024-01-15T11:00:00Z"
+    },
+    {
+      "LogID": "log-007",
+      "UserID": "user-002",
+      "Action": "search",
+      "IpAddress": "192.168.1.2",
+      "UserAgent": "Chrome/119.0",
+      "CreatedAt": "2024-01-15T11:05:00Z"
+    },
+    {
+      "LogID": "log-008",
+      "UserID": "user-002",
+      "Action": "view_category",
+      "IpAddress": "192.168.1.2",
+      "UserAgent": "Chrome/119.0",
+      "CreatedAt": "2024-01-15T11:10:00Z"
+    },
+    {
+      "LogID": "log-009",
+      "UserID": "user-002",
+      "Action": "logout",
+      "IpAddress": "192.168.1.2",
+      "UserAgent": "Chrome/119.0",
+      "CreatedAt": "2024-01-15T11:15:00Z"
+    },
+    {
+      "LogID": "log-010",
+      "UserID": "user-001",
+      "Action": "login",
+      "IpAddress": "192.168.1.1",
+      "UserAgent": "Mozilla/5.0",
+      "CreatedAt": "2024-01-16T09:00:00Z"
+    }
+  ]
+}

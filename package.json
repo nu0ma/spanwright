@@ -1,0 +1,61 @@
+{
+  "name": "spanwright",
+  "version": "1.0.0",
+  "description": "CLI tool to generate Cloud Spanner E2E testing framework projects with Go database tools and Playwright browser automation",
+  "main": "dist/index.js",
+  "bin": {
+    "spanwright": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "template",
+    "README.md",
+    "LICENSE",
+    "CLAUDE.md",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "echo \"No linting configured yet\"",
+    "format": "echo \"No formatting configured yet\"",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "spanner",
+    "e2e",
+    "testing",
+    "database",
+    "playwright",
+    "cloud-spanner",
+    "emulator"
+  ],
+  "author": "nu0ma",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nu0ma/spanwright.git"
+  },
+  "homepage": "https://github.com/nu0ma/spanwright#readme",
+  "bugs": {
+    "url": "https://github.com/nu0ma/spanwright/issues"
+  },
+  "preferGlobal": true,
+  "dependencies": {
+    "@types/node": "^24.0.10"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}

@@ -1,0 +1,49 @@
+# E2E Sandbox Application Configuration
+# This file contains all configurable values for the application
+# Environment variables will override these defaults
+
+# Spanner Configuration
+spanner:
+  project_id: "test-project"
+  instance_id: "test-instance"
+  emulator_host: "localhost:9010"
+  
+# Database Configuration
+databases:
+  primary_db: "primary-db"
+  secondary_db: "secondary-db"
+  
+# Path Configuration
+paths:
+  # These should be set via environment variables
+  primary_schema: ""
+  secondary_schema: ""
+  
+# Docker Configuration
+docker:
+  image: "gcr.io/cloud-spanner-emulator/emulator"
+  container_name: "spanner-emulator"
+  ports:
+    spanner: "9010:9010"
+    admin: "9020:9020"
+  startup_wait_seconds: 20
+  
+# Runtime Configuration
+runtime:
+  environment: "development"
+  log_level: "info"
+  timeout_seconds: 120
+  
+# Playwright Configuration
+playwright:
+  base_url: "http://localhost:3000"
+  timeout_ms: 60000
+  global_timeout_ms: 600000
+  action_timeout_ms: 30000
+  workers: 1
+  
+# Validation Configuration  
+validation:
+  timeout_ms: 30000
+  retry_attempts: 3
+  retry_delay_ms: 1000

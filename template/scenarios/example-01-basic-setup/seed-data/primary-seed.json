@@ -1,0 +1,66 @@
+{
+  "Users": [
+    {
+      "UserID": "user-001",
+      "Name": "Sample User",
+      "Email": "user@example.com",
+      "Status": 1,
+      "CreatedAt": "2024-01-01T00:00:00Z"
+    },
+    {
+      "UserID": "user-002", 
+      "Name": "Test User",
+      "Email": "test@example.com",
+      "Status": 1,
+      "CreatedAt": "2024-01-02T00:00:00Z"
+    }
+  ],
+  "Products": [
+    {
+      "ProductID": "prod-001",
+      "Name": "Sample Product",
+      "Price": 1000,
+      "CategoryID": "cat-001",
+      "IsActive": true
+    },
+    {
+      "ProductID": "prod-002",
+      "Name": "Test Product",
+      "Price": 1500,
+      "CategoryID": "cat-001", 
+      "IsActive": true
+    },
+    {
+      "ProductID": "prod-003",
+      "Name": "Demo Product",
+      "Price": 500,
+      "CategoryID": "cat-002",
+      "IsActive": false
+    }
+  ],
+  "Orders": [
+    {
+      "OrderID": "order-001",
+      "UserID": "user-001",
+      "TotalAmount": 2500,
+      "Status": "completed",
+      "OrderDate": "2024-01-15T10:30:00Z"
+    }
+  ],
+  "OrderItems": [
+    {
+      "OrderItemID": "item-001", 
+      "OrderID": "order-001",
+      "ProductID": "prod-001",
+      "Quantity": 2,
+      "UnitPrice": 1000
+    },
+    {
+      "OrderItemID": "item-002",
+      "OrderID": "order-001", 
+      "ProductID": "prod-002",
+      "Quantity": 1,
+      "UnitPrice": 500
+    }
+  ]
+}
