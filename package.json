@@ -20,10 +20,18 @@
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
     "prepublishOnly": "npm run clean && npm run build",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "echo \"Run 'npm run dev:test-e2e' for full E2E testing\"",
     "lint": "echo \"No linting configured yet\"",
     "format": "echo \"No formatting configured yet\"",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "template:validate": "npx ts-node scripts/validate-template.ts",
+    "template:validate-go": "npx ts-node scripts/validate-template.ts --go-only",
+    "template:validate-ts": "npx ts-node scripts/validate-template.ts --ts-only",
+    "template:validate-config": "npx ts-node scripts/validate-template.ts --config-only",
+    "dev:create-testbed": "npx ts-node scripts/create-testbed.ts",
+    "dev:test-e2e": "npx ts-node scripts/run-e2e-test.ts",
+    "dev:watch": "npm run template:validate && npm run dev:create-testbed",
+    "dev:quick-test": "npm run template:validate && npm run dev:create-testbed && npm run dev:test-e2e"
   },
   "keywords": [
     "spanner",
@@ -52,7 +60,8 @@
     "@types/node": "^24.0.10"
   },
   "devDependencies": {
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "ts-node": "^10.9.0"
   },
   "publishConfig": {
     "access": "public",

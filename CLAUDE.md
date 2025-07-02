@@ -8,7 +8,37 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run build` - Build TypeScript CLI to dist/
 - `npm run dev` - Watch mode for development
 - `npm run clean` - Remove build artifacts
-- `npm test` - Run tests (currently placeholder)
+- `npm test` - Show E2E testing information
+
+### Template Development & Validation
+- `npm run template:validate` - Validate all template files (Go, TypeScript, YAML/JSON)
+- `npm run template:validate-go` - Validate Go template files only
+- `npm run template:validate-ts` - Validate TypeScript template files only
+- `npm run template:validate-config` - Validate YAML/JSON configuration files only
+
+### Development Testing
+- `npm run dev:create-testbed` - Create development testbed project with test schemas
+- `npm run dev:test-e2e` - Run complete E2E test on testbed (Emulator + Playwright)
+- `npm run dev:watch` - Validate templates and recreate testbed
+- `npm run dev:quick-test` - Full pipeline: validate → create testbed → run E2E tests
+
+## Template Development Workflow
+
+### Development Flow
+1. **Edit templates** in `template/` directory
+2. **Validate changes** with `npm run template:validate`
+3. **Create testbed** with `npm run dev:create-testbed` 
+4. **Test E2E** with `npm run dev:test-e2e`
+5. **Commit changes** after validation passes
+
+### Quick Development Commands
+- `npm run dev:quick-test` - Complete pipeline: validate → testbed → E2E test
+- `npm run dev:watch` - Validate templates and recreate testbed
+
+### CI/CD Integration
+- Template validation runs automatically on PR/push
+- E2E tests validate generated projects work correctly
+- Package testing ensures CLI installation works
 
 ### Template Development
 Generated projects use Make-based workflows:

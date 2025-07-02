@@ -24,6 +24,11 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
         
+    - name: Setup Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.22'
+        
     - name: Install dependencies
       run: npm ci
       
@@ -35,6 +40,9 @@ jobs:
       
     - name: Check TypeScript compilation
       run: npx tsc --noEmit
+      
+    - name: Validate template files
+      run: npm run template:validate
       
   lint:
     runs-on: ubuntu-latest
