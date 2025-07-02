@@ -40,6 +40,95 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - E2E tests validate generated projects work correctly
 - Package testing ensures CLI installation works
 
+## Development Testbed Usage
+
+The development testbed allows you to test template changes with a real Spanwright project without manual setup.
+
+### Quick Start
+
+```bash
+# 1. Validate templates
+npm run template:validate
+
+# 2. Create testbed with test schemas and data
+npm run dev:create-testbed
+
+# 3. Test the generated project
+cd dev-testbed/spanwright-testbed
+make init                    # Initialize project
+make run-all-scenarios       # Run database + E2E tests
+```
+
+### Testbed Features
+
+- **Auto-generated schemas**: Primary and Secondary DB with realistic tables
+- **Test data**: Companies, Users, and SystemConfig seed data  
+- **Complete E2E pipeline**: Spanner emulator + Playwright browser tests
+- **Database isolation**: Parallel test execution with worker-specific databases
+
+### Testbed Commands
+
+```bash
+# Full pipeline (validate → create → test)
+npm run dev:quick-test
+
+# Individual steps
+npm run template:validate     # Check Go/TS/YAML syntax
+npm run dev:create-testbed   # Create test project
+npm run dev:test-e2e         # Run complete E2E test
+
+# Template validation only
+npm run template:validate-go      # Go files only
+npm run template:validate-ts      # TypeScript files only
+npm run template:validate-config  # YAML/JSON files only
+```
+
+### Testing Generated Projects
+
+```bash
+cd dev-testbed/spanwright-testbed
+
+# Database operations
+make check-prerequisites     # Verify Docker, wrench, Node.js
+make start                  # Start Spanner emulator
+make setup-all              # Create schemas for both databases
+make stop                   # Stop emulator
+
+# Scenario testing
+make list-scenarios         # Show available test scenarios
+make setup-scenario SCENARIO=scenario-01-basic-setup
+make validate-scenario SCENARIO=scenario-01-basic-setup
+
+# E2E browser testing
+make test-e2e               # Run Playwright tests
+make test-e2e-ui           # Interactive test UI
+make test-report           # Show test results
+```
+
+### Testbed Structure
+
+```
+dev-testbed/
+├── spanwright-testbed/          # Generated Spanwright project
+│   ├── .env                     # Auto-configured environment
+│   ├── go.mod                   # Go module with correct name
+│   ├── scenarios/scenario-01-*/ # Renamed test scenario
+│   └── ...                      # Complete project template
+└── test-schemas/                # Auto-generated schemas
+    ├── primary-db/
+    │   └── 001_initial_schema.sql    # Companies, Users, UserSessions
+    └── secondary-db/
+        └── 001_initial_schema.sql    # SystemConfig, UserAnalytics, AuditLogs
+```
+
+### Development Workflow
+
+1. **Edit templates** in `template/` directory
+2. **Validate changes**: `npm run template:validate`
+3. **Test with real project**: `npm run dev:create-testbed`
+4. **Verify E2E functionality**: `cd dev-testbed/spanwright-testbed && make init && make run-all-scenarios`
+5. **Clean up**: Testbed is automatically recreated on next run
+
 ### Template Development
 Generated projects use Make-based workflows:
 - `make init` - Initial project setup

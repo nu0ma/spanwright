@@ -61,7 +61,7 @@ CREATE TABLE Companies (
   name STRING(255) NOT NULL,
   email STRING(255),
   created_at TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true),
-  updated_at TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true),
+  updated_at TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true)
 ) PRIMARY KEY (company_id);
 
 -- Users table
@@ -75,8 +75,8 @@ CREATE TABLE Users (
   is_active BOOL NOT NULL DEFAULT (true),
   created_at TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true),
   updated_at TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true),
-) PRIMARY KEY (user_id),
-  FOREIGN KEY (company_id) REFERENCES Companies (company_id);
+  FOREIGN KEY (company_id) REFERENCES Companies (company_id)
+) PRIMARY KEY (user_id);
 
 -- Sessions table for authentication
 CREATE TABLE UserSessions (
@@ -84,30 +84,29 @@ CREATE TABLE UserSessions (
   user_id STRING(36) NOT NULL,
   expires_at TIMESTAMP NOT NULL,
   created_at TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true),
-) PRIMARY KEY (session_id),
-  FOREIGN KEY (user_id) REFERENCES Users (user_id);
+  FOREIGN KEY (user_id) REFERENCES Users (user_id)
+) PRIMARY KEY (session_id);
 `;
 
     // Secondary DB schema
     const secondarySchema = `-- Secondary Database Schema for E2E Testing
--- Analytics and Metrics
-CREATE TABLE UserAnalytics (
-  analytics_id STRING(36) NOT NULL,
-  user_id STRING(36) NOT NULL,
-  event_type STRING(100) NOT NULL,
-  event_data JSON,
-  timestamp TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true),
-) PRIMARY KEY (analytics_id, timestamp),
-  INTERLEAVE IN PARENT UserAnalytics ON DELETE CASCADE;
-
 -- Configuration table
 CREATE TABLE SystemConfig (
   config_key STRING(255) NOT NULL,
   config_value STRING(MAX) NOT NULL,
   description STRING(500),
   created_at TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true),
-  updated_at TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true),
+  updated_at TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true)
 ) PRIMARY KEY (config_key);
+
+-- Analytics and Metrics
+CREATE TABLE UserAnalytics (
+  analytics_id STRING(36) NOT NULL,
+  user_id STRING(36) NOT NULL,
+  event_type STRING(100) NOT NULL,
+  event_data JSON,
+  timestamp TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true)
+) PRIMARY KEY (analytics_id);
 
 -- Audit logs
 CREATE TABLE AuditLogs (
@@ -117,9 +116,8 @@ CREATE TABLE AuditLogs (
   resource_type STRING(100) NOT NULL,
   resource_id STRING(36),
   details JSON,
-  timestamp TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true),
-) PRIMARY KEY (log_id, timestamp),
-  INTERLEAVE IN PARENT AuditLogs ON DELETE CASCADE;
+  timestamp TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true)
+) PRIMARY KEY (log_id);
 `;
 
     // Write schema files
@@ -221,6 +219,13 @@ DOCKER_STARTUP_WAIT=20
 
 # 🧪 Test Settings
 TEST_ACCOUNT_PASSWORD=test-password-123
+
+# Environment variables expected by Go tools
+PRIMARY_DATABASE_ID=primary-db
+SECONDARY_DATABASE_ID=secondary-db
+PRIMARY_SCHEMA_PATH=${schemaPaths.primarySchemaPath}
+SECONDARY_SCHEMA_PATH=${schemaPaths.secondarySchemaPath}
+SPANNER_EMULATOR_HOST=localhost:9010
 `;
     
     fs.writeFileSync(path.join(projectPath, '.env'), envContent);
@@ -255,7 +260,15 @@ TEST_ACCOUNT_PASSWORD=test-password-123
   generateTestData(projectPath: string): void {
     this.log('Generating test data...');
     
-    const scenarioDir = path.join(projectPath, 'scenarios', 'example-01-basic-setup', 'seed-data');
+    // Rename scenario directory to match expected pattern
+    const oldScenarioDir = path.join(projectPath, 'scenarios', 'example-01-basic-setup');
+    const newScenarioDir = path.join(projectPath, 'scenarios', 'scenario-01-basic-setup');
+    
+    if (fs.existsSync(oldScenarioDir)) {
+      fs.renameSync(oldScenarioDir, newScenarioDir);
+    }
+    
+    const scenarioDir = path.join(newScenarioDir, 'seed-data');
     
     // Primary DB test data
     const primarySeedData = [

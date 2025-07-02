@@ -38,9 +38,19 @@ class TemplateValidator {
     this.log('Starting Go syntax validation...');
     
     try {
-      // Create temporary go.mod file
-      const tempGoMod = path.join(TEMP_DIR, 'go.mod');
-      const goModContent = `module temp-validation
+      if (!fs.existsSync(TEMP_DIR)) {
+        fs.mkdirSync(TEMP_DIR, { recursive: true });
+      }
+      
+      // Copy go.mod.template and replace PROJECT_NAME
+      const templateGoMod = path.join(TEMPLATE_DIR, 'go.mod.template');
+      if (fs.existsSync(templateGoMod)) {
+        let goModContent = fs.readFileSync(templateGoMod, 'utf8');
+        goModContent = goModContent.replace(/PROJECT_NAME/g, 'temp-validation');
+        fs.writeFileSync(path.join(TEMP_DIR, 'go.mod'), goModContent);
+      } else {
+        // Fallback go.mod if template doesn't exist
+        const goModContent = `module temp-validation
 
 go 1.22
 
@@ -51,12 +61,8 @@ require google.golang.org/grpc v1.61.1
 require gopkg.in/yaml.v2 v2.4.0
 require github.com/joho/godotenv v1.5.1
 `;
-      
-      if (!fs.existsSync(TEMP_DIR)) {
-        fs.mkdirSync(TEMP_DIR, { recursive: true });
+        fs.writeFileSync(path.join(TEMP_DIR, 'go.mod'), goModContent);
       }
-      
-      fs.writeFileSync(tempGoMod, goModContent);
       
       // Copy Go files from template directory to temporary directory
       this.copyGoFiles(TEMPLATE_DIR, TEMP_DIR);
@@ -231,7 +237,7 @@ require github.com/joho/godotenv v1.5.1
   }
 
   /**
-   * Recursively copy Go files
+   * Recursively copy Go files and replace module references
    */
   private copyGoFiles(src: string, dest: string): void {
     const items = fs.readdirSync(src);
@@ -247,7 +253,14 @@ require github.com/joho/godotenv v1.5.1
         }
         this.copyGoFiles(srcPath, destPath);
       } else if (item.endsWith('.go')) {
-        fs.copyFileSync(srcPath, destPath);
+        // Read file content and replace old module references
+        let content = fs.readFileSync(srcPath, 'utf8');
+        
+        // Replace old module references with temp-validation
+        content = content.replace(/e2e-sandbox\//g, 'temp-validation/');
+        content = content.replace(/PROJECT_NAME\//g, 'temp-validation/');
+        
+        fs.writeFileSync(destPath, content);
       }
     }
   }
