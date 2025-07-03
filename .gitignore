@@ -168,3 +168,6 @@ go.work.sum
 dev-testbed/
 # Extra safety for dev-testbed env files
 dev-testbed/**/.env*
+
+# Test CLI directories (temporary project generations)
+test-cli/
