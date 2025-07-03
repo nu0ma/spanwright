@@ -52,9 +52,9 @@ class E2ETestRunner {
       cwd: TESTBED_PROJECT_PATH,
       stdio: 'inherit',
       timeout: 300000, // 5 minute timeout
-      ...options
+      ...options,
     };
-    
+
     try {
       this.log(`Executing command: ${command}`);
       // Parse command into executable and args for security
@@ -62,10 +62,10 @@ class E2ETestRunner {
       const result = execFileSync(executable, args, defaultOptions);
       return { success: true, output: result ? result.toString() : '' };
     } catch (error: any) {
-      return { 
-        success: false, 
-        error: error.message, 
-        code: error.status || 1 
+      return {
+        success: false,
+        error: error.message,
+        code: error.status || 1,
       };
     }
   }
@@ -75,12 +75,14 @@ class E2ETestRunner {
    */
   checkDocker(): void {
     this.log('Checking Docker environment...');
-    
+
     const result = this.runCommand('docker --version', { stdio: 'pipe' });
     if (!result.success) {
-      throw new Error('Docker is not available. Please ensure Docker Desktop is installed and running.');
+      throw new Error(
+        'Docker is not available. Please ensure Docker Desktop is installed and running.'
+      );
     }
-    
+
     this.log('Docker environment check completed');
   }
 
@@ -89,21 +91,25 @@ class E2ETestRunner {
    */
   checkPrerequisites(): void {
     this.log('Checking prerequisites...');
-    
+
     // Check if testbed exists
     if (!fs.existsSync(TESTBED_PROJECT_PATH)) {
-      throw new Error(`Testbed not found: ${TESTBED_PROJECT_PATH}\nPlease run 'npm run dev:create-testbed' first.`);
+      throw new Error(
+        `Testbed not found: ${TESTBED_PROJECT_PATH}\nPlease run 'npm run dev:create-testbed' first.`
+      );
     }
-    
+
     // Check Docker
     this.checkDocker();
-    
+
     // Check wrench (will be checked by Makefile, but check here as well)
     const wrenchResult = this.runCommand('which wrench', { stdio: 'pipe' });
     if (!wrenchResult.success) {
-      throw new Error('wrench not found.\nInstall with: go install github.com/cloudspannerecosystem/wrench@latest');
+      throw new Error(
+        'wrench not found.\nInstall with: go install github.com/cloudspannerecosystem/wrench@latest'
+      );
     }
-    
+
     this.log('Prerequisites check completed');
   }
 
@@ -112,13 +118,13 @@ class E2ETestRunner {
    */
   async initializeTestbed(): Promise<void> {
     this.log('Initializing testbed...');
-    
+
     // Run make init (.env file check and Playwright setup)
     const initResult = this.runCommand('make init');
     if (!initResult.success) {
       throw new Error(`Testbed initialization error: ${initResult.error}`);
     }
-    
+
     this.log('Testbed initialization completed');
   }
 
@@ -127,20 +133,20 @@ class E2ETestRunner {
    */
   async startSpannerEmulator(): Promise<void> {
     this.log('Starting Spanner emulator...');
-    
+
     // Stop and remove existing containers
     this.runCommand('make stop');
-    
+
     // Start emulator
     const startResult = this.runCommand('make start');
     if (!startResult.success) {
       throw new Error(`Spanner emulator startup error: ${startResult.error}`);
     }
-    
+
     // Wait for emulator to stabilize
     this.log('Waiting for emulator to stabilize...');
     await new Promise(resolve => setTimeout(resolve, 5000));
-    
+
     this.log('Spanner emulator startup completed');
   }
 
@@ -149,12 +155,12 @@ class E2ETestRunner {
    */
   async setupDatabaseSchemas(): Promise<void> {
     this.log('Setting up database schemas...');
-    
+
     const setupResult = this.runCommand('make setup-all');
     if (!setupResult.success) {
       throw new Error(`Schema setup error: ${setupResult.error}`);
     }
-    
+
     this.log('Database schema setup completed');
   }
 
@@ -163,19 +169,19 @@ class E2ETestRunner {
    */
   async runScenarioTests(): Promise<void> {
     this.log('Running scenario-based tests...');
-    
+
     // Check available scenarios
     const listResult = this.runCommand('make list-scenarios', { stdio: 'pipe' });
     if (!listResult.success) {
       throw new Error('Failed to get scenario list');
     }
-    
+
     // Run all scenarios
     const runAllResult = this.runCommand('make run-all-scenarios');
     if (!runAllResult.success) {
       throw new Error(`Scenario test error: ${runAllResult.error}`);
     }
-    
+
     this.log('Scenario-based tests completed');
   }
 
@@ -184,25 +190,25 @@ class E2ETestRunner {
    */
   async runPlaywrightTests(): Promise<void> {
     this.log('Running Playwright E2E tests...');
-    
+
     // Run Playwright tests
     const e2eResult = this.runCommand('npm test');
     if (!e2eResult.success) {
       // Generate test report even if tests fail
       this.log('E2E tests failed, but generating report...', 'warn');
     }
-    
+
     // Generate test report (continue even if it fails)
     this.log('Generating test report...');
     const reportResult = this.runCommand('npm run report', { stdio: 'pipe' });
     if (reportResult.success) {
       this.log('Test report generated: test-results/report/index.html');
     }
-    
+
     if (!e2eResult.success) {
       throw new Error(`Playwright E2E test error: ${e2eResult.error}`);
     }
-    
+
     this.log('Playwright E2E tests completed');
   }
 
@@ -211,10 +217,10 @@ class E2ETestRunner {
    */
   async cleanup(): Promise<void> {
     this.log('Running cleanup...');
-    
+
     // Stop Spanner emulator
     this.runCommand('make stop');
-    
+
     this.log('Cleanup completed');
   }
 
@@ -223,24 +229,25 @@ class E2ETestRunner {
    */
   showSummary(success: boolean, error: string | null = null): void {
     const elapsedTime = this.getElapsedTime();
-    
+
     this.log('='.repeat(70));
     this.log('🧪 E2E Test Results Summary');
     this.log('='.repeat(70));
     this.log(`Execution time: ${elapsedTime}`);
-    
+
     if (success) {
       this.log('🎉 All tests completed successfully!');
       this.log('');
       this.log('📊 Generated files:');
-      this.log(`  - Test report: ${path.join(TESTBED_PROJECT_PATH, 'test-results/report/index.html')}`);
+      this.log(
+        `  - Test report: ${path.join(TESTBED_PROJECT_PATH, 'test-results/report/index.html')}`
+      );
       this.log(`  - Screenshots: ${path.join(TESTBED_PROJECT_PATH, 'test-results/')}`);
       this.log('');
       this.log('🔍 Detailed inspection:');
       this.log(`  cd ${path.relative(process.cwd(), TESTBED_PROJECT_PATH)}`);
       this.log('  make test-report                 # Show test report');
       this.log('  make test-e2e-ui                 # Test UI mode');
-      
     } else {
       this.log('💥 Errors occurred during test execution', 'error');
       if (error) {
@@ -257,7 +264,7 @@ class E2ETestRunner {
       this.log('  make help                        # Available commands');
       this.log('  make check-prerequisites         # Check prerequisites');
     }
-    
+
     this.log('='.repeat(70));
   }
 
@@ -267,40 +274,38 @@ class E2ETestRunner {
   async run(): Promise<boolean> {
     let success = false;
     let error: string | null = null;
-    
+
     try {
       // 1. Check prerequisites
       this.checkPrerequisites();
-      
+
       // 2. Initialize testbed
       await this.initializeTestbed();
-      
+
       // 3. Start Spanner emulator
       await this.startSpannerEmulator();
-      
+
       // 4. Setup database schemas
       await this.setupDatabaseSchemas();
-      
+
       // 5. Run scenario-based tests
       await this.runScenarioTests();
-      
+
       // 6. Run Playwright E2E tests
       await this.runPlaywrightTests();
-      
+
       success = true;
-      
     } catch (err: any) {
       error = err.message;
       this.log(`E2E test execution error: ${error}`, 'error');
-      
     } finally {
       // 7. Cleanup
       await this.cleanup();
-      
+
       // 8. Show results summary
       this.showSummary(success, error);
     }
-    
+
     return success;
   }
 }
@@ -308,12 +313,15 @@ class E2ETestRunner {
 // Script execution
 if (require.main === module) {
   const runner = new E2ETestRunner();
-  runner.run().then(success => {
-    process.exit(success ? 0 : 1);
-  }).catch(error => {
-    console.error('❌ Unexpected error:', error);
-    process.exit(1);
-  });
+  runner
+    .run()
+    .then(success => {
+      process.exit(success ? 0 : 1);
+    })
+    .catch(error => {
+      console.error('❌ Unexpected error:', error);
+      process.exit(1);
+    });
 }
 
 export default E2ETestRunner;

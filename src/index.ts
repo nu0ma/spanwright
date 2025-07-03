@@ -32,12 +32,12 @@ if (fs.existsSync(projectPath)) {
 // Configure readline interface
 const rl = readline.createInterface({
   input: process.stdin,
-  output: process.stdout
+  output: process.stdout,
 });
 
 // Helper function for questions
 function question(query: string): Promise<string> {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     rl.question(query, resolve);
   });
 }
@@ -47,13 +47,13 @@ function copyDir(src: string, dest: string): void {
   if (!fs.existsSync(dest)) {
     fs.mkdirSync(dest, { recursive: true });
   }
-  
+
   const files = fs.readdirSync(src);
-  
+
   files.forEach(file => {
     const srcPath = path.join(src, file);
     const destPath = path.join(dest, file);
-    
+
     if (fs.statSync(srcPath).isDirectory()) {
       copyDir(srcPath, destPath);
     } else {
@@ -70,20 +70,22 @@ function escapeRegExp(string: string): string {
 // Replace file contents
 function replaceInFile(filePath: string, replacements: Record<string, string>): void {
   let content = fs.readFileSync(filePath, 'utf8');
-  
+
   Object.entries(replacements).forEach(([search, replace]) => {
     const escapedSearch = escapeRegExp(search);
     content = content.replace(new RegExp(escapedSearch, 'g'), replace);
   });
-  
+
   fs.writeFileSync(filePath, content, 'utf8');
 }
 
 // Check for non-interactive mode
 function isNonInteractive(): boolean {
-  return process.env.CI === 'true' || 
-         process.env.SPANWRIGHT_NON_INTERACTIVE === 'true' ||
-         process.argv.includes('--non-interactive');
+  return (
+    process.env.CI === 'true' ||
+    process.env.SPANWRIGHT_NON_INTERACTIVE === 'true' ||
+    process.argv.includes('--non-interactive')
+  );
 }
 
 // Get configuration from environment variables or interactive input
@@ -112,7 +114,7 @@ async function getConfiguration(): Promise<DatabaseConfig> {
       primaryDbName,
       primarySchemaPath,
       secondaryDbName: dbCount === '2' ? secondaryDbName : undefined,
-      secondarySchemaPath: dbCount === '2' ? secondarySchemaPath : undefined
+      secondarySchemaPath: dbCount === '2' ? secondarySchemaPath : undefined,
     };
   } else {
     // Interactive mode - ask questions
@@ -123,27 +125,28 @@ async function getConfiguration(): Promise<DatabaseConfig> {
 async function getInteractiveConfiguration(): Promise<DatabaseConfig> {
   // Select number of databases
   const dbCount = await question('Select number of databases (1 or 2): ');
-  
+
   if (dbCount !== '1' && dbCount !== '2') {
     console.error('❌ Please enter 1 or 2');
     process.exit(1);
   }
-  
+
   // Get DB configuration
-  const primaryDbName = await question('Primary DB name (default: primary-db): ') || 'primary-db';
+  const primaryDbName = (await question('Primary DB name (default: primary-db): ')) || 'primary-db';
   const primarySchemaPath = await question('Primary DB schema path: ');
-  
+
   const config: DatabaseConfig = {
     count: dbCount as '1' | '2',
     primaryDbName,
-    primarySchemaPath
+    primarySchemaPath,
   };
-  
+
   if (dbCount === '2') {
-    config.secondaryDbName = await question('Secondary DB name (default: secondary-db): ') || 'secondary-db';
+    config.secondaryDbName =
+      (await question('Secondary DB name (default: secondary-db): ')) || 'secondary-db';
     config.secondarySchemaPath = await question('Secondary DB schema path: ');
   }
-  
+
   return config;
 }
 
@@ -151,46 +154,46 @@ async function getInteractiveConfiguration(): Promise<DatabaseConfig> {
 async function main(): Promise<void> {
   console.log('🚀 Starting Spanner E2E Test Framework setup');
   console.log('');
-  
+
   try {
     const config = await getConfiguration();
-    
+
     // Close readline interface if it was used
     if (!isNonInteractive()) {
       rl.close();
     }
-    
+
     console.log('');
     console.log('📁 Creating project directory...');
     fs.mkdirSync(projectPath, { recursive: true });
-    
+
     // Template directory path
     const templatePath = path.join(__dirname, '..', 'template');
-    
+
     console.log('📦 Copying template files...');
     copyDir(templatePath, projectPath);
-    
+
     // _package.json を package.json にリネーム
     const packageJsonPath = path.join(projectPath, 'package.json');
     if (fs.existsSync(path.join(projectPath, '_package.json'))) {
       fs.renameSync(path.join(projectPath, '_package.json'), packageJsonPath);
     }
-    
+
     // _gitignore を .gitignore にリネーム
     const gitignorePath = path.join(projectPath, '.gitignore');
     if (fs.existsSync(path.join(projectPath, '_gitignore'))) {
       fs.renameSync(path.join(projectPath, '_gitignore'), gitignorePath);
     }
-    
+
     // Generate go.mod dynamically
     const goModPath = path.join(projectPath, 'go.mod');
     if (fs.existsSync(path.join(projectPath, 'go.mod.template'))) {
       replaceInFile(path.join(projectPath, 'go.mod.template'), {
-        'PROJECT_NAME': projectName
+        PROJECT_NAME: projectName,
       });
       fs.renameSync(path.join(projectPath, 'go.mod.template'), goModPath);
     }
-    
+
     // Replace PROJECT_NAME in all Go files
     console.log('🔧 Configuring Go modules...');
     const replaceInGoFiles = (dir: string) => {
@@ -198,23 +201,23 @@ async function main(): Promise<void> {
       items.forEach(item => {
         const fullPath = path.join(dir, item);
         const stat = fs.statSync(fullPath);
-        
+
         if (stat.isDirectory()) {
           replaceInGoFiles(fullPath);
         } else if (item.endsWith('.go')) {
           replaceInFile(fullPath, {
-            'PROJECT_NAME': projectName
+            PROJECT_NAME: projectName,
           });
         }
       });
     };
-    
+
     replaceInGoFiles(projectPath);
-    
+
     // Configure .env.example
     console.log('⚙️  Creating environment configuration file...');
     const envExamplePath = path.join(projectPath, '.env.example');
-    
+
     let envContent = `# ================================================
 # Spanner E2E Testing Framework Configuration
 # Copy this file to .env and adjust the settings
@@ -225,13 +228,13 @@ DB_COUNT=${config.count}
 PRIMARY_DB_ID=${config.primaryDbName}
 PRIMARY_DB_SCHEMA_PATH=${config.primarySchemaPath}
 `;
-    
+
     if (config.count === '2' && config.secondaryDbName && config.secondarySchemaPath) {
       envContent += `SECONDARY_DB_ID=${config.secondaryDbName}
 SECONDARY_DB_SCHEMA_PATH=${config.secondarySchemaPath}
 `;
     }
-    
+
     envContent += `
 # 📊 Project Settings (usually no need to change)
 PROJECT_ID=test-project
@@ -244,31 +247,31 @@ DOCKER_SPANNER_PORT=9010
 DOCKER_ADMIN_PORT=9020
 DOCKER_STARTUP_WAIT=20
 `;
-    
+
     fs.writeFileSync(envExamplePath, envContent, 'utf8');
-    
+
     // Also create .env file for immediate use
     const envPath = path.join(projectPath, '.env');
     fs.writeFileSync(envPath, envContent, 'utf8');
-    
+
     // Remove unnecessary files based on DB count
     if (config.count === '1') {
       console.log('🗑️  Removing unnecessary files (Single DB configuration)...');
       const exampleDir = path.join(projectPath, 'scenarios', 'example-01-basic-setup');
-      
+
       // Remove Secondary DB related files
       const secondaryFiles = [
         path.join(exampleDir, 'expected-secondary.yaml'),
-        path.join(exampleDir, 'seed-data', 'secondary-seed.json')
+        path.join(exampleDir, 'seed-data', 'secondary-seed.json'),
       ];
-      
+
       secondaryFiles.forEach(file => {
         if (fs.existsSync(file)) {
           fs.unlinkSync(file);
         }
       });
     }
-    
+
     console.log('');
     console.log('✅ Project creation completed!');
     console.log('');
@@ -281,7 +284,6 @@ DOCKER_STARTUP_WAIT=20
     console.log('  make new-scenario SCENARIO=scenario-01-my-test');
     console.log('');
     console.log('📚 Detailed documentation: See README.md');
-    
   } catch (error) {
     console.error('❌ An error occurred:', (error as Error).message);
     process.exit(1);

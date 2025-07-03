@@ -36,14 +36,14 @@ class TestbedCreator {
     const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
     const length = 16;
     let password = '';
-    
+
     // Use crypto for secure random generation
     const crypto = require('crypto');
     for (let i = 0; i < length; i++) {
       const randomIndex = crypto.randomInt(0, chars.length);
       password += chars[randomIndex];
     }
-    
+
     return password;
   }
 
@@ -62,15 +62,15 @@ class TestbedCreator {
    */
   createTestSchemas(): SchemaPaths {
     this.log('Creating test schema files...');
-    
+
     const schemasDir = path.join(TESTBED_DIR, 'test-schemas');
     const primarySchemaDir = path.join(schemasDir, 'primary-db');
     const secondarySchemaDir = path.join(schemasDir, 'secondary-db');
-    
+
     // Create directories
     fs.mkdirSync(primarySchemaDir, { recursive: true });
     fs.mkdirSync(secondarySchemaDir, { recursive: true });
-    
+
     // Primary DB schema - E-commerce tables to match template seed data
     const primarySchema = `-- Primary Database Schema for E-commerce E2E Testing
 -- Users table
@@ -135,12 +135,12 @@ CREATE TABLE UserLogs (
     // Write schema files
     fs.writeFileSync(path.join(primarySchemaDir, '001_initial_schema.sql'), primarySchema);
     fs.writeFileSync(path.join(secondarySchemaDir, '001_initial_schema.sql'), secondarySchema);
-    
+
     this.log('Test schema files created successfully');
-    
+
     return {
       primarySchemaPath: primarySchemaDir,
-      secondarySchemaPath: secondarySchemaDir
+      secondarySchemaPath: secondarySchemaDir,
     };
   }
 
@@ -149,28 +149,27 @@ CREATE TABLE UserLogs (
    */
   async createSpanwrightProject(schemaPaths: SchemaPaths): Promise<string> {
     this.log('Creating Spanwright project...');
-    
+
     try {
       // Build CLI first
       this.log('Building CLI...');
-      execFileSync('npm', ['run', 'build'], { 
-        cwd: PROJECT_ROOT, 
-        stdio: 'pipe'
+      execFileSync('npm', ['run', 'build'], {
+        cwd: PROJECT_ROOT,
+        stdio: 'pipe',
       });
-      
+
       // Copy template files manually instead of using CLI
       const projectPath = path.join(TESTBED_DIR, TESTBED_PROJECT_NAME);
-      
+
       // Copy template directory
       const templateDir = path.join(PROJECT_ROOT, 'template');
       this.copyDirectory(templateDir, projectPath);
-      
+
       // Generate configuration files
       this.generateConfigFiles(projectPath, schemaPaths);
-      
+
       this.log('Spanwright project created successfully');
       return projectPath;
-      
     } catch (error: any) {
       throw new Error(`Project creation error: ${error.message}`);
     }
@@ -183,31 +182,31 @@ CREATE TABLE UserLogs (
     if (!fs.existsSync(dest)) {
       fs.mkdirSync(dest, { recursive: true });
     }
-    
+
     const items = fs.readdirSync(src);
-    
+
     for (const item of items) {
       const srcPath = path.join(src, item);
       const destPath = path.join(dest, item);
       const stat = fs.statSync(srcPath);
-      
+
       if (stat.isDirectory()) {
         this.copyDirectory(srcPath, destPath);
       } else {
         // Copy file
         fs.copyFileSync(srcPath, destPath);
-        
+
         // Replace PROJECT_NAME in Go files
         if (item.endsWith('.go')) {
           this.replaceInFile(destPath, {
-            'PROJECT_NAME': TESTBED_PROJECT_NAME
+            PROJECT_NAME: TESTBED_PROJECT_NAME,
           });
         }
-        
+
         // Handle template files
         if (item === 'go.mod.template') {
           this.replaceInFile(destPath, {
-            'PROJECT_NAME': TESTBED_PROJECT_NAME
+            PROJECT_NAME: TESTBED_PROJECT_NAME,
           });
           fs.renameSync(destPath, path.join(dest, 'go.mod'));
         } else if (item === '_package.json') {
@@ -224,11 +223,11 @@ CREATE TABLE UserLogs (
    */
   private replaceInFile(filePath: string, replacements: Record<string, string>): void {
     let content = fs.readFileSync(filePath, 'utf8');
-    
+
     Object.entries(replacements).forEach(([search, replace]) => {
       content = content.replace(new RegExp(search, 'g'), replace);
     });
-    
+
     fs.writeFileSync(filePath, content, 'utf8');
   }
 
@@ -237,7 +236,7 @@ CREATE TABLE UserLogs (
    */
   private generateConfigFiles(projectPath: string, schemaPaths: SchemaPaths): void {
     this.log('Generating configuration files...');
-    
+
     // .env file
     const envContent = `# ================================================
 # Spanner E2E Testing Framework Configuration
@@ -272,21 +271,21 @@ PRIMARY_SCHEMA_PATH=${schemaPaths.primarySchemaPath}
 SECONDARY_SCHEMA_PATH=${schemaPaths.secondarySchemaPath}
 SPANNER_EMULATOR_HOST=localhost:9010
 `;
-    
+
     fs.writeFileSync(path.join(projectPath, '.env'), envContent);
-    
+
     // Rename _package.json to package.json
     const packageJsonPath = path.join(projectPath, 'package.json');
     if (fs.existsSync(path.join(projectPath, '_package.json'))) {
       fs.renameSync(path.join(projectPath, '_package.json'), packageJsonPath);
     }
-    
+
     // Rename _gitignore to .gitignore
     const gitignorePath = path.join(projectPath, '.gitignore');
     if (fs.existsSync(path.join(projectPath, '_gitignore'))) {
       fs.renameSync(path.join(projectPath, '_gitignore'), gitignorePath);
     }
-    
+
     // Convert go.mod.template to go.mod
     const goModPath = path.join(projectPath, 'go.mod');
     if (fs.existsSync(path.join(projectPath, 'go.mod.template'))) {
@@ -295,7 +294,7 @@ SPANNER_EMULATOR_HOST=localhost:9010
       fs.writeFileSync(goModPath, goModContent);
       fs.unlinkSync(path.join(projectPath, 'go.mod.template'));
     }
-    
+
     this.log('Configuration files generated successfully');
   }
 
@@ -304,218 +303,218 @@ SPANNER_EMULATOR_HOST=localhost:9010
    */
   generateTestData(projectPath: string): void {
     this.log('Generating test data...');
-    
+
     // Rename scenario directory to match expected pattern
     const oldScenarioDir = path.join(projectPath, 'scenarios', 'example-01-basic-setup');
     const newScenarioDir = path.join(projectPath, 'scenarios', 'scenario-01-basic-setup');
-    
+
     if (fs.existsSync(oldScenarioDir)) {
       fs.renameSync(oldScenarioDir, newScenarioDir);
     }
-    
+
     const scenarioDir = path.join(newScenarioDir, 'seed-data');
-    
+
     // Primary DB test data - matches template expected data
     const primarySeedData = {
-      "Users": [
+      Users: [
         {
-          "UserID": "user-001",
-          "Name": "Sample User",
-          "Email": "user@example.com",
-          "Status": 1,
-          "CreatedAt": "2024-01-01T00:00:00Z"
+          UserID: 'user-001',
+          Name: 'Sample User',
+          Email: 'user@example.com',
+          Status: 1,
+          CreatedAt: '2024-01-01T00:00:00Z',
         },
         {
-          "UserID": "user-002", 
-          "Name": "Test User",
-          "Email": "test@example.com",
-          "Status": 1,
-          "CreatedAt": "2024-01-02T00:00:00Z"
-        }
+          UserID: 'user-002',
+          Name: 'Test User',
+          Email: 'test@example.com',
+          Status: 1,
+          CreatedAt: '2024-01-02T00:00:00Z',
+        },
       ],
-      "Products": [
+      Products: [
         {
-          "ProductID": "prod-001",
-          "Name": "Sample Product",
-          "Price": 1000,
-          "CategoryID": "cat-001",
-          "IsActive": true
+          ProductID: 'prod-001',
+          Name: 'Sample Product',
+          Price: 1000,
+          CategoryID: 'cat-001',
+          IsActive: true,
         },
         {
-          "ProductID": "prod-002",
-          "Name": "Test Product",
-          "Price": 1500,
-          "CategoryID": "cat-001", 
-          "IsActive": true
+          ProductID: 'prod-002',
+          Name: 'Test Product',
+          Price: 1500,
+          CategoryID: 'cat-001',
+          IsActive: true,
         },
         {
-          "ProductID": "prod-003",
-          "Name": "Demo Product",
-          "Price": 500,
-          "CategoryID": "cat-002",
-          "IsActive": false
-        }
+          ProductID: 'prod-003',
+          Name: 'Demo Product',
+          Price: 500,
+          CategoryID: 'cat-002',
+          IsActive: false,
+        },
       ],
-      "Orders": [
+      Orders: [
         {
-          "OrderID": "order-001",
-          "UserID": "user-001",
-          "TotalAmount": 2500,
-          "Status": "completed",
-          "OrderDate": "2024-01-15T10:30:00Z"
-        }
+          OrderID: 'order-001',
+          UserID: 'user-001',
+          TotalAmount: 2500,
+          Status: 'completed',
+          OrderDate: '2024-01-15T10:30:00Z',
+        },
       ],
-      "OrderItems": [
+      OrderItems: [
         {
-          "OrderItemID": "item-001", 
-          "OrderID": "order-001",
-          "ProductID": "prod-001",
-          "Quantity": 2,
-          "UnitPrice": 1000
+          OrderItemID: 'item-001',
+          OrderID: 'order-001',
+          ProductID: 'prod-001',
+          Quantity: 2,
+          UnitPrice: 1000,
         },
         {
-          "OrderItemID": "item-002",
-          "OrderID": "order-001", 
-          "ProductID": "prod-002",
-          "Quantity": 1,
-          "UnitPrice": 500
-        }
-      ]
+          OrderItemID: 'item-002',
+          OrderID: 'order-001',
+          ProductID: 'prod-002',
+          Quantity: 1,
+          UnitPrice: 500,
+        },
+      ],
     };
-    
+
     // Secondary DB test data - matches template expected data
     const secondarySeedData = {
-      "Analytics": [
+      Analytics: [
         {
-          "AnalyticsID": "analytics-001",
-          "UserID": "user-001",
-          "EventType": "page_view",
-          "PageURL": "/products",
-          "Timestamp": "2024-01-15T10:30:00Z"
+          AnalyticsID: 'analytics-001',
+          UserID: 'user-001',
+          EventType: 'page_view',
+          PageURL: '/products',
+          Timestamp: '2024-01-15T10:30:00Z',
         },
         {
-          "AnalyticsID": "analytics-002",
-          "UserID": "user-001",
-          "EventType": "page_view",
-          "PageURL": "/cart",
-          "Timestamp": "2024-01-15T10:31:00Z"
+          AnalyticsID: 'analytics-002',
+          UserID: 'user-001',
+          EventType: 'page_view',
+          PageURL: '/cart',
+          Timestamp: '2024-01-15T10:31:00Z',
         },
         {
-          "AnalyticsID": "analytics-003",
-          "UserID": "user-002",
-          "EventType": "page_view",
-          "PageURL": "/home",
-          "Timestamp": "2024-01-15T11:00:00Z"
+          AnalyticsID: 'analytics-003',
+          UserID: 'user-002',
+          EventType: 'page_view',
+          PageURL: '/home',
+          Timestamp: '2024-01-15T11:00:00Z',
         },
         {
-          "AnalyticsID": "analytics-004",
-          "UserID": "user-002",
-          "EventType": "click",
-          "PageURL": "/products",
-          "Timestamp": "2024-01-15T11:01:00Z"
+          AnalyticsID: 'analytics-004',
+          UserID: 'user-002',
+          EventType: 'click',
+          PageURL: '/products',
+          Timestamp: '2024-01-15T11:01:00Z',
         },
         {
-          "AnalyticsID": "analytics-005",
-          "UserID": "user-001",
-          "EventType": "purchase",
-          "PageURL": "/checkout",
-          "Timestamp": "2024-01-15T10:35:00Z"
-        }
+          AnalyticsID: 'analytics-005',
+          UserID: 'user-001',
+          EventType: 'purchase',
+          PageURL: '/checkout',
+          Timestamp: '2024-01-15T10:35:00Z',
+        },
       ],
-      "UserLogs": [
+      UserLogs: [
         {
-          "LogID": "log-001",
-          "UserID": "user-001",
-          "Action": "login",
-          "IpAddress": "192.168.1.1",
-          "UserAgent": "Mozilla/5.0",
-          "CreatedAt": "2024-01-15T09:00:00Z"
+          LogID: 'log-001',
+          UserID: 'user-001',
+          Action: 'login',
+          IpAddress: '192.168.1.1',
+          UserAgent: 'Mozilla/5.0',
+          CreatedAt: '2024-01-15T09:00:00Z',
         },
         {
-          "LogID": "log-002",
-          "UserID": "user-001",
-          "Action": "view_product",
-          "IpAddress": "192.168.1.1",
-          "UserAgent": "Mozilla/5.0",
-          "CreatedAt": "2024-01-15T09:05:00Z"
+          LogID: 'log-002',
+          UserID: 'user-001',
+          Action: 'view_product',
+          IpAddress: '192.168.1.1',
+          UserAgent: 'Mozilla/5.0',
+          CreatedAt: '2024-01-15T09:05:00Z',
         },
         {
-          "LogID": "log-003",
-          "UserID": "user-002",
-          "Action": "login",
-          "IpAddress": "192.168.1.2",
-          "UserAgent": "Chrome/120.0",
-          "CreatedAt": "2024-01-15T09:30:00Z"
+          LogID: 'log-003',
+          UserID: 'user-002',
+          Action: 'login',
+          IpAddress: '192.168.1.2',
+          UserAgent: 'Chrome/120.0',
+          CreatedAt: '2024-01-15T09:30:00Z',
         },
         {
-          "LogID": "log-004",
-          "UserID": "user-001",
-          "Action": "add_to_cart",
-          "IpAddress": "192.168.1.1",
-          "UserAgent": "Mozilla/5.0",
-          "CreatedAt": "2024-01-15T09:10:00Z"
+          LogID: 'log-004',
+          UserID: 'user-001',
+          Action: 'add_to_cart',
+          IpAddress: '192.168.1.1',
+          UserAgent: 'Mozilla/5.0',
+          CreatedAt: '2024-01-15T09:10:00Z',
         },
         {
-          "LogID": "log-005",
-          "UserID": "user-001",
-          "Action": "checkout",
-          "IpAddress": "192.168.1.1",
-          "UserAgent": "Mozilla/5.0",
-          "CreatedAt": "2024-01-15T09:15:00Z"
+          LogID: 'log-005',
+          UserID: 'user-001',
+          Action: 'checkout',
+          IpAddress: '192.168.1.1',
+          UserAgent: 'Mozilla/5.0',
+          CreatedAt: '2024-01-15T09:15:00Z',
         },
         {
-          "LogID": "log-006",
-          "UserID": "user-002",
-          "Action": "view_product",
-          "IpAddress": "192.168.1.2",
-          "UserAgent": "Chrome/120.0",
-          "CreatedAt": "2024-01-15T09:35:00Z"
+          LogID: 'log-006',
+          UserID: 'user-002',
+          Action: 'view_product',
+          IpAddress: '192.168.1.2',
+          UserAgent: 'Chrome/120.0',
+          CreatedAt: '2024-01-15T09:35:00Z',
         },
         {
-          "LogID": "log-007",
-          "UserID": "user-001",
-          "Action": "logout",
-          "IpAddress": "192.168.1.1",
-          "UserAgent": "Mozilla/5.0",
-          "CreatedAt": "2024-01-15T10:00:00Z"
+          LogID: 'log-007',
+          UserID: 'user-001',
+          Action: 'logout',
+          IpAddress: '192.168.1.1',
+          UserAgent: 'Mozilla/5.0',
+          CreatedAt: '2024-01-15T10:00:00Z',
         },
         {
-          "LogID": "log-008",
-          "UserID": "user-002",
-          "Action": "add_to_cart",
-          "IpAddress": "192.168.1.2",
-          "UserAgent": "Chrome/120.0",
-          "CreatedAt": "2024-01-15T09:40:00Z"
+          LogID: 'log-008',
+          UserID: 'user-002',
+          Action: 'add_to_cart',
+          IpAddress: '192.168.1.2',
+          UserAgent: 'Chrome/120.0',
+          CreatedAt: '2024-01-15T09:40:00Z',
         },
         {
-          "LogID": "log-009",
-          "UserID": "user-001",
-          "Action": "login",
-          "IpAddress": "192.168.1.1",
-          "UserAgent": "Mozilla/5.0",
-          "CreatedAt": "2024-01-15T10:25:00Z"
+          LogID: 'log-009',
+          UserID: 'user-001',
+          Action: 'login',
+          IpAddress: '192.168.1.1',
+          UserAgent: 'Mozilla/5.0',
+          CreatedAt: '2024-01-15T10:25:00Z',
         },
         {
-          "LogID": "log-010",
-          "UserID": "user-002",
-          "Action": "logout",
-          "IpAddress": "192.168.1.2",
-          "UserAgent": "Chrome/120.0",
-          "CreatedAt": "2024-01-15T10:30:00Z"
-        }
-      ]
+          LogID: 'log-010',
+          UserID: 'user-002',
+          Action: 'logout',
+          IpAddress: '192.168.1.2',
+          UserAgent: 'Chrome/120.0',
+          CreatedAt: '2024-01-15T10:30:00Z',
+        },
+      ],
     };
-    
+
     fs.writeFileSync(
       path.join(scenarioDir, 'primary-seed.json'),
       JSON.stringify(primarySeedData, null, 2)
     );
-    
+
     fs.writeFileSync(
       path.join(scenarioDir, 'secondary-seed.json'),
       JSON.stringify(secondarySeedData, null, 2)
     );
-    
+
     this.log('Test data generated successfully');
   }
 
@@ -524,22 +523,21 @@ SPANNER_EMULATOR_HOST=localhost:9010
    */
   async installDependencies(projectPath: string): Promise<void> {
     this.log('Installing dependencies...');
-    
+
     try {
       // npm install
-      execFileSync('npm', ['install'], { 
-        cwd: projectPath, 
-        stdio: 'inherit'
+      execFileSync('npm', ['install'], {
+        cwd: projectPath,
+        stdio: 'inherit',
       });
-      
+
       // go mod tidy
-      execFileSync('go', ['mod', 'tidy'], { 
-        cwd: projectPath, 
-        stdio: 'inherit'
+      execFileSync('go', ['mod', 'tidy'], {
+        cwd: projectPath,
+        stdio: 'inherit',
       });
-      
+
       this.log('Dependencies installed successfully');
-      
     } catch (error: any) {
       throw new Error(`Dependency installation error: ${error.message}`);
     }
@@ -608,7 +606,7 @@ npm run dev:create-testbed
 ---
 *Generated by Spanwright testbed creation script*
 `;
-    
+
     fs.writeFileSync(path.join(projectPath, 'README.md'), readmeContent);
   }
 
@@ -619,25 +617,25 @@ npm run dev:create-testbed
     try {
       // 1. Cleanup
       this.cleanup();
-      
+
       // 2. Create testbed directory
       fs.mkdirSync(TESTBED_DIR, { recursive: true });
-      
+
       // 3. Create test schema files
       const schemaPaths = this.createTestSchemas();
-      
+
       // 4. Create Spanwright project
       const projectPath = await this.createSpanwrightProject(schemaPaths);
-      
+
       // 5. Generate test data
       this.generateTestData(projectPath);
-      
+
       // 6. Install dependencies
       await this.installDependencies(projectPath);
-      
+
       // 7. Generate README
       this.generateReadme(projectPath);
-      
+
       // Success message
       this.log('='.repeat(60));
       this.log('🎉 Testbed creation completed successfully!');
@@ -653,9 +651,8 @@ npm run dev:create-testbed
       this.log('  make setup-scenario SCENARIO=example-01-basic-setup');
       this.log('  make validate-scenario SCENARIO=example-01-basic-setup');
       this.log('  make test-e2e-scenario SCENARIO=example-01-basic-setup');
-      
+
       return true;
-      
     } catch (error: any) {
       this.log(`Testbed creation error: ${error.message}`, 'error');
       return false;
@@ -666,12 +663,15 @@ npm run dev:create-testbed
 // Script execution
 if (require.main === module) {
   const creator = new TestbedCreator();
-  creator.run().then(success => {
-    process.exit(success ? 0 : 1);
-  }).catch(error => {
-    console.error('❌ Unexpected error:', error);
-    process.exit(1);
-  });
+  creator
+    .run()
+    .then(success => {
+      process.exit(success ? 0 : 1);
+    })
+    .catch(error => {
+      console.error('❌ Unexpected error:', error);
+      process.exit(1);
+    });
 }
 
 export default TestbedCreator;
