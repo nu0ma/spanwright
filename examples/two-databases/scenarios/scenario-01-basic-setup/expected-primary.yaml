@@ -1,0 +1,6 @@
+# Primary Database expected values configuration
+# Two databases example - Primary DB with Users table
+
+tables:
+  Users:
+    count: 2

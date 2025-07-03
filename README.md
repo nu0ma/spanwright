@@ -141,7 +141,27 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 
 ## Examples
 
-### Single Database Setup
+We provide working examples that you can try immediately:
+
+### 🔢 Single Table Example
+```bash
+git clone https://github.com/nu0ma/spanwright.git
+cd spanwright/examples/single-table
+make run-all-scenarios
+```
+
+### 🗄️ Two Databases Example
+```bash
+git clone https://github.com/nu0ma/spanwright.git
+cd spanwright/examples/two-databases
+make run-all-scenarios
+```
+
+See the [examples directory](examples/) for detailed documentation on each example.
+
+### Creating Your Own Project
+
+#### Single Database Setup
 ```bash
 npx spanwright my-app-tests
 # Choose: 1 database
@@ -149,7 +169,7 @@ npx spanwright my-app-tests
 # Schema path: ./schemas/app
 ```
 
-### Dual Database Setup
+#### Dual Database Setup
 ```bash
 npx spanwright multi-db-tests
 # Choose: 2 databases

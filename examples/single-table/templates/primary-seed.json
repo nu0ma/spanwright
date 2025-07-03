@@ -1,0 +1,16 @@
+{
+  "Users": [{
+    "UserID": "user-001",
+    "Name": "Test User",
+    "Email": "test@example.com",
+    "Status": 1,
+    "CreatedAt": "2024-01-01T00:00:00Z"
+  }],
+  "Products": [{
+    "ProductID": "prod-001",
+    "Name": "Test Product",
+    "Price": 1000,
+    "CategoryID": "cat-001",
+    "IsActive": true
+  }]
+}
