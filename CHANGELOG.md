@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [0.0.3] - 2025-07-03
+
+### ✨ Features
+- feat: add automated npm release workflow with changelog generation ([41fcd86](https://github.com/nu0ma/spanwright/commit/41fcd86))
+
+### 🐛 Bug Fixes
+- fix: escape regex special characters in changelog generation script ([8a2c10b](https://github.com/nu0ma/spanwright/commit/8a2c10b))
+
+
 ## [Unreleased]
 
 ### Added
