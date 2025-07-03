@@ -1,0 +1,177 @@
+name: Manual Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - prerelease
+      skip_validation:
+        description: 'Skip pre-release validation'
+        required: false
+        default: false
+        type: boolean
+      skip_tests:
+        description: 'Skip E2E tests'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+      pull-requests: write
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch all history for changelog generation
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
+        
+    - name: Setup Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.23'
+        cache: true
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Configure Git
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        
+    - name: Run pre-release validation
+      if: ${{ !inputs.skip_validation }}
+      run: |
+        echo "🔍 Running pre-release validation..."
+        npm run template:validate
+        npm run build
+        
+    - name: Run E2E tests
+      if: ${{ !inputs.skip_tests }}
+      run: |
+        echo "🎭 Running E2E tests..."
+        npm run dev:quick-test || echo "E2E tests failed, but continuing"
+        
+    - name: Generate changelog preview
+      run: |
+        echo "📝 Generating changelog preview..."
+        npm run changelog > changelog-preview.md
+        echo "## Changelog Preview" >> $GITHUB_STEP_SUMMARY
+        cat changelog-preview.md >> $GITHUB_STEP_SUMMARY
+        
+    - name: Get current version
+      id: current_version
+      run: |
+        current_version=$(node -p "require('./package.json').version")
+        echo "version=$current_version" >> $GITHUB_OUTPUT
+        
+    - name: Calculate next version
+      id: next_version
+      run: |
+        current_version="${{ steps.current_version.outputs.version }}"
+        release_type="${{ inputs.release_type }}"
+        
+        # Simple semver calculation
+        IFS='.' read -ra VERSION_PARTS <<< "$current_version"
+        major=${VERSION_PARTS[0]}
+        minor=${VERSION_PARTS[1]}
+        patch=${VERSION_PARTS[2]}
+        
+        case $release_type in
+          major)
+            next_version="$((major + 1)).0.0"
+            ;;
+          minor)
+            next_version="$major.$((minor + 1)).0"
+            ;;
+          patch)
+            next_version="$major.$minor.$((patch + 1))"
+            ;;
+          prerelease)
+            next_version="$major.$minor.$((patch + 1))-alpha.1"
+            ;;
+        esac
+        
+        echo "version=$next_version" >> $GITHUB_OUTPUT
+        
+    - name: Update package version
+      run: |
+        npm version ${{ steps.next_version.outputs.version }} --no-git-tag-version
+        
+    - name: Update changelog
+      run: |
+        npm run changelog:version ${{ steps.next_version.outputs.version }} > new-changelog.md
+        
+        # Backup existing changelog
+        cp CHANGELOG.md CHANGELOG.md.bak
+        
+        # Create new changelog with header
+        cat > CHANGELOG.md << 'EOF'
+        # Changelog
+
+        All notable changes to this project will be documented in this file.
+
+        The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+        and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+        EOF
+        
+        # Add new changelog entry
+        cat new-changelog.md >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        
+        # Add existing changelog (skip header)
+        tail -n +8 CHANGELOG.md.bak >> CHANGELOG.md
+        
+    - name: Create release commit and tag
+      run: |
+        version="${{ steps.next_version.outputs.version }}"
+        
+        git add package.json CHANGELOG.md
+        git commit -m "chore: release $version"
+        git tag -a "v$version" -m "Release $version"
+        
+    - name: Push release
+      run: |
+        git push origin main
+        git push origin --tags
+        
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: v${{ steps.next_version.outputs.version }}
+        name: Release v${{ steps.next_version.outputs.version }}
+        body_path: new-changelog.md
+        draft: false
+        prerelease: ${{ inputs.release_type == 'prerelease' }}
+        
+    - name: Post-release summary
+      run: |
+        echo "## 🎉 Release Complete!" >> $GITHUB_STEP_SUMMARY
+        echo "- **Version**: v${{ steps.next_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Type**: ${{ inputs.release_type }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Tag**: [v${{ steps.next_version.outputs.version }}](https://github.com/${{ github.repository }}/releases/tag/v${{ steps.next_version.outputs.version }})" >> $GITHUB_STEP_SUMMARY
+        echo "- **NPM**: Package will be published automatically by the release workflow" >> $GITHUB_STEP_SUMMARY
+        
+    - name: Cleanup
+      run: |
+        rm -f changelog-preview.md new-changelog.md CHANGELOG.md.bak

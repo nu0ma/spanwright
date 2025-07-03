@@ -35,7 +35,16 @@
     "dev:test-e2e": "npx ts-node scripts/run-e2e-test.ts",
     "dev:watch": "npm run template:validate && npm run dev:create-testbed",
     "dev:quick-test": "npm run template:validate && npm run dev:create-testbed && npm run dev:test-e2e",
-    "update-go-version": "npx ts-node scripts/update-go-version.ts"
+    "update-go-version": "npx ts-node scripts/update-go-version.ts",
+    "changelog": "./scripts/get-changes-since-tag.sh",
+    "changelog:version": "./scripts/get-changes-since-tag.sh --version",
+    "changelog:full": "./scripts/get-changes-since-tag.sh --full",
+    "release": "./scripts/release.sh",
+    "release:patch": "./scripts/release.sh patch",
+    "release:minor": "./scripts/release.sh minor",
+    "release:major": "./scripts/release.sh major",
+    "release:prerelease": "./scripts/release.sh prerelease",
+    "release:dry-run": "./scripts/release.sh patch --dry-run"
   },
   "keywords": [
     "spanner",
