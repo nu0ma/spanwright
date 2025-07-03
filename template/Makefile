@@ -105,6 +105,18 @@ check-env:
 	fi
 	@echo "✅ .env file exists"
 
+# Go dependencies management
+.PHONY: go-deps
+go-deps:
+	@if [ ! -f "go.mod" ]; then \
+		echo "❌ Error: go.mod not found"; \
+		echo "💡 This command should be run from the project root directory"; \
+		exit 1; \
+	fi
+	@echo "📦 Managing Go dependencies..."
+	@go mod tidy
+	@echo "✅ Go dependencies updated"
+
 .PHONY: start
 start: check-env
 	@echo "🚀 Starting Spanner emulator..."
@@ -196,7 +208,7 @@ schema: check-wrench
 	@echo "✅ Schema application using wrench completed"
 
 .PHONY: seed
-seed:
+seed: go-deps
 	@if [ -z "$(SEED_FILE)" ]; then \
 		echo "❌ Error: SEED_FILE is required"; \
 		echo "Usage: make seed SEED_FILE=/path/to/seed.json DATABASE_ID=my-db"; \
@@ -209,7 +221,7 @@ seed:
 	@echo "✅ Seed data injection completed"
 
 .PHONY: check-data
-check-data:
+check-data: go-deps
 	@echo "🔍 Checking data..."
 	@SPANNER_EMULATOR_HOST=localhost:9010 go run ./cmd/db-validator $(DATABASE_ID) --summary
 	@echo "✅ Data check completed"
@@ -300,7 +312,7 @@ new-scenario:
 	@mkdir -p scenarios/$(SCENARIO)/tests/fixtures
 	@echo "📝 Creating configuration file..."
 	@echo "name: $(SCENARIO)" > scenarios/$(SCENARIO)/scenario-config.yaml
-	@echo "description: $(SCENARIO) goes here" >> scenarios/$(SCENARIO)/scenario-config.yaml
+	@echo "description: Description for $(SCENARIO) goes here" >> scenarios/$(SCENARIO)/scenario-config.yaml
 	@echo "version: \"1.0\"" >> scenarios/$(SCENARIO)/scenario-config.yaml
 	@echo "" >> scenarios/$(SCENARIO)/scenario-config.yaml
 	@echo "# Scenario-specific file path configuration" >> scenarios/$(SCENARIO)/scenario-config.yaml
@@ -334,9 +346,9 @@ new-scenario:
 	@echo "✅ Scenario $(SCENARIO) has been created!"
 	@echo ""
 	@echo "📋 Next steps:"
-	@echo "  1. scenarios/$(SCENARIO)/seed-data/  JSON files"
-	@echo "  2. scenarios/$(SCENARIO)/expected-*.yaml  expected values"
-	@echo "  3. scenarios/$(SCENARIO)/tests/$(SCENARIO).spec.ts  test cases"
+	@echo "  1. Edit scenarios/$(SCENARIO)/seed-data/ JSON files"
+	@echo "  2. Edit scenarios/$(SCENARIO)/expected-*.yaml expected values"
+	@echo "  3. Edit scenarios/$(SCENARIO)/tests/$(SCENARIO).spec.ts test cases"
 	@echo ""
 	@echo "🧪 Test execution:"
 	@echo "  make setup-scenario SCENARIO=$(SCENARIO)     # DB setup"
@@ -350,7 +362,7 @@ list-scenarios:
 
 
 .PHONY: validate-db
-validate-db:
+validate-db: go-deps
 	@if [ -z "$(DATABASE_ID)" ]; then \
 		echo "❌ Error: DATABASE_ID is required"; \
 		echo "Usage: make validate-db DATABASE_ID=portal-db CONFIG=validation-config.json"; \
@@ -555,6 +567,7 @@ help:
 	@echo "Basic commands:"
 	@echo "  make check-prerequisites - Check prerequisites (wrench, Docker, Node.js)"
 	@echo "  make check-env      - Check .env file existence"
+	@echo "  make go-deps        - Setup Go dependencies (run go mod tidy)"
 	@echo "  make start          - Start Spanner emulator"
 	@echo "  make setup-primary  - Setup Primary DB"
 	@echo "  make setup-secondary - Setup Secondary DB"
