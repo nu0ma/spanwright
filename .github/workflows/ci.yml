@@ -92,5 +92,119 @@ jobs:
       run: |
         mkdir test-output
         cd test-output
-        echo -e "1\ntest-primary\n/tmp/schema1" | spanwright test-project || echo "Interactive CLI test completed"
-        ls -la test-project/ || echo "Project directory not created"
+        
+        # Test project generation with actual inputs
+        echo -e "1\ntest-primary\n/tmp/schema1" | spanwright test-project
+        
+        # Verify project structure was created
+        if [ ! -d "test-project" ]; then
+          echo "❌ Project directory was not created"
+          exit 1
+        fi
+        
+        echo "✅ Project directory created successfully"
+        ls -la test-project/
+        
+        # Verify essential files exist
+        essential_files=(
+          "test-project/Makefile"
+          "test-project/go.mod"
+          "test-project/.env"
+          "test-project/playwright.config.ts"
+          "test-project/cmd/db-validator/main.go"
+          "test-project/cmd/seed-injector/main.go"
+        )
+        
+        for file in "${essential_files[@]}"; do
+          if [ ! -f "$file" ]; then
+            echo "❌ Essential file missing: $file"
+            exit 1
+          fi
+          echo "✅ Found: $file"
+        done
+        
+        echo "✅ All essential files verified"
+
+  generated-project-test:
+    runs-on: ubuntu-latest
+    needs: build-test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
+        
+    - name: Setup Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.23'
+        cache: true
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Build CLI
+      run: npm run build
+      
+    - name: Install CLI globally
+      run: |
+        npm pack
+        npm install -g spanwright-*.tgz
+        
+    - name: Generate test project
+      run: |
+        mkdir generated-project-test
+        cd generated-project-test
+        
+        # Generate project with 2 databases
+        echo -e "2\ntest-primary\n/tmp/schema1\ntest-secondary\n/tmp/schema2" | spanwright test-e2e-project
+        
+        cd test-e2e-project
+        echo "📁 Generated project structure:"
+        find . -type f -name "*.go" -o -name "*.ts" -o -name "Makefile" -o -name "*.env" | head -20
+        
+    - name: Test Go compilation
+      run: |
+        cd generated-project-test/test-e2e-project
+        
+        # Test Go modules and compilation
+        echo "🔧 Testing Go module setup..."
+        go mod tidy
+        go mod verify
+        
+        echo "🔨 Testing Go compilation..."
+        go build ./cmd/db-validator/
+        go build ./cmd/seed-injector/
+        
+        echo "✅ Go compilation successful"
+        
+    - name: Test TypeScript compilation
+      run: |
+        cd generated-project-test/test-e2e-project
+        
+        echo "🔧 Installing Node.js dependencies..."
+        npm install
+        
+        echo "🔨 Testing TypeScript compilation..."
+        npx tsc --noEmit
+        
+        echo "✅ TypeScript compilation successful"
+        
+    - name: Test basic project setup
+      run: |
+        cd generated-project-test/test-e2e-project
+        
+        echo "🧪 Testing project setup commands..."
+        
+        # Test help command
+        make help || echo "Help command tested"
+        
+        # Test prerequisite check
+        make check-prerequisites || echo "Prerequisites checked"
+        
+        echo "✅ Basic project setup verified"
