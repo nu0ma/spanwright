@@ -93,8 +93,8 @@ jobs:
         mkdir test-output
         cd test-output
         
-        # Test project generation with actual inputs
-        echo -e "1\ntest-primary\n/tmp/schema1" | spanwright test-project
+        # Test project generation in non-interactive mode
+        env SPANWRIGHT_DB_COUNT=1 SPANWRIGHT_PRIMARY_DB_NAME=test-primary SPANWRIGHT_PRIMARY_SCHEMA_PATH=/tmp/schema1 spanwright test-project
         
         # Verify project structure was created
         if [ ! -d "test-project" ]; then
@@ -161,8 +161,8 @@ jobs:
         mkdir generated-project-test
         cd generated-project-test
         
-        # Generate project with 2 databases
-        echo -e "2\ntest-primary\n/tmp/schema1\ntest-secondary\n/tmp/schema2" | spanwright test-e2e-project
+        # Generate project with 2 databases in non-interactive mode
+        env SPANWRIGHT_DB_COUNT=2 SPANWRIGHT_PRIMARY_DB_NAME=test-primary SPANWRIGHT_PRIMARY_SCHEMA_PATH=/tmp/schema1 SPANWRIGHT_SECONDARY_DB_NAME=test-secondary SPANWRIGHT_SECONDARY_SCHEMA_PATH=/tmp/schema2 spanwright test-e2e-project
         
         cd test-e2e-project
         echo "📁 Generated project structure:"

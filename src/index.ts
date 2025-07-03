@@ -79,36 +79,86 @@ function replaceInFile(filePath: string, replacements: Record<string, string>): 
   fs.writeFileSync(filePath, content, 'utf8');
 }
 
+// Check for non-interactive mode
+function isNonInteractive(): boolean {
+  return process.env.CI === 'true' || 
+         process.env.SPANWRIGHT_NON_INTERACTIVE === 'true' ||
+         process.argv.includes('--non-interactive');
+}
+
+// Get configuration from environment variables or interactive input
+async function getConfiguration(): Promise<DatabaseConfig> {
+  if (isNonInteractive()) {
+    // Non-interactive mode - use environment variables with defaults
+    const dbCount = process.env.SPANWRIGHT_DB_COUNT || '1';
+    const primaryDbName = process.env.SPANWRIGHT_PRIMARY_DB_NAME || 'primary-db';
+    const primarySchemaPath = process.env.SPANWRIGHT_PRIMARY_SCHEMA_PATH || '/tmp/schema';
+    const secondaryDbName = process.env.SPANWRIGHT_SECONDARY_DB_NAME || 'secondary-db';
+    const secondarySchemaPath = process.env.SPANWRIGHT_SECONDARY_SCHEMA_PATH || '/tmp/schema2';
+
+    if (dbCount !== '1' && dbCount !== '2') {
+      console.error('❌ SPANWRIGHT_DB_COUNT must be 1 or 2');
+      process.exit(1);
+    }
+
+    console.log(`🤖 Non-interactive mode: Creating project with ${dbCount} database(s)`);
+    console.log(`   Primary DB: ${primaryDbName} (${primarySchemaPath})`);
+    if (dbCount === '2') {
+      console.log(`   Secondary DB: ${secondaryDbName} (${secondarySchemaPath})`);
+    }
+
+    return {
+      count: dbCount as '1' | '2',
+      primaryDbName,
+      primarySchemaPath,
+      secondaryDbName: dbCount === '2' ? secondaryDbName : undefined,
+      secondarySchemaPath: dbCount === '2' ? secondarySchemaPath : undefined
+    };
+  } else {
+    // Interactive mode - ask questions
+    return await getInteractiveConfiguration();
+  }
+}
+
+async function getInteractiveConfiguration(): Promise<DatabaseConfig> {
+  // Select number of databases
+  const dbCount = await question('Select number of databases (1 or 2): ');
+  
+  if (dbCount !== '1' && dbCount !== '2') {
+    console.error('❌ Please enter 1 or 2');
+    process.exit(1);
+  }
+  
+  // Get DB configuration
+  const primaryDbName = await question('Primary DB name (default: primary-db): ') || 'primary-db';
+  const primarySchemaPath = await question('Primary DB schema path: ');
+  
+  const config: DatabaseConfig = {
+    count: dbCount as '1' | '2',
+    primaryDbName,
+    primarySchemaPath
+  };
+  
+  if (dbCount === '2') {
+    config.secondaryDbName = await question('Secondary DB name (default: secondary-db): ') || 'secondary-db';
+    config.secondarySchemaPath = await question('Secondary DB schema path: ');
+  }
+  
+  return config;
+}
+
 // Main process
 async function main(): Promise<void> {
   console.log('🚀 Starting Spanner E2E Test Framework setup');
   console.log('');
   
   try {
-    // Select number of databases
-    const dbCount = await question('Select number of databases (1 or 2): ');
+    const config = await getConfiguration();
     
-    if (dbCount !== '1' && dbCount !== '2') {
-      console.error('❌ Please enter 1 or 2');
-      process.exit(1);
+    // Close readline interface if it was used
+    if (!isNonInteractive()) {
+      rl.close();
     }
-    
-    // Get DB configuration
-    const primaryDbName = await question('Primary DB name (default: primary-db): ') || 'primary-db';
-    const primarySchemaPath = await question('Primary DB schema path: ');
-    
-    const config: DatabaseConfig = {
-      count: dbCount as '1' | '2',
-      primaryDbName,
-      primarySchemaPath
-    };
-    
-    if (dbCount === '2') {
-      config.secondaryDbName = await question('Secondary DB name (default: secondary-db): ') || 'secondary-db';
-      config.secondarySchemaPath = await question('Secondary DB schema path: ');
-    }
-    
-    rl.close();
     
     console.log('');
     console.log('📁 Creating project directory...');

@@ -97,8 +97,8 @@ jobs:
         mkdir cli-generated-project
         cd cli-generated-project
         
-        # Generate project with 2 databases using actual CLI
-        echo -e "2\ntest-primary\n/tmp/schema1\ntest-secondary\n/tmp/schema2" | spanwright cli-e2e-test
+        # Generate project with 2 databases using actual CLI in non-interactive mode
+        env SPANWRIGHT_DB_COUNT=2 SPANWRIGHT_PRIMARY_DB_NAME=test-primary SPANWRIGHT_PRIMARY_SCHEMA_PATH=/tmp/schema1 SPANWRIGHT_SECONDARY_DB_NAME=test-secondary SPANWRIGHT_SECONDARY_SCHEMA_PATH=/tmp/schema2 spanwright cli-e2e-test
         
         cd cli-e2e-test
         echo "📁 CLI-generated project structure:"
