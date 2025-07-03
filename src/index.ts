@@ -12,14 +12,64 @@ interface DatabaseConfig {
   secondarySchemaPath?: string;
 }
 
-// Get project name
-const projectName = process.argv[2];
+// Helper function to show version
+function showVersion(): void {
+  const packageJsonPath = path.join(__dirname, '..', 'package.json');
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+  console.log(packageJson.version);
+  process.exit(0);
+}
 
-if (!projectName) {
+// Helper function to show help
+function showHelp(): void {
+  console.log(`Spanwright - Cloud Spanner E2E Testing Framework Generator
+
+Usage: spanwright [options] <project-name>
+
+Options:
+  -v, --version    Show version number
+  -h, --help       Show help information
+
+Arguments:
+  project-name     Name of the project to create
+
+Examples:
+  spanwright my-project              Create a new project interactively
+  spanwright my-project --non-interactive   Create with default settings
+
+Non-interactive mode environment variables:
+  SPANWRIGHT_DB_COUNT              Number of databases (1 or 2, default: 1)
+  SPANWRIGHT_PRIMARY_DB_NAME       Primary database name (default: primary-db)
+  SPANWRIGHT_PRIMARY_SCHEMA_PATH   Primary database schema path (default: /tmp/schema)
+  SPANWRIGHT_SECONDARY_DB_NAME     Secondary database name (default: secondary-db)
+  SPANWRIGHT_SECONDARY_SCHEMA_PATH Secondary database schema path (default: /tmp/schema2)
+
+For more information, visit: https://github.com/nu0ma/spanwright
+`);
+  process.exit(0);
+}
+
+// Parse command-line flags
+const args = process.argv.slice(2);
+if (args.includes('--version') || args.includes('-v')) {
+  showVersion();
+}
+if (args.includes('--help') || args.includes('-h')) {
+  showHelp();
+}
+
+// Get project name (excluding flags)
+const projectNameArg = args.find(arg => !arg.startsWith('-'));
+
+if (!projectNameArg) {
   console.error('❌ Please specify a project name');
   console.log('Usage: npx spanwright my-project');
+  console.log('Try "spanwright --help" for more information.');
   process.exit(1);
 }
+
+// TypeScript now knows projectName is defined
+const projectName: string = projectNameArg;
 
 // Create project directory
 const projectPath = path.resolve(process.cwd(), projectName);
@@ -84,7 +134,7 @@ function isNonInteractive(): boolean {
   return (
     process.env.CI === 'true' ||
     process.env.SPANWRIGHT_NON_INTERACTIVE === 'true' ||
-    process.argv.includes('--non-interactive')
+    args.includes('--non-interactive')
   );
 }
 
