@@ -46,7 +46,6 @@ export const FILE_PATTERNS = {
   PACKAGE_JSON: 'package.json',
   GITIGNORE: '.gitignore',
   GO_MOD: 'go.mod',
-  ENV_EXAMPLE: '.env.example',
   ENV: '.env'
 } as const;
 

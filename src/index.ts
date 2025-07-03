@@ -64,10 +64,8 @@ async function createProject(): Promise<void> {
     console.log(MESSAGES.INFO.CREATING_ENV);
     const envContent = generateEnvironmentContent(config);
     
-    const envExamplePath = path.join(projectPath, FILE_PATTERNS.ENV_EXAMPLE);
     const envPath = path.join(projectPath, FILE_PATTERNS.ENV);
     
-    writeFileContent(envExamplePath, envContent);
     writeFileContent(envPath, envContent);
     
     // Remove unnecessary files for single DB configuration
