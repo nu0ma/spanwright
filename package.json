@@ -34,7 +34,8 @@
     "dev:create-testbed": "npx ts-node scripts/create-testbed.ts",
     "dev:test-e2e": "npx ts-node scripts/run-e2e-test.ts",
     "dev:watch": "npm run template:validate && npm run dev:create-testbed",
-    "dev:quick-test": "npm run template:validate && npm run dev:create-testbed && npm run dev:test-e2e"
+    "dev:quick-test": "npm run template:validate && npm run dev:create-testbed && npm run dev:test-e2e",
+    "update-go-version": "npx ts-node scripts/update-go-version.ts"
   },
   "keywords": [
     "spanner",

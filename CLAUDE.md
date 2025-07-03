@@ -22,6 +22,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run dev:watch` - Validate templates and recreate testbed
 - `npm run dev:quick-test` - Full pipeline: validate → create testbed → run E2E tests
 
+### Version Management
+- `npm run update-go-version <version>` - Update Go version across all configuration files and templates
+
 ## Template Development Workflow
 
 ### Development Flow
@@ -268,3 +271,74 @@ Each scenario contains:
 - **Docker**: Spanner emulator hosting
 - **Node.js**: >=22.0.0 for CLI, >=16.0.0 for generated projects
 - **Go**: For database tools in generated projects
+
+## Version Management
+
+### Go Version Updates
+
+To update the Go version across all configuration files and templates:
+
+```bash
+# Update Go version to 1.24.3
+npm run update-go-version 1.24.3
+
+# Validate and test changes
+npm run template:validate
+npm run dev:create-testbed
+npm run dev:test-e2e
+```
+
+### Automated Version Updates
+
+The project includes automation for Go version updates:
+
+#### 1. **Local CLI Script**
+- **Script**: `scripts/update-go-version.ts`
+- **Usage**: `npm run update-go-version <version>`
+- **Updates**: All Go version references in templates and CI/CD files
+- **Validation**: Automatic template validation after updates
+
+#### 2. **GitHub Actions Workflow**
+- **Workflow**: `.github/workflows/update-go-version.yml`
+- **Trigger**: Manual dispatch with version input
+- **Process**: Updates → Validates → Tests → Creates PR
+- **Output**: Automated pull request with all changes
+
+#### 3. **Updated Files**
+The automation updates Go version references in:
+- `template/go.mod.template` - Go module version and toolchain
+- `.github/workflows/ci.yml` - GitHub Actions Go version
+- `.github/workflows/template-validation.yml` - Template validation Go version  
+- `scripts/validate-template.ts` - Fallback Go version
+
+### Version Update Workflow
+
+1. **Run update script**:
+   ```bash
+   npm run update-go-version 1.24.3
+   ```
+
+2. **Validate changes**:
+   ```bash
+   npm run template:validate
+   ```
+
+3. **Test with testbed**:
+   ```bash
+   npm run dev:create-testbed
+   npm run dev:test-e2e
+   ```
+
+4. **Commit changes** after validation passes
+
+### GitHub Actions Integration
+
+For automated updates via GitHub Actions:
+
+1. Go to **Actions** → **Update Go Version**
+2. Click **Run workflow**
+3. Enter the new Go version (e.g., `1.24.3`)
+4. Review the automatically created pull request
+5. Merge after CI passes
+
+This ensures all Go version references stay synchronized across the entire project.
