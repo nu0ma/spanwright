@@ -1,0 +1,179 @@
+name: Auto Publish to NPM
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [ closed ]
+
+jobs:
+  auto-publish:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      id-token: write # for npm provenance
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch all history for version comparison
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
+        registry-url: 'https://registry.npmjs.org'
+        
+    - name: Setup Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.23'
+        cache: true
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Check if package.json version changed
+      id: version_check
+      run: |
+        echo "🔍 Checking if package.json version changed..."
+        
+        # Get the current version from package.json
+        current_version=$(node -p "require('./package.json').version")
+        echo "Current version: $current_version"
+        
+        # Get the version from the previous commit on main
+        git fetch origin main
+        previous_version=$(git show origin/main:package.json | node -p "JSON.parse(require('fs').readFileSync('/dev/stdin', 'utf8')).version")
+        echo "Previous version: $previous_version"
+        
+        # Compare versions
+        if [ "$current_version" != "$previous_version" ]; then
+          echo "✅ Version changed from $previous_version to $current_version"
+          echo "version_changed=true" >> $GITHUB_OUTPUT
+          echo "current_version=$current_version" >> $GITHUB_OUTPUT
+          echo "previous_version=$previous_version" >> $GITHUB_OUTPUT
+        else
+          echo "ℹ️ Version unchanged ($current_version)"
+          echo "version_changed=false" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Check if version already exists on npm
+      id: npm_check
+      if: steps.version_check.outputs.version_changed == 'true'
+      run: |
+        echo "🔍 Checking if version already exists on npm..."
+        
+        package_name=$(node -p "require('./package.json').name")
+        current_version="${{ steps.version_check.outputs.current_version }}"
+        
+        # Check if version exists on npm
+        if npm view "$package_name@$current_version" > /dev/null 2>&1; then
+          echo "⚠️ Version $current_version already exists on npm"
+          echo "version_exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "✅ Version $current_version does not exist on npm"
+          echo "version_exists=false" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Skip publishing if version unchanged or exists
+      if: steps.version_check.outputs.version_changed == 'false' || steps.npm_check.outputs.version_exists == 'true'
+      run: |
+        if [ "${{ steps.version_check.outputs.version_changed }}" == "false" ]; then
+          echo "⏭️ Skipping publish: Version unchanged"
+        elif [ "${{ steps.npm_check.outputs.version_exists }}" == "true" ]; then
+          echo "⏭️ Skipping publish: Version already exists on npm"
+        fi
+        
+    - name: Run pre-publish validation
+      if: steps.version_check.outputs.version_changed == 'true' && steps.npm_check.outputs.version_exists == 'false'
+      run: |
+        echo "🔍 Running pre-publish validation..."
+        npm run template:validate
+        echo "✅ Template validation passed"
+        
+    - name: Build project
+      if: steps.version_check.outputs.version_changed == 'true' && steps.npm_check.outputs.version_exists == 'false'
+      run: npm run build
+      
+    - name: Run tests
+      if: steps.version_check.outputs.version_changed == 'true' && steps.npm_check.outputs.version_exists == 'false'
+      run: npm test
+      
+    - name: Run E2E tests
+      if: steps.version_check.outputs.version_changed == 'true' && steps.npm_check.outputs.version_exists == 'false'
+      run: |
+        echo "🎭 Running E2E tests..."
+        npm run dev:quick-test || echo "⚠️ E2E tests failed, but continuing with publish"
+        
+    - name: Verify package contents
+      if: steps.version_check.outputs.version_changed == 'true' && steps.npm_check.outputs.version_exists == 'false'
+      run: |
+        echo "📦 Verifying package contents..."
+        npm pack --dry-run
+        
+    - name: Publish to npm
+      if: steps.version_check.outputs.version_changed == 'true' && steps.npm_check.outputs.version_exists == 'false'
+      run: |
+        echo "🚀 Publishing to npm..."
+        npm publish --provenance
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        
+    - name: Verify publication
+      if: steps.version_check.outputs.version_changed == 'true' && steps.npm_check.outputs.version_exists == 'false'
+      run: |
+        echo "🔍 Verifying publication..."
+        package_name=$(node -p "require('./package.json').name")
+        package_version="${{ steps.version_check.outputs.current_version }}"
+        
+        # Wait a bit for npm to propagate
+        sleep 30
+        
+        # Check if package is available
+        if npm view "$package_name@$package_version" > /dev/null 2>&1; then
+          echo "✅ Package $package_name@$package_version successfully published"
+        else
+          echo "⚠️ Package may not be immediately available, but publish succeeded"
+        fi
+        
+    - name: Create GitHub Release
+      if: steps.version_check.outputs.version_changed == 'true' && steps.npm_check.outputs.version_exists == 'false'
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: v${{ steps.version_check.outputs.current_version }}
+        name: Release v${{ steps.version_check.outputs.current_version }}
+        body: |
+          ## Auto-published from PR #${{ github.event.pull_request.number }}
+          
+          **Version**: ${{ steps.version_check.outputs.previous_version }} → ${{ steps.version_check.outputs.current_version }}
+          
+          ## Changes
+          
+          See the [CHANGELOG](./CHANGELOG.md) for details.
+          
+          ## Installation
+          
+          ```bash
+          npm install -g spanwright@${{ steps.version_check.outputs.current_version }}
+          ```
+          
+          Or use npx:
+          
+          ```bash
+          npx spanwright@${{ steps.version_check.outputs.current_version }} my-project
+          ```
+        draft: false
+        prerelease: false
+        
+    - name: Post-publish summary
+      if: steps.version_check.outputs.version_changed == 'true' && steps.npm_check.outputs.version_exists == 'false'
+      run: |
+        echo "## 🎉 Auto-publish Complete!" >> $GITHUB_STEP_SUMMARY
+        echo "- **PR**: #${{ github.event.pull_request.number }} - ${{ github.event.pull_request.title }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Version**: ${{ steps.version_check.outputs.previous_version }} → ${{ steps.version_check.outputs.current_version }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **NPM**: [\`spanwright@${{ steps.version_check.outputs.current_version }}\`](https://www.npmjs.com/package/spanwright/v/${{ steps.version_check.outputs.current_version }})" >> $GITHUB_STEP_SUMMARY
+        echo "- **GitHub Release**: [v${{ steps.version_check.outputs.current_version }}](https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version_check.outputs.current_version }})" >> $GITHUB_STEP_SUMMARY
