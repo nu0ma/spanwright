@@ -31,6 +31,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 4. **Test E2E** with `npm run dev:test-e2e`
 5. **Commit changes** after validation passes
 
+⚠️ **IMPORTANT**: Any changes to the codebase (dependencies, templates, scripts) MUST be tested using the development testbed before committing. This ensures the full CLI generation and E2E workflow continues to function correctly.
+
 ### Quick Development Commands
 - `npm run dev:quick-test` - Complete pipeline: validate → testbed → E2E test
 - `npm run dev:watch` - Validate templates and recreate testbed
@@ -128,6 +130,8 @@ dev-testbed/
 3. **Test with real project**: `npm run dev:create-testbed`
 4. **Verify E2E functionality**: `cd dev-testbed/spanwright-testbed && make init && make run-all-scenarios`
 5. **Clean up**: Testbed is automatically recreated on next run
+
+🔴 **MANDATORY TESTING**: Before committing ANY changes (dependencies, scripts, templates, etc.), you MUST run `npm run dev:quick-test` to verify the complete workflow still functions. This catches breaking changes early and ensures the CLI generates working projects.
 
 ### Template Development
 Generated projects use Make-based workflows:

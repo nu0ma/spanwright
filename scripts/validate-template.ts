@@ -2,6 +2,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import * as yaml from 'js-yaml';
 import { execFileSync } from 'child_process';
 
 /**
@@ -11,11 +12,6 @@ import { execFileSync } from 'child_process';
 
 const TEMPLATE_DIR = path.join(__dirname, '..', 'template');
 const TEMP_DIR = path.join(__dirname, '..', '.temp-validation');
-
-interface ValidationResult {
-  success: boolean;
-  error?: string;
-}
 
 class TemplateValidator {
   private errors: string[] = [];
@@ -87,9 +83,10 @@ require github.com/joho/godotenv v1.5.1
 
       this.log('Go syntax validation: PASSED');
       return true;
-    } catch (error: any) {
-      this.errors.push(`Go syntax error: ${error.message}`);
-      this.log(`Go syntax validation: FAILED - ${error.message}`, 'error');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.errors.push(`Go syntax error: ${message}`);
+      this.log(`Go syntax validation: FAILED - ${message}`, 'error');
       return false;
     }
   }
@@ -181,7 +178,7 @@ require github.com/joho/godotenv v1.5.1
         {
           path: path.join(TEMP_DIR, 'templates/fixtures/command-utils-mock.ts'),
           content: `
-export const safeMakeRun = (command: string, args: string[], options?: any) => {
+export const safeMakeRun = (command: string, args: string[], options?: Record<string, unknown>) => {
   console.log('Mock safeMakeRun:', command, args);
   return { success: true, output: '' };
 };
@@ -191,7 +188,7 @@ export const validateScenarioName = (name: string) => {
   return true;
 };
 
-export const safeGoRun = (path: string, args: string[], options?: any) => {
+export const safeGoRun = (path: string, args: string[], options?: Record<string, unknown>) => {
   console.log('Mock safeGoRun:', path, args);
   return '{"success": true}';
 };
@@ -236,7 +233,7 @@ export { expect } from '@playwright/test';
         {
           path: path.join(TEMP_DIR, 'scenarios/command-utils-mock.ts'),
           content: `
-export const safeMakeRun = (command: string, args: string[], options?: any) => {
+export const safeMakeRun = (command: string, args: string[], options?: Record<string, unknown>) => {
   console.log('Mock safeMakeRun:', command, args);
   return { success: true, output: '' };
 };
@@ -246,7 +243,7 @@ export const validateScenarioName = (name: string) => {
   return true;
 };
 
-export const safeGoRun = (path: string, args: string[], options?: any) => {
+export const safeGoRun = (path: string, args: string[], options?: Record<string, unknown>) => {
   console.log('Mock safeGoRun:', path, args);
   return '{"success": true}';
 };
@@ -265,7 +262,7 @@ export const validatePath = (path: string, root: string) => {
         {
           path: path.join(TEMP_DIR, 'command-utils-mock.ts'),
           content: `
-export const safeMakeRun = (command: string, args: string[], options?: any) => {
+export const safeMakeRun = (command: string, args: string[], options?: Record<string, unknown>) => {
   console.log('Mock safeMakeRun:', command, args);
   return { success: true, output: '' };
 };
@@ -275,7 +272,7 @@ export const validateScenarioName = (name: string) => {
   return true;
 };
 
-export const safeGoRun = (path: string, args: string[], options?: any) => {
+export const safeGoRun = (path: string, args: string[], options?: Record<string, unknown>) => {
   console.log('Mock safeGoRun:', path, args);
   return '{"success": true}';
 };
@@ -294,7 +291,7 @@ export const validatePath = (path: string, root: string) => {
         {
           path: path.join(TEMP_DIR, 'scenarios/command-utils-mock.ts'),
           content: `
-export const safeMakeRun = (command: string, args: string[], options?: any) => {
+export const safeMakeRun = (command: string, args: string[], options?: Record<string, unknown>) => {
   console.log('Mock safeMakeRun:', command, args);
   return { success: true, output: '' };
 };
@@ -304,7 +301,7 @@ export const validateScenarioName = (name: string) => {
   return true;
 };
 
-export const safeGoRun = (path: string, args: string[], options?: any) => {
+export const safeGoRun = (path: string, args: string[], options?: Record<string, unknown>) => {
   console.log('Mock safeGoRun:', path, args);
   return '{"success": true}';
 };
@@ -326,7 +323,7 @@ export const validatePath = (path: string, root: string) => {
             'scenarios/example-01-basic-setup/tests/fixtures/command-utils-mock.ts'
           ),
           content: `
-export const safeMakeRun = (command: string, args: string[], options?: any) => {
+export const safeMakeRun = (command: string, args: string[], options?: Record<string, unknown>) => {
   console.log('Mock safeMakeRun:', command, args);
   return { success: true, output: '' };
 };
@@ -336,7 +333,7 @@ export const validateScenarioName = (name: string) => {
   return true;
 };
 
-export const safeGoRun = (path: string, args: string[], options?: any) => {
+export const safeGoRun = (path: string, args: string[], options?: Record<string, unknown>) => {
   console.log('Mock safeGoRun:', path, args);
   return '{"success": true}';
 };
@@ -421,9 +418,10 @@ export { expect } from '@playwright/test';
 
       this.log('TypeScript syntax validation: PASSED');
       return true;
-    } catch (error: any) {
-      this.errors.push(`TypeScript syntax error: ${error.message}`);
-      this.log(`TypeScript syntax validation: FAILED - ${error.message}`, 'error');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.errors.push(`TypeScript syntax error: ${message}`);
+      this.log(`TypeScript syntax validation: FAILED - ${message}`, 'error');
       return false;
     }
   }
@@ -444,22 +442,16 @@ export { expect } from '@playwright/test';
       const jsonFiles = this.findFiles(TEMPLATE_DIR, /\.json$/);
 
       // Dynamic import of js-yaml
-      let yaml: any;
-      try {
-        yaml = require('js-yaml');
-      } catch {
-        this.log('Installing js-yaml...', 'warn');
-        execFileSync('npm', ['install', 'js-yaml', '--no-save'], { stdio: 'pipe' });
-        yaml = require('js-yaml');
-      }
+      // js-yaml is already imported at the top of the file
 
       // Validate YAML files
       for (const yamlFile of yamlFiles) {
         try {
           const content = fs.readFileSync(yamlFile, 'utf8');
           yaml.load(content);
-        } catch (error: any) {
-          this.errors.push(`YAML syntax error in ${yamlFile}: ${error.message}`);
+        } catch (error: unknown) {
+          const message = error instanceof Error ? error.message : String(error);
+          this.errors.push(`YAML syntax error in ${yamlFile}: ${message}`);
         }
       }
 
@@ -468,8 +460,9 @@ export { expect } from '@playwright/test';
         try {
           const content = fs.readFileSync(jsonFile, 'utf8');
           JSON.parse(content);
-        } catch (error: any) {
-          this.errors.push(`JSON syntax error in ${jsonFile}: ${error.message}`);
+        } catch (error: unknown) {
+          const message = error instanceof Error ? error.message : String(error);
+          this.errors.push(`JSON syntax error in ${jsonFile}: ${message}`);
         }
       }
 
@@ -480,9 +473,10 @@ export { expect } from '@playwright/test';
         this.log(`Configuration file validation: ${this.errors.length} errors found`, 'error');
         return false;
       }
-    } catch (error: any) {
-      this.errors.push(`Configuration file validation error: ${error.message}`);
-      this.log(`Configuration file validation: FAILED - ${error.message}`, 'error');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.errors.push(`Configuration file validation error: ${message}`);
+      this.log(`Configuration file validation: FAILED - ${message}`, 'error');
       return false;
     }
   }
@@ -600,7 +594,7 @@ export { expect } from '@playwright/test';
 }
 
 // Script execution
-if (require.main === module) {
+if (process.argv[1] === __filename) {
   const args = process.argv.slice(2);
   const goOnly = args.includes('--go-only');
   const tsOnly = args.includes('--ts-only');

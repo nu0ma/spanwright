@@ -2,6 +2,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import * as crypto from 'crypto';
 import { execFileSync } from 'child_process';
 
 /**
@@ -38,7 +39,6 @@ class TestbedCreator {
     let password = '';
 
     // Use crypto for secure random generation
-    const crypto = require('crypto');
     for (let i = 0; i < length; i++) {
       const randomIndex = crypto.randomInt(0, chars.length);
       password += chars[randomIndex];
@@ -170,8 +170,9 @@ CREATE TABLE UserLogs (
 
       this.log('Spanwright project created successfully');
       return projectPath;
-    } catch (error: any) {
-      throw new Error(`Project creation error: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Project creation error: ${message}`);
     }
   }
 
@@ -538,8 +539,9 @@ SPANNER_EMULATOR_HOST=localhost:9010
       });
 
       this.log('Dependencies installed successfully');
-    } catch (error: any) {
-      throw new Error(`Dependency installation error: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Dependency installation error: ${message}`);
     }
   }
 
@@ -653,15 +655,16 @@ npm run dev:create-testbed
       this.log('  make test-e2e-scenario SCENARIO=example-01-basic-setup');
 
       return true;
-    } catch (error: any) {
-      this.log(`Testbed creation error: ${error.message}`, 'error');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.log(`Testbed creation error: ${message}`, 'error');
       return false;
     }
   }
 }
 
 // Script execution
-if (require.main === module) {
+if (process.argv[1] === __filename) {
   const creator = new TestbedCreator();
   creator
     .run()

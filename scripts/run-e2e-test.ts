@@ -47,7 +47,7 @@ class E2ETestRunner {
   /**
    * Command execution helper
    */
-  private runCommand(command: string, options: any = {}): CommandResult {
+  private runCommand(command: string, options: Record<string, unknown> = {}): CommandResult {
     const defaultOptions = {
       cwd: TESTBED_PROJECT_PATH,
       stdio: 'inherit',
@@ -59,13 +59,19 @@ class E2ETestRunner {
       this.log(`Executing command: ${command}`);
       // Parse command into executable and args for security
       const [executable, ...args] = command.split(' ');
-      const result = execFileSync(executable, args, defaultOptions);
-      return { success: true, output: result ? result.toString() : '' };
-    } catch (error: any) {
+      const result = execFileSync(executable, args, {
+        cwd: defaultOptions.cwd as string,
+        timeout: defaultOptions.timeout as number,
+        encoding: 'utf8',
+      });
+      return { success: true, output: result || '' };
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      const code = (error as { status?: number }).status || 1;
       return {
         success: false,
-        error: error.message,
-        code: error.status || 1,
+        error: message,
+        code,
       };
     }
   }
@@ -295,8 +301,8 @@ class E2ETestRunner {
       await this.runPlaywrightTests();
 
       success = true;
-    } catch (err: any) {
-      error = err.message;
+    } catch (err: unknown) {
+      error = err instanceof Error ? err.message : String(err);
       this.log(`E2E test execution error: ${error}`, 'error');
     } finally {
       // 7. Cleanup
@@ -311,7 +317,7 @@ class E2ETestRunner {
 }
 
 // Script execution
-if (require.main === module) {
+if (process.argv[1] === __filename) {
   const runner = new E2ETestRunner();
   runner
     .run()
