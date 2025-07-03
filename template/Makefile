@@ -63,7 +63,7 @@ init:
 	@$(MAKE) playwright-setup
 	@echo ""
 	@echo "🎉 Initial setup completed!"
-	@echo "Next step: make run-all-scenarios"
+	@echo "Next step: Create a new scenario with 'make new-scenario SCENARIO=scenario-01-basic-setup'"
 
 # Prerequisites check
 .PHONY: check-prerequisites
