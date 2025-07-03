@@ -53,7 +53,7 @@ class ExamplesCreator {
    * Clean up existing examples
    */
   cleanup(): void {
-    const singleTableProject = path.join(EXAMPLES_DIR, 'single-table');
+    const singleTableProject = path.join(EXAMPLES_DIR, 'single-database');
     const twoDatabasesProject = path.join(EXAMPLES_DIR, 'two-databases');
 
     // Remove existing projects but keep schemas and README files
@@ -226,7 +226,7 @@ class ExamplesCreator {
 
   private generateSingleDbEnv(config: ExampleConfig): string {
     return `# ================================================
-# Spanwright Single Table Example Configuration
+# Spanwright Single Database Example Configuration
 # ================================================
 
 # 🔧 Database Settings
@@ -446,10 +446,10 @@ SPANNER_EMULATOR_HOST=localhost:9010
       // Define example configurations
       const examples: ExampleConfig[] = [
         {
-          name: 'single-table',
+          name: 'single-database',
           dbCount: 1,
           schemaPaths: {
-            primarySchemaPath: path.join(EXAMPLES_DIR, 'single-table', 'schemas', 'primary-db'),
+            primarySchemaPath: path.join(EXAMPLES_DIR, 'single-database', 'schemas', 'primary-db'),
           },
         },
         {
@@ -476,11 +476,11 @@ SPANNER_EMULATOR_HOST=localhost:9010
       this.log('🎉 Examples creation completed successfully!');
       this.log('='.repeat(60));
       this.log('📁 Created examples:');
-      this.log('  - examples/single-table/');
+      this.log('  - examples/single-database/');
       this.log('  - examples/two-databases/');
       this.log('');
       this.log('🚀 Try the examples:');
-      this.log('  cd examples/single-table && make run-all-scenarios');
+      this.log('  cd examples/single-database && make run-all-scenarios');
       this.log('  cd examples/two-databases && make run-all-scenarios');
 
       return true;

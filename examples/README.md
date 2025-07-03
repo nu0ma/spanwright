@@ -4,8 +4,8 @@ This directory contains working examples of Spanwright projects that you can use
 
 ## Available Examples
 
-### 🔢 Single Table Example
-**Path**: `examples/single-table/`
+### 🔢 Single Database Example
+**Path**: `examples/single-database/`
 
 A minimal example with:
 - **1 database** (Primary)
@@ -31,8 +31,8 @@ Demonstrates multi-database testing scenarios.
 # Clone the repository
 git clone https://github.com/nu0ma/spanwright.git
 
-# Try the single table example
-cd spanwright/examples/single-table
+# Try the single database example
+cd spanwright/examples/single-database
 make run-all-scenarios
 
 # Try the two databases example
@@ -90,7 +90,7 @@ make stop
 
 ## Learning Path
 
-1. **Start with Single Table** - Understand basic concepts
+1. **Start with Single Database** - Understand basic concepts
 2. **Move to Two Databases** - Learn multi-database patterns
 3. **Create Your Own** - Apply knowledge to your use case
 

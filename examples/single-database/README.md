@@ -1,4 +1,4 @@
-# Single Table Example
+# Single Database Example
 
 This example demonstrates the simplest possible Spanwright setup with a single database and single table.
 
@@ -13,7 +13,7 @@ This example demonstrates the simplest possible Spanwright setup with a single d
 ```bash
 # Clone the repository
 git clone https://github.com/nu0ma/spanwright.git
-cd spanwright/examples/single-table
+cd spanwright/examples/single-database
 
 # Run the complete E2E test
 make run-all-scenarios
