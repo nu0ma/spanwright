@@ -13,7 +13,7 @@
     "paths": {
       "@/*": ["tests/*"]
     },
-    "types": ["@playwright/test", "node"]
+    "types": ["node"]
   },
   "include": [
     "tests/**/*.ts",

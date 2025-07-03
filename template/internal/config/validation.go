@@ -10,6 +10,41 @@ import (
 	"strings"
 )
 
+// sensitiveFields defines field names that should have their values redacted in error messages
+var sensitiveFields = map[string]bool{
+	"PASSWORD":             true,
+	"SECRET":               true,
+	"TOKEN":                true,
+	"API_KEY":              true,
+	"PRIVATE_KEY":          true,
+	"TEST_ACCOUNT_PASSWORD": true,
+	"AUTH_TOKEN":           true,
+	"DATABASE_PASSWORD":    true,
+}
+
+// redactSensitiveValue redacts sensitive field values in error messages
+func redactSensitiveValue(field, value string) string {
+	fieldUpper := strings.ToUpper(field)
+	
+	// Check if field name contains sensitive keywords
+	for sensitiveKey := range sensitiveFields {
+		if strings.Contains(fieldUpper, sensitiveKey) {
+			if len(value) <= 3 {
+				return "[REDACTED]"
+			}
+			// Show first 3 characters and redact the rest
+			return value[:3] + strings.Repeat("*", len(value)-3)
+		}
+	}
+	
+	// For non-sensitive fields, truncate very long values
+	if len(value) > 100 {
+		return value[:97] + "..."
+	}
+	
+	return value
+}
+
 // ValidationError represents a configuration validation error
 type ValidationError struct {
 	Field   string
@@ -19,10 +54,11 @@ type ValidationError struct {
 }
 
 func (e ValidationError) Error() string {
+	redactedValue := redactSensitiveValue(e.Field, e.Value)
 	if e.Suggestion != "" {
-		return fmt.Sprintf("validation failed for %s='%s': %s. Suggestion: %s", e.Field, e.Value, e.Message, e.Suggestion)
+		return fmt.Sprintf("validation failed for %s='%s': %s. Suggestion: %s", e.Field, redactedValue, e.Message, e.Suggestion)
 	}
-	return fmt.Sprintf("validation failed for %s='%s': %s", e.Field, e.Value, e.Message)
+	return fmt.Sprintf("validation failed for %s='%s': %s", e.Field, redactedValue, e.Message)
 }
 
 // ValidationErrors represents multiple validation errors

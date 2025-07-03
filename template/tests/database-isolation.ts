@@ -2,6 +2,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { safeMakeRun, validateScenarioName } from './utils/command-utils';
 
+// Cache worker ID to avoid recalculation
+let cachedWorkerId: number | undefined;
+
 /**
  * Configuration for an isolated database environment
  */
@@ -37,6 +40,10 @@ export function getWorkerDatabaseConfig(): WorkerDatabaseConfig {
  * @returns The worker ID (0-based index)
  */
 function getWorkerId(): number {
+  // Return cached value if available
+  if (cachedWorkerId !== undefined) {
+    return cachedWorkerId;
+  }
   // Debug: log all environment variables that might contain worker info
   const allEnvKeys = Object.keys(process.env).filter(key => 
     key.toLowerCase().includes('worker') || 
@@ -50,6 +57,7 @@ function getWorkerId(): number {
   if (workerIndex !== undefined && workerIndex !== '') {
     const parsed = parseInt(workerIndex, 10);
     console.log(`🔧 Found worker ID from environment: ${parsed}`);
+    cachedWorkerId = parsed;
     return parsed;
   }
   
@@ -58,14 +66,21 @@ function getWorkerId(): number {
   if (parallelIndex !== undefined && parallelIndex !== '') {
     const parsed = parseInt(parallelIndex, 10);
     console.log(`🔧 Found worker ID from parallel index: ${parsed}`);
+    cachedWorkerId = parsed;
     return parsed;
   }
   
-  // Generate a deterministic worker ID based on process.pid and timestamp
-  // This ensures each test run gets a unique worker ID even in non-parallel mode
-  const deterministicId = Math.abs(process.pid % 1000) % 4; // 0-3 range
-  console.log(`🔧 Generated deterministic worker ID based on PID: ${deterministicId}`);
-  return deterministicId;
+  // Generate a more robust worker ID using multiple entropy sources
+  // Combines PID, timestamp, and random component for better uniqueness
+  const pidComponent = Math.abs(process.pid % 1000);
+  const timeComponent = Math.abs(Date.now() % 1000);
+  const randomComponent = Math.abs(Math.floor(Math.random() * 1000));
+  
+  // XOR combine components and ensure we get a value in 0-3 range
+  const combinedId = (pidComponent ^ timeComponent ^ randomComponent) % 4;
+  console.log(`🔧 Generated robust worker ID (PID:${pidComponent}, Time:${timeComponent}, Random:${randomComponent}): ${combinedId}`);
+  cachedWorkerId = combinedId;
+  return combinedId;
 }
 
 /**

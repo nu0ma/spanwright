@@ -62,12 +62,18 @@ function copyDir(src: string, dest: string): void {
   });
 }
 
+// Helper function to escape regex special characters
+function escapeRegExp(string: string): string {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 // Replace file contents
 function replaceInFile(filePath: string, replacements: Record<string, string>): void {
   let content = fs.readFileSync(filePath, 'utf8');
   
   Object.entries(replacements).forEach(([search, replace]) => {
-    content = content.replace(new RegExp(search, 'g'), replace);
+    const escapedSearch = escapeRegExp(search);
+    content = content.replace(new RegExp(escapedSearch, 'g'), replace);
   });
   
   fs.writeFileSync(filePath, content, 'utf8');

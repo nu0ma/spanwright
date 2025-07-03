@@ -251,6 +251,7 @@ func (bv *BatchValidator) batchValidateColumns(ctx context.Context, tablesToVali
 	var mu sync.Mutex
 	var wg sync.WaitGroup
 	var firstError error
+	var hasError bool
 
 	// Limit concurrent queries to avoid overwhelming the database
 	semaphore := make(chan struct{}, 5) // Max 5 concurrent queries
@@ -291,11 +292,13 @@ func (bv *BatchValidator) batchValidateColumns(ctx context.Context, tablesToVali
 				}
 			}
 
-			// Store result safely
+			// Store result safely with race condition fix
 			mu.Lock()
 			results[tableName] = tableResult
-			if !tableResult.Success && firstError == nil {
+			// Only set the first error to avoid race condition
+			if !tableResult.Success && !hasError {
 				firstError = fmt.Errorf("column validation failed for table %s", tableName)
+				hasError = true
 			}
 			mu.Unlock()
 		}(tableName, expected)

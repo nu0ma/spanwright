@@ -44,9 +44,9 @@ func NewPooledSpannerManager(ctx context.Context, dbConfig *config.DatabaseConfi
 	sm := &SpannerManager{
 		config:          dbConfig,
 		client:          client,
-		schemaMap:       make(map[string]map[string]string),
+		schemaMap:       NewBoundedSchemaMap(100),
 	}
-	sm.mutationBuilder = NewMutationBuilder(sm.schemaMap)
+	sm.mutationBuilder = NewMutationBuilder(sm.schemaMap.GetAll())
 	
 	return &PooledSpannerManager{
 		SpannerManager: sm,

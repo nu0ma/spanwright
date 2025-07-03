@@ -1,12 +1,14 @@
 package db
 
 import (
+	"container/list"
 	"context"
 	"fmt"
 	"log"
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
 
 	"cloud.google.com/go/spanner"
 	"google.golang.org/api/iterator"
@@ -15,12 +17,94 @@ import (
 	"PROJECT_NAME/internal/config"
 )
 
+// BoundedSchemaMap implements a memory-bounded schema map with LRU eviction
+type BoundedSchemaMap struct {
+	maxSize int
+	data    map[string]map[string]string
+	order   *list.List
+	keys    map[string]*list.Element
+	mutex   sync.RWMutex
+}
+
+// NewBoundedSchemaMap creates a new bounded schema map
+func NewBoundedSchemaMap(maxSize int) *BoundedSchemaMap {
+	return &BoundedSchemaMap{
+		maxSize: maxSize,
+		data:    make(map[string]map[string]string),
+		order:   list.New(),
+		keys:    make(map[string]*list.Element),
+	}
+}
+
+// Set adds or updates a schema entry
+func (bsm *BoundedSchemaMap) Set(key string, value map[string]string) {
+	bsm.mutex.Lock()
+	defer bsm.mutex.Unlock()
+	
+	// If key exists, update and move to front
+	if elem, exists := bsm.keys[key]; exists {
+		bsm.data[key] = value
+		bsm.order.MoveToFront(elem)
+		return
+	}
+	
+	// If at capacity, remove oldest entry
+	if len(bsm.data) >= bsm.maxSize {
+		oldest := bsm.order.Back()
+		if oldest != nil {
+			oldKey := oldest.Value.(string)
+			delete(bsm.data, oldKey)
+			delete(bsm.keys, oldKey)
+			bsm.order.Remove(oldest)
+		}
+	}
+	
+	// Add new entry
+	bsm.data[key] = value
+	elem := bsm.order.PushFront(key)
+	bsm.keys[key] = elem
+}
+
+// Get retrieves a schema entry
+func (bsm *BoundedSchemaMap) Get(key string) (map[string]string, bool) {
+	bsm.mutex.RLock()
+	defer bsm.mutex.RUnlock()
+	
+	if value, exists := bsm.data[key]; exists {
+		// Move to front on access
+		if elem, ok := bsm.keys[key]; ok {
+			bsm.order.MoveToFront(elem)
+		}
+		return value, true
+	}
+	return nil, false
+}
+
+// GetAll returns all current schema entries (for compatibility)
+func (bsm *BoundedSchemaMap) GetAll() map[string]map[string]string {
+	bsm.mutex.RLock()
+	defer bsm.mutex.RUnlock()
+	
+	result := make(map[string]map[string]string)
+	for k, v := range bsm.data {
+		result[k] = v
+	}
+	return result
+}
+
+// Size returns the current number of entries
+func (bsm *BoundedSchemaMap) Size() int {
+	bsm.mutex.RLock()
+	defer bsm.mutex.RUnlock()
+	return len(bsm.data)
+}
+
 // SpannerManager manages Spanner database client
 // It implements the DatabaseManager interface
 type SpannerManager struct {
 	config          *config.DatabaseConfig
 	client          *spanner.Client
-	schemaMap       map[string]map[string]string
+	schemaMap       *BoundedSchemaMap
 	mutationBuilder *MutationBuilder
 }
 
@@ -38,9 +122,9 @@ func NewSpannerManager(ctx context.Context, dbConfig *config.DatabaseConfig) (*S
 	sm := &SpannerManager{
 		config:          dbConfig,
 		client:          client,
-		schemaMap:       make(map[string]map[string]string),
+		schemaMap:       NewBoundedSchemaMap(100), // Limit to 100 schema entries
 	}
-	sm.mutationBuilder = NewMutationBuilder(sm.schemaMap)
+	sm.mutationBuilder = NewMutationBuilder(sm.schemaMap.GetAll())
 
 	return sm, nil
 }
@@ -191,9 +275,16 @@ func (sm *SpannerManager) ReadSchemaFiles(schemaPath string) ([]string, error) {
 
 // ParseSchemaFromDDL parses schema information from DDL statements
 func (sm *SpannerManager) ParseSchemaFromDDL(ddlStatements []string) map[string]map[string]string {
-	sm.schemaMap = ParseSchemaFromDDL(ddlStatements)
-	sm.mutationBuilder = NewMutationBuilder(sm.schemaMap)
-	return sm.schemaMap
+	schemaData := ParseSchemaFromDDL(ddlStatements)
+	
+	// Store each table schema in the bounded map
+	for tableName, tableSchema := range schemaData {
+		sm.schemaMap.Set(tableName, tableSchema)
+	}
+	
+	// Update mutation builder with current schema data
+	sm.mutationBuilder = NewMutationBuilder(sm.schemaMap.GetAll())
+	return sm.schemaMap.GetAll()
 }
 
 // BuildInsertMutation builds an insert mutation with proper type conversion

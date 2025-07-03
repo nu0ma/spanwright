@@ -90,47 +90,119 @@ func (c *Config) Validate() error {
 
 	// Validate Spanner configuration
 	if err := ValidateProjectID(c.Spanner.ProjectID); err != nil {
-		errors = append(errors, err.(ValidationError))
+		if validationErr, ok := err.(ValidationError); ok {
+			errors = append(errors, validationErr)
+		} else {
+			errors = append(errors, ValidationError{
+				Field:   "PROJECT_ID",
+				Value:   c.Spanner.ProjectID,
+				Message: err.Error(),
+			})
+		}
 	}
 	if err := ValidateInstanceID(c.Spanner.InstanceID); err != nil {
-		errors = append(errors, err.(ValidationError))
+		if validationErr, ok := err.(ValidationError); ok {
+			errors = append(errors, validationErr)
+		} else {
+			errors = append(errors, ValidationError{
+				Field:   "INSTANCE_ID",
+				Value:   c.Spanner.InstanceID,
+				Message: err.Error(),
+			})
+		}
 	}
 	if err := ValidateSpannerEmulatorHost(c.Spanner.EmulatorHost); err != nil {
-		errors = append(errors, err.(ValidationError))
+		if validationErr, ok := err.(ValidationError); ok {
+			errors = append(errors, validationErr)
+		} else {
+			errors = append(errors, ValidationError{
+				Field:   "EMULATOR_HOST",
+				Value:   c.Spanner.EmulatorHost,
+				Message: err.Error(),
+			})
+		}
 	}
 
 	// Validate database IDs
 	if err := ValidateDatabaseID(c.Databases.PrimaryDB); err != nil {
-		errors = append(errors, ValidationError{
-			Field:   "PRIMARY_DATABASE_ID",
-			Value:   c.Databases.PrimaryDB,
-			Message: err.(ValidationError).Message,
-			Suggestion: err.(ValidationError).Suggestion,
-		})
+		if validationErr, ok := err.(ValidationError); ok {
+			errors = append(errors, ValidationError{
+				Field:      "PRIMARY_DATABASE_ID",
+				Value:      c.Databases.PrimaryDB,
+				Message:    validationErr.Message,
+				Suggestion: validationErr.Suggestion,
+			})
+		} else {
+			errors = append(errors, ValidationError{
+				Field:   "PRIMARY_DATABASE_ID",
+				Value:   c.Databases.PrimaryDB,
+				Message: err.Error(),
+			})
+		}
 	}
 	if err := ValidateDatabaseID(c.Databases.SecondaryDB); err != nil {
-		errors = append(errors, ValidationError{
-			Field:   "SECONDARY_DATABASE_ID",
-			Value:   c.Databases.SecondaryDB,
-			Message: err.(ValidationError).Message,
-			Suggestion: err.(ValidationError).Suggestion,
-		})
+		if validationErr, ok := err.(ValidationError); ok {
+			errors = append(errors, ValidationError{
+				Field:      "SECONDARY_DATABASE_ID",
+				Value:      c.Databases.SecondaryDB,
+				Message:    validationErr.Message,
+				Suggestion: validationErr.Suggestion,
+			})
+		} else {
+			errors = append(errors, ValidationError{
+				Field:   "SECONDARY_DATABASE_ID",
+				Value:   c.Databases.SecondaryDB,
+				Message: err.Error(),
+			})
+		}
 	}
 
 	// Validate schema paths
 	if err := ValidateSchemaPath(c.Paths.PrimarySchema, "PRIMARY_SCHEMA_PATH"); err != nil {
-		errors = append(errors, err.(ValidationError))
+		if validationErr, ok := err.(ValidationError); ok {
+			errors = append(errors, validationErr)
+		} else {
+			errors = append(errors, ValidationError{
+				Field:   "PRIMARY_SCHEMA_PATH",
+				Value:   c.Paths.PrimarySchema,
+				Message: err.Error(),
+			})
+		}
 	}
 	if err := ValidateSchemaPath(c.Paths.SecondarySchema, "SECONDARY_SCHEMA_PATH"); err != nil {
-		errors = append(errors, err.(ValidationError))
+		if validationErr, ok := err.(ValidationError); ok {
+			errors = append(errors, validationErr)
+		} else {
+			errors = append(errors, ValidationError{
+				Field:   "SECONDARY_SCHEMA_PATH",
+				Value:   c.Paths.SecondarySchema,
+				Message: err.Error(),
+			})
+		}
 	}
 
 	// Validate optional paths
 	if err := ValidateOptionalPath(c.Paths.DefaultSchema, "SCHEMA_PATH"); err != nil {
-		errors = append(errors, err.(ValidationError))
+		if validationErr, ok := err.(ValidationError); ok {
+			errors = append(errors, validationErr)
+		} else {
+			errors = append(errors, ValidationError{
+				Field:   "SCHEMA_PATH",
+				Value:   c.Paths.DefaultSchema,
+				Message: err.Error(),
+			})
+		}
 	}
 	if err := ValidateOptionalPath(c.Paths.DefaultSeedFile, "SEED_FILE"); err != nil {
-		errors = append(errors, err.(ValidationError))
+		if validationErr, ok := err.(ValidationError); ok {
+			errors = append(errors, validationErr)
+		} else {
+			errors = append(errors, ValidationError{
+				Field:   "SEED_FILE",
+				Value:   c.Paths.DefaultSeedFile,
+				Message: err.Error(),
+			})
+		}
 	}
 
 	if errors.HasErrors() {

@@ -30,6 +30,24 @@ class TestbedCreator {
   }
 
   /**
+   * Generate a secure random password for test environment
+   */
+  private generateSecurePassword(): string {
+    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+    const length = 16;
+    let password = '';
+    
+    // Use crypto for secure random generation
+    const crypto = require('crypto');
+    for (let i = 0; i < length; i++) {
+      const randomIndex = crypto.randomInt(0, chars.length);
+      password += chars[randomIndex];
+    }
+    
+    return password;
+  }
+
+  /**
    * Clean up existing testbed
    */
   cleanup(): void {
@@ -245,7 +263,7 @@ DOCKER_ADMIN_PORT=9020
 DOCKER_STARTUP_WAIT=20
 
 # 🧪 Test Settings
-TEST_ACCOUNT_PASSWORD=test-password-123
+TEST_ACCOUNT_PASSWORD=${this.generateSecurePassword()}
 
 # Environment variables expected by Go tools
 PRIMARY_DATABASE_ID=primary-db
