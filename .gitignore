@@ -162,5 +162,8 @@ go.work.sum
 .todo
 .claude/settings.local.json
 
+# Template validation temporary files
+.temp-validation/
+
 dev-testbed/
 .
