@@ -247,6 +247,10 @@ DOCKER_STARTUP_WAIT=20
     
     fs.writeFileSync(envExamplePath, envContent, 'utf8');
     
+    // Also create .env file for immediate use
+    const envPath = path.join(projectPath, '.env');
+    fs.writeFileSync(envPath, envContent, 'utf8');
+    
     // Remove unnecessary files based on DB count
     if (config.count === '1') {
       console.log('🗑️  Removing unnecessary files (Single DB configuration)...');
