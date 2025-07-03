@@ -13,7 +13,8 @@
     "LICENSE",
     "CLAUDE.md",
     "CHANGELOG.md",
-    "CONTRIBUTING.md"
+    "CONTRIBUTING.md",
+    "SECURITY.md"
   ],
   "scripts": {
     "build": "tsc",
@@ -21,8 +22,10 @@
     "clean": "rm -rf dist",
     "prepublishOnly": "npm run clean && npm run build",
     "test": "echo \"Run 'npm run dev:test-e2e' for full E2E testing\"",
-    "lint": "echo \"No linting configured yet\"",
-    "format": "echo \"No formatting configured yet\"",
+    "lint": "eslint src scripts --ext .ts",
+    "lint:fix": "eslint src scripts --ext .ts --fix",
+    "format": "prettier --write \"src/**/*.ts\" \"scripts/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"scripts/**/*.ts\"",
     "prepare": "npm run build",
     "template:validate": "npx ts-node scripts/validate-template.ts",
     "template:validate-go": "npx ts-node scripts/validate-template.ts --go-only",
@@ -62,7 +65,11 @@
   "devDependencies": {
     "typescript": "^5.8.3",
     "ts-node": "^10.9.0",
-    "js-yaml": "^4.1.0"
+    "js-yaml": "^4.1.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0"
   },
   "publishConfig": {
     "access": "public",

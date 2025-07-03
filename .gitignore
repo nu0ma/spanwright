@@ -166,4 +166,5 @@ go.work.sum
 .temp-validation/
 
 dev-testbed/
-.
+# Extra safety for dev-testbed env files
+dev-testbed/**/.env*
