@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.0.6] - 2025-07-03
+
+### 🐛 Bug Fixes
+- fix: add go mod tidy prerequisite to fix missing go.sum errors ([f381608](https://github.com/nu0ma/spanwright/commit/f381608))
+
+### 🔧 Chores
+-  ([- Make ](https://github.com/nu0ma/spanwright/commit/- Make ))
+-  ([- Fixes](https://github.com/nu0ma/spanwright/commit/- Fixes))
+-  ([- Maint](https://github.com/nu0ma/spanwright/commit/- Maint))
+- Convert all Japanese text to English across the project ([0d38e02](https://github.com/nu0ma/spanwright/commit/0d38e02))
+-  ([- Conve](https://github.com/nu0ma/spanwright/commit/- Conve))
+-  ([- Updat](https://github.com/nu0ma/spanwright/commit/- Updat))
+-  ([- Ensur](https://github.com/nu0ma/spanwright/commit/- Ensur))
+-  ([Affects](https://github.com/nu0ma/spanwright/commit/Affects))
+-  ([- templ](https://github.com/nu0ma/spanwright/commit/- templ))
+-  ([- templ](https://github.com/nu0ma/spanwright/commit/- templ))
+-  ([- templ](https://github.com/nu0ma/spanwright/commit/- templ))
+-  ([- templ](https://github.com/nu0ma/spanwright/commit/- templ))
+-  ([- templ](https://github.com/nu0ma/spanwright/commit/- templ))
+-  ([All tem](https://github.com/nu0ma/spanwright/commit/All tem))
+- chore: version 0.0.5 ([af40feb](https://github.com/nu0ma/spanwright/commit/af40feb))
+
+
+
 ## [0.0.5] - 2025-07-03
 
 ### 🔧 Chores
