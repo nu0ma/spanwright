@@ -53,71 +53,65 @@ class TestbedCreator {
     fs.mkdirSync(primarySchemaDir, { recursive: true });
     fs.mkdirSync(secondarySchemaDir, { recursive: true });
     
-    // Primary DB schema
-    const primarySchema = `-- Primary Database Schema for E2E Testing
--- Companies table
-CREATE TABLE Companies (
-  company_id STRING(36) NOT NULL,
-  name STRING(255) NOT NULL,
-  email STRING(255),
-  created_at TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true),
-  updated_at TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true)
-) PRIMARY KEY (company_id);
-
+    // Primary DB schema - E-commerce tables to match template seed data
+    const primarySchema = `-- Primary Database Schema for E-commerce E2E Testing
 -- Users table
 CREATE TABLE Users (
-  user_id STRING(36) NOT NULL,
-  company_id STRING(36) NOT NULL,
-  email STRING(255) NOT NULL,
-  name STRING(255) NOT NULL,
-  password_hash STRING(255) NOT NULL,
-  role STRING(50) NOT NULL,
-  is_active BOOL NOT NULL DEFAULT (true),
-  created_at TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true),
-  updated_at TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true),
-  FOREIGN KEY (company_id) REFERENCES Companies (company_id)
-) PRIMARY KEY (user_id);
+  UserID STRING(36) NOT NULL,
+  Name STRING(255) NOT NULL,
+  Email STRING(255) NOT NULL,
+  Status INT64 NOT NULL,
+  CreatedAt TIMESTAMP NOT NULL
+) PRIMARY KEY (UserID);
 
--- Sessions table for authentication
-CREATE TABLE UserSessions (
-  session_id STRING(36) NOT NULL,
-  user_id STRING(36) NOT NULL,
-  expires_at TIMESTAMP NOT NULL,
-  created_at TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true),
-  FOREIGN KEY (user_id) REFERENCES Users (user_id)
-) PRIMARY KEY (session_id);
+-- Products table
+CREATE TABLE Products (
+  ProductID STRING(36) NOT NULL,
+  Name STRING(255) NOT NULL,
+  Price INT64 NOT NULL,
+  CategoryID STRING(36) NOT NULL,
+  IsActive BOOL NOT NULL
+) PRIMARY KEY (ProductID);
+
+-- Orders table
+CREATE TABLE Orders (
+  OrderID STRING(36) NOT NULL,
+  UserID STRING(36) NOT NULL,
+  TotalAmount INT64 NOT NULL,
+  Status STRING(50) NOT NULL,
+  OrderDate TIMESTAMP NOT NULL
+) PRIMARY KEY (OrderID);
+
+-- OrderItems table
+CREATE TABLE OrderItems (
+  OrderItemID STRING(36) NOT NULL,
+  OrderID STRING(36) NOT NULL,
+  ProductID STRING(36) NOT NULL,
+  Quantity INT64 NOT NULL,
+  UnitPrice INT64 NOT NULL
+) PRIMARY KEY (OrderItemID);
 `;
 
-    // Secondary DB schema
-    const secondarySchema = `-- Secondary Database Schema for E2E Testing
--- Configuration table
-CREATE TABLE SystemConfig (
-  config_key STRING(255) NOT NULL,
-  config_value STRING(MAX) NOT NULL,
-  description STRING(500),
-  created_at TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true),
-  updated_at TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true)
-) PRIMARY KEY (config_key);
+    // Secondary DB schema - Analytics tables to match template expected data
+    const secondarySchema = `-- Secondary Database Schema for Analytics E2E Testing
+-- Analytics table
+CREATE TABLE Analytics (
+  AnalyticsID STRING(36) NOT NULL,
+  UserID STRING(36) NOT NULL,
+  EventType STRING(100) NOT NULL,
+  PageURL STRING(500),
+  Timestamp TIMESTAMP NOT NULL
+) PRIMARY KEY (AnalyticsID);
 
--- Analytics and Metrics
-CREATE TABLE UserAnalytics (
-  analytics_id STRING(36) NOT NULL,
-  user_id STRING(36) NOT NULL,
-  event_type STRING(100) NOT NULL,
-  event_data JSON,
-  timestamp TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true)
-) PRIMARY KEY (analytics_id);
-
--- Audit logs
-CREATE TABLE AuditLogs (
-  log_id STRING(36) NOT NULL,
-  user_id STRING(36),
-  action STRING(255) NOT NULL,
-  resource_type STRING(100) NOT NULL,
-  resource_id STRING(36),
-  details JSON,
-  timestamp TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true)
-) PRIMARY KEY (log_id);
+-- UserLogs table
+CREATE TABLE UserLogs (
+  LogID STRING(36) NOT NULL,
+  UserID STRING(36) NOT NULL,
+  Action STRING(255) NOT NULL,
+  IpAddress STRING(50),
+  UserAgent STRING(500),
+  CreatedAt TIMESTAMP NOT NULL
+) PRIMARY KEY (LogID);
 `;
 
     // Write schema files
@@ -303,48 +297,193 @@ SPANNER_EMULATOR_HOST=localhost:9010
     
     const scenarioDir = path.join(newScenarioDir, 'seed-data');
     
-    // Primary DB test data - object format for Go parser
+    // Primary DB test data - matches template expected data
     const primarySeedData = {
-      "Companies": [
-        {
-          company_id: "test-company-001",
-          name: "Test Company Ltd.",
-          email: "contact@testcompany.com",
-          created_at: "2024-01-01T00:00:00Z",
-          updated_at: "2024-01-01T00:00:00Z"
-        }
-      ],
       "Users": [
         {
-          user_id: "test-user-001",
-          company_id: "test-company-001",
-          email: "e2e-test-user@example.com",
-          name: "E2E Test User",
-          password_hash: "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewRRJQc8rDKFJiY6", // test-password-123
-          role: "admin",
-          is_active: true,
-          created_at: "2024-01-01T00:00:00Z",
-          updated_at: "2024-01-01T00:00:00Z"
+          "UserID": "user-001",
+          "Name": "Sample User",
+          "Email": "user@example.com",
+          "Status": 1,
+          "CreatedAt": "2024-01-01T00:00:00Z"
+        },
+        {
+          "UserID": "user-002", 
+          "Name": "Test User",
+          "Email": "test@example.com",
+          "Status": 1,
+          "CreatedAt": "2024-01-02T00:00:00Z"
+        }
+      ],
+      "Products": [
+        {
+          "ProductID": "prod-001",
+          "Name": "Sample Product",
+          "Price": 1000,
+          "CategoryID": "cat-001",
+          "IsActive": true
+        },
+        {
+          "ProductID": "prod-002",
+          "Name": "Test Product",
+          "Price": 1500,
+          "CategoryID": "cat-001", 
+          "IsActive": true
+        },
+        {
+          "ProductID": "prod-003",
+          "Name": "Demo Product",
+          "Price": 500,
+          "CategoryID": "cat-002",
+          "IsActive": false
+        }
+      ],
+      "Orders": [
+        {
+          "OrderID": "order-001",
+          "UserID": "user-001",
+          "TotalAmount": 2500,
+          "Status": "completed",
+          "OrderDate": "2024-01-15T10:30:00Z"
+        }
+      ],
+      "OrderItems": [
+        {
+          "OrderItemID": "item-001", 
+          "OrderID": "order-001",
+          "ProductID": "prod-001",
+          "Quantity": 2,
+          "UnitPrice": 1000
+        },
+        {
+          "OrderItemID": "item-002",
+          "OrderID": "order-001", 
+          "ProductID": "prod-002",
+          "Quantity": 1,
+          "UnitPrice": 500
         }
       ]
     };
     
-    // Secondary DB test data - object format for Go parser
+    // Secondary DB test data - matches template expected data
     const secondarySeedData = {
-      "SystemConfig": [
+      "Analytics": [
         {
-          config_key: "app_version",
-          config_value: "1.0.0",
-          description: "Application version",
-          created_at: "2024-01-01T00:00:00Z",
-          updated_at: "2024-01-01T00:00:00Z"
+          "AnalyticsID": "analytics-001",
+          "UserID": "user-001",
+          "EventType": "page_view",
+          "PageURL": "/products",
+          "Timestamp": "2024-01-15T10:30:00Z"
         },
         {
-          config_key: "maintenance_mode",
-          config_value: "false",
-          description: "Maintenance mode flag",
-          created_at: "2024-01-01T00:00:00Z",
-          updated_at: "2024-01-01T00:00:00Z"
+          "AnalyticsID": "analytics-002",
+          "UserID": "user-001",
+          "EventType": "page_view",
+          "PageURL": "/cart",
+          "Timestamp": "2024-01-15T10:31:00Z"
+        },
+        {
+          "AnalyticsID": "analytics-003",
+          "UserID": "user-002",
+          "EventType": "page_view",
+          "PageURL": "/home",
+          "Timestamp": "2024-01-15T11:00:00Z"
+        },
+        {
+          "AnalyticsID": "analytics-004",
+          "UserID": "user-002",
+          "EventType": "click",
+          "PageURL": "/products",
+          "Timestamp": "2024-01-15T11:01:00Z"
+        },
+        {
+          "AnalyticsID": "analytics-005",
+          "UserID": "user-001",
+          "EventType": "purchase",
+          "PageURL": "/checkout",
+          "Timestamp": "2024-01-15T10:35:00Z"
+        }
+      ],
+      "UserLogs": [
+        {
+          "LogID": "log-001",
+          "UserID": "user-001",
+          "Action": "login",
+          "IpAddress": "192.168.1.1",
+          "UserAgent": "Mozilla/5.0",
+          "CreatedAt": "2024-01-15T09:00:00Z"
+        },
+        {
+          "LogID": "log-002",
+          "UserID": "user-001",
+          "Action": "view_product",
+          "IpAddress": "192.168.1.1",
+          "UserAgent": "Mozilla/5.0",
+          "CreatedAt": "2024-01-15T09:05:00Z"
+        },
+        {
+          "LogID": "log-003",
+          "UserID": "user-002",
+          "Action": "login",
+          "IpAddress": "192.168.1.2",
+          "UserAgent": "Chrome/120.0",
+          "CreatedAt": "2024-01-15T09:30:00Z"
+        },
+        {
+          "LogID": "log-004",
+          "UserID": "user-001",
+          "Action": "add_to_cart",
+          "IpAddress": "192.168.1.1",
+          "UserAgent": "Mozilla/5.0",
+          "CreatedAt": "2024-01-15T09:10:00Z"
+        },
+        {
+          "LogID": "log-005",
+          "UserID": "user-001",
+          "Action": "checkout",
+          "IpAddress": "192.168.1.1",
+          "UserAgent": "Mozilla/5.0",
+          "CreatedAt": "2024-01-15T09:15:00Z"
+        },
+        {
+          "LogID": "log-006",
+          "UserID": "user-002",
+          "Action": "view_product",
+          "IpAddress": "192.168.1.2",
+          "UserAgent": "Chrome/120.0",
+          "CreatedAt": "2024-01-15T09:35:00Z"
+        },
+        {
+          "LogID": "log-007",
+          "UserID": "user-001",
+          "Action": "logout",
+          "IpAddress": "192.168.1.1",
+          "UserAgent": "Mozilla/5.0",
+          "CreatedAt": "2024-01-15T10:00:00Z"
+        },
+        {
+          "LogID": "log-008",
+          "UserID": "user-002",
+          "Action": "add_to_cart",
+          "IpAddress": "192.168.1.2",
+          "UserAgent": "Chrome/120.0",
+          "CreatedAt": "2024-01-15T09:40:00Z"
+        },
+        {
+          "LogID": "log-009",
+          "UserID": "user-001",
+          "Action": "login",
+          "IpAddress": "192.168.1.1",
+          "UserAgent": "Mozilla/5.0",
+          "CreatedAt": "2024-01-15T10:25:00Z"
+        },
+        {
+          "LogID": "log-010",
+          "UserID": "user-002",
+          "Action": "logout",
+          "IpAddress": "192.168.1.2",
+          "UserAgent": "Chrome/120.0",
+          "CreatedAt": "2024-01-15T10:30:00Z"
         }
       ]
     };
@@ -420,12 +559,14 @@ make test-e2e-scenario SCENARIO=example-01-basic-setup
 ## 🧪 Test Data
 
 ### Primary DB
-- Companies table with test company
-- Users table with test user (email: e2e-test-user@example.com)
+- Users table with 2 test users
+- Products table with 3 products
+- Orders table with 1 order
+- OrderItems table with 2 items
 
 ### Secondary DB  
-- SystemConfig table with configuration
-- Analytics and audit log tables (empty by default)
+- Analytics table with 5 page view/click events
+- UserLogs table with 10 user action logs
 
 ## 🔧 Development
 
@@ -437,14 +578,14 @@ npm run dev:create-testbed
 ## 📊 Schema Details
 
 ### Primary DB Schema
-- Companies (company management)
-- Users (user authentication)
-- UserSessions (session management)
+- Users (user accounts)
+- Products (product catalog)
+- Orders (order management)
+- OrderItems (order line items)
 
 ### Secondary DB Schema
-- UserAnalytics (user behavior tracking)
-- SystemConfig (application configuration)
-- AuditLogs (audit trail)
+- Analytics (page views and user events)
+- UserLogs (user action history)
 
 ---
 *Generated by Spanwright testbed creation script*
