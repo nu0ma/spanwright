@@ -2,7 +2,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 
 /**
  * Development testbed auto-creation script
@@ -153,7 +153,7 @@ CREATE TABLE UserLogs (
     try {
       // Build CLI first
       this.log('Building CLI...');
-      execSync('npm run build', { 
+      execFileSync('npm', ['run', 'build'], { 
         cwd: PROJECT_ROOT, 
         stdio: 'pipe'
       });
@@ -527,13 +527,13 @@ SPANNER_EMULATOR_HOST=localhost:9010
     
     try {
       // npm install
-      execSync('npm install', { 
+      execFileSync('npm', ['install'], { 
         cwd: projectPath, 
         stdio: 'inherit'
       });
       
       // go mod tidy
-      execSync('go mod tidy', { 
+      execFileSync('go', ['mod', 'tidy'], { 
         cwd: projectPath, 
         stdio: 'inherit'
       });

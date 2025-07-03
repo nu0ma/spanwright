@@ -2,7 +2,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 
 /**
  * Complete automated E2E test script
@@ -57,8 +57,10 @@ class E2ETestRunner {
     
     try {
       this.log(`Executing command: ${command}`);
-      const result = execSync(command, defaultOptions);
-      return { success: true, output: result.toString() };
+      // Parse command into executable and args for security
+      const [executable, ...args] = command.split(' ');
+      const result = execFileSync(executable, args, defaultOptions);
+      return { success: true, output: result ? result.toString() : '' };
     } catch (error: any) {
       return { 
         success: false, 

@@ -2,7 +2,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 
 /**
  * Template validation script
@@ -68,19 +68,19 @@ require github.com/joho/godotenv v1.5.1
       this.copyGoFiles(TEMPLATE_DIR, TEMP_DIR);
       
       // Run go mod tidy
-      execSync('go mod tidy', { 
+      execFileSync('go', ['mod', 'tidy'], { 
         cwd: TEMP_DIR, 
         stdio: 'pipe'
       });
       
       // Run go vet
-      execSync('go vet ./...', { 
+      execFileSync('go', ['vet', './...'], { 
         cwd: TEMP_DIR, 
         stdio: 'pipe'
       });
       
       // Run go build (dry-run)
-      execSync('go build -o /dev/null ./...', { 
+      execFileSync('go', ['build', '-o', '/dev/null', './...'], { 
         cwd: TEMP_DIR, 
         stdio: 'pipe'
       });
@@ -295,13 +295,13 @@ export { expect } from '@playwright/test';
       );
       
       // Run npm install
-      execSync('npm install --silent', { 
+      execFileSync('npm', ['install', '--silent'], { 
         cwd: TEMP_DIR, 
         stdio: 'pipe'
       });
       
       // Run TypeScript syntax check
-      execSync('npx tsc --noEmit', { 
+      execFileSync('npx', ['tsc', '--noEmit'], { 
         cwd: TEMP_DIR, 
         stdio: 'pipe'
       });
@@ -337,7 +337,7 @@ export { expect } from '@playwright/test';
         yaml = require('js-yaml');
       } catch {
         this.log('Installing js-yaml...', 'warn');
-        execSync('npm install js-yaml --no-save', { stdio: 'pipe' });
+        execFileSync('npm', ['install', 'js-yaml', '--no-save'], { stdio: 'pipe' });
         yaml = require('js-yaml');
       }
       
@@ -445,8 +445,8 @@ export { expect } from '@playwright/test';
   async run(): Promise<boolean> {
     this.log('Starting template validation...');
     
+    let allPassed = true;
     try {
-      let allPassed = true;
       
       // Validate Go files
       if (!await this.validateGoFiles()) {

@@ -163,3 +163,4 @@ go.work.sum
 .claude/settings.local.json
 
 dev-testbed/
+.
