@@ -1,0 +1,6 @@
+# Secondary Database expected values configuration  
+# Two databases example - Secondary DB with Logs table
+
+tables:
+  Logs:
+    count: 4

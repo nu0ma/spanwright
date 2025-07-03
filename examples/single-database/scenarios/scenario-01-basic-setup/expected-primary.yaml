@@ -1,0 +1,6 @@
+# Primary Database expected values configuration
+# Single table example with Users table only
+
+tables:
+  Users:
+    count: 3
