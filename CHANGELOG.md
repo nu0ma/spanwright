@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.0.7] - 2025-07-03
+
+### ✨ Features
+- feat: add examples system with auto-update mechanism ([283cb07](https://github.com/nu0ma/spanwright/commit/283cb07))
+
+### 🔧 Chores
+- refactor: rename single-table example to single-database for clarity ([672b708](https://github.com/nu0ma/spanwright/commit/672b708))
+-  ([- Updat](https://github.com/nu0ma/spanwright/commit/- Updat))
+-  ([- Fix .](https://github.com/nu0ma/spanwright/commit/- Fix .))
+-  ([- Updat](https://github.com/nu0ma/spanwright/commit/- Updat))
+-  ([- Impro](https://github.com/nu0ma/spanwright/commit/- Impro))
+-  ([The new](https://github.com/nu0ma/spanwright/commit/The new))
+-  ([- Add s](https://github.com/nu0ma/spanwright/commit/- Add s))
+-  ([- Add t](https://github.com/nu0ma/spanwright/commit/- Add t))
+-  ([- Imple](https://github.com/nu0ma/spanwright/commit/- Imple))
+-  ([- Integ](https://github.com/nu0ma/spanwright/commit/- Integ))
+-  ([- Add D](https://github.com/nu0ma/spanwright/commit/- Add D))
+-  ([- Updat](https://github.com/nu0ma/spanwright/commit/- Updat))
+-  ([The exa](https://github.com/nu0ma/spanwright/commit/The exa))
+-  ([updated](https://github.com/nu0ma/spanwright/commit/updated))
+- 0.0.6 ([73736df](https://github.com/nu0ma/spanwright/commit/73736df))
+
+
+
 ## [0.0.6] - 2025-07-03
 
 ### 🐛 Bug Fixes
