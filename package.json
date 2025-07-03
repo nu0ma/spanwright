@@ -61,7 +61,8 @@
   },
   "devDependencies": {
     "typescript": "^5.8.3",
-    "ts-node": "^10.9.0"
+    "ts-node": "^10.9.0",
+    "js-yaml": "^4.1.0"
   },
   "publishConfig": {
     "access": "public",

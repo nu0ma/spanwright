@@ -102,6 +102,11 @@ require github.com/joho/godotenv v1.5.1
     this.log('Starting TypeScript syntax validation...');
     
     try {
+      // Ensure temp directory exists
+      if (!fs.existsSync(TEMP_DIR)) {
+        fs.mkdirSync(TEMP_DIR, { recursive: true });
+      }
+      
       // Find TypeScript files in template directory
       const tsFiles = this.findFiles(TEMPLATE_DIR, /\.ts$/);
       
@@ -130,7 +135,7 @@ require github.com/joho/godotenv v1.5.1
       
       fs.writeFileSync(tempTsConfig, JSON.stringify(tsConfigContent, null, 2));
       
-      // Copy TypeScript files to temporary directory
+      // Copy TypeScript files and their dependencies to temporary directory
       for (const tsFile of tsFiles) {
         const relativePath = path.relative(TEMPLATE_DIR, tsFile);
         const destPath = path.join(TEMP_DIR, relativePath);
@@ -140,7 +145,137 @@ require github.com/joho/godotenv v1.5.1
           fs.mkdirSync(destDir, { recursive: true });
         }
         
-        fs.copyFileSync(tsFile, destPath);
+        // Read and process TypeScript file content
+        let content = fs.readFileSync(tsFile, 'utf8');
+        
+        // Replace any problematic imports with mock versions for validation
+        content = content.replace(/from ['"]\.\/fixtures\/db-validator['"]/g, 'from "./fixtures/db-validator-mock"');
+        content = content.replace(/from ['"]\.\.\/\.\.\/\.\.\/tests\/utils\/command-utils['"]/g, 'from "./command-utils-mock"');
+        content = content.replace(/from ['"]\.\.\/\.\.\/\.\.\/\.\.\/tests\/utils\/command-utils['"]/g, 'from "../../../command-utils-mock"');
+        
+        fs.writeFileSync(destPath, content);
+      }
+      
+      // Create mock files for missing dependencies
+      const mockFiles = [
+        {
+          path: path.join(TEMP_DIR, 'templates/fixtures/db-validator-mock.ts'),
+          content: `
+import { test as base } from '@playwright/test';
+
+type DBValidatorFixtures = {
+  validateDB: (databaseId: string, expectedPath: string) => void;
+  validateAllDBs: (scenario?: string) => void;
+};
+
+export const test = base.extend<DBValidatorFixtures>({
+  validateDB: async ({}, use) => {
+    await use((databaseId: string, expectedPath: string) => {
+      console.log('Mock DB validation for', databaseId, expectedPath);
+    });
+  },
+  validateAllDBs: async ({ validateDB }, use) => {
+    await use((scenario: string = 'mock-scenario') => {
+      console.log('Mock validation for all DBs', scenario);
+    });
+  },
+});
+
+export { expect } from '@playwright/test';
+`
+        },
+        {
+          path: path.join(TEMP_DIR, 'templates/command-utils-mock.ts'),
+          content: `
+export const safeMakeRun = (command: string, args: string[], options?: any) => {
+  console.log('Mock safeMakeRun:', command, args);
+  return { success: true, output: '' };
+};
+
+export const validateScenarioName = (name: string) => {
+  console.log('Mock validateScenarioName:', name);
+  return true;
+};
+
+export const safeGoRun = (path: string, args: string[], options?: any) => {
+  console.log('Mock safeGoRun:', path, args);
+  return '{"success": true}';
+};
+
+export const validateDatabaseId = (id: string) => {
+  console.log('Mock validateDatabaseId:', id);
+  return true;
+};
+
+export const validatePath = (path: string, root: string) => {
+  console.log('Mock validatePath:', path, root);
+  return path;
+};
+`
+        },
+        {
+          path: path.join(TEMP_DIR, 'command-utils-mock.ts'),
+          content: `
+export const safeMakeRun = (command: string, args: string[], options?: any) => {
+  console.log('Mock safeMakeRun:', command, args);
+  return { success: true, output: '' };
+};
+
+export const validateScenarioName = (name: string) => {
+  console.log('Mock validateScenarioName:', name);
+  return true;
+};
+
+export const safeGoRun = (path: string, args: string[], options?: any) => {
+  console.log('Mock safeGoRun:', path, args);
+  return '{"success": true}';
+};
+
+export const validateDatabaseId = (id: string) => {
+  console.log('Mock validateDatabaseId:', id);
+  return true;
+};
+
+export const validatePath = (path: string, root: string) => {
+  console.log('Mock validatePath:', path, root);
+  return path;
+};
+`
+        },
+        {
+          path: path.join(TEMP_DIR, 'scenarios/example-01-basic-setup/tests/fixtures/db-validator-mock.ts'),
+          content: `
+import { test as base } from '@playwright/test';
+
+type DBValidatorFixtures = {
+  validateDB: (databaseId: string, expectedPath: string) => void;
+  validateAllDBs: (scenario?: string) => void;
+};
+
+export const test = base.extend<DBValidatorFixtures>({
+  validateDB: async ({}, use) => {
+    await use((databaseId: string, expectedPath: string) => {
+      console.log('Mock DB validation for', databaseId, expectedPath);
+    });
+  },
+  validateAllDBs: async ({ validateDB }, use) => {
+    await use((scenario: string = 'mock-scenario') => {
+      console.log('Mock validation for all DBs', scenario);
+    });
+  },
+});
+
+export { expect } from '@playwright/test';
+`
+        }
+      ];
+      
+      for (const mockFile of mockFiles) {
+        const mockDir = path.dirname(mockFile.path);
+        if (!fs.existsSync(mockDir)) {
+          fs.mkdirSync(mockDir, { recursive: true });
+        }
+        fs.writeFileSync(mockFile.path, mockFile.content);
       }
       
       // Install required dependencies
@@ -188,6 +323,11 @@ require github.com/joho/godotenv v1.5.1
     this.log('Starting configuration file validation...');
     
     try {
+      // Ensure temp directory exists
+      if (!fs.existsSync(TEMP_DIR)) {
+        fs.mkdirSync(TEMP_DIR, { recursive: true });
+      }
+      
       const yamlFiles = this.findFiles(TEMPLATE_DIR, /\.ya?ml$/);
       const jsonFiles = this.findFiles(TEMPLATE_DIR, /\.json$/);
       
@@ -340,7 +480,12 @@ require github.com/joho/godotenv v1.5.1
       return allPassed;
       
     } finally {
-      this.cleanup();
+      // Don't cleanup on error for debugging
+      if (allPassed) {
+        this.cleanup();
+      } else {
+        this.log(`Keeping temp directory for debugging: ${TEMP_DIR}`, 'warn');
+      }
     }
   }
 }
