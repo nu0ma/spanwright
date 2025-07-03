@@ -4,20 +4,21 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"cloud.google.com/go/spanner"
 	"PROJECT_NAME/internal/config"
-	"PROJECT_NAME/internal/data"
 	"PROJECT_NAME/internal/db"
 )
 
 func main() {
 	// Parse command-line flags for seed injection
 	var databaseID = flag.String("database-id", "", "Database ID to inject seed data")
-	var seedFile = flag.String("seed-file", "", "Path to seed data file")
+	var seedFile = flag.String("seed-file", "", "Path to SQL seed data file")
 	flag.Parse()
 
 	if *databaseID == "" || *seedFile == "" {
@@ -57,42 +58,38 @@ func main() {
 	log.Printf("📊 Connection Pool: %d/%d active, %d idle", 
 		stats.ActiveConnections, stats.MaxConnections, stats.IdleConnections)
 
-	// List all tables to get schema information
-	log.Println("Getting table schema information...")
-	tables, err := db.ListTables(ctx, spannerManager.Client())
+	// Read and execute SQL seed file
+	log.Printf("Reading SQL seed data from: %s", *seedFile)
+	sqlContent, err := ioutil.ReadFile(*seedFile)
 	if err != nil {
-		log.Fatalf("Failed to list tables: %v", err)
+		log.Fatalf("Failed to read SQL file: %v", err)
 	}
 
-	if len(tables) == 0 {
-		log.Fatal("No tables found. Please apply schema first using 'make schema'")
+	// Split SQL content into individual statements
+	statements := splitSQLStatements(string(sqlContent))
+	if len(statements) == 0 {
+		log.Println("No SQL statements found in file")
+		return
 	}
 
-	log.Printf("Found %d tables in database", len(tables))
+	log.Printf("Executing %d SQL statements...", len(statements))
 
-	// Get schema path from environment variable
-	schemaPath := os.Getenv("SCHEMA_PATH")
-	if schemaPath == "" {
-		log.Fatal("SCHEMA_PATH environment variable is required for schema parsing")
-	}
+	// Execute each SQL statement
+	for i, statement := range statements {
+		statement = strings.TrimSpace(statement)
+		if statement == "" {
+			continue
+		}
 
-	// Read DDL files from schema path
-	log.Printf("Reading schema files from: %s", schemaPath)
-	ddlStatements, err := db.ReadSchemaFiles(schemaPath)
-	if err != nil {
-		log.Fatalf("Failed to read schema files from %s: %v", schemaPath, err)
-	}
+		log.Printf("Executing statement %d/%d...", i+1, len(statements))
+		_, err := spannerManager.Client().ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
+			_, err := txn.Update(ctx, spanner.Statement{SQL: statement})
+			return err
+		})
 
-	// Parse schema information from DDL statements using existing function
-	schemaMap := db.ParseSchemaFromDDL(ddlStatements)
-
-	// Create seed data processor
-	processor := data.NewSeedDataProcessor(schemaMap)
-
-	// Process seed data
-	log.Printf("Processing seed data from: %s", *seedFile)
-	if err := processor.ProcessSeedData(ctx, spannerManager.Client(), *seedFile, tables); err != nil {
-		log.Fatalf("Failed to process seed data: %v", err)
+		if err != nil {
+			log.Fatalf("Failed to execute SQL statement %d: %v\nStatement: %s", i+1, err, statement)
+		}
 	}
 
 	log.Println("✅ Seed data injection completed successfully")
@@ -124,9 +121,9 @@ func validateSeedFilePath(path string) error {
 		return fmt.Errorf("seed file must be a regular file, not directory or special file")
 	}
 	
-	// Check file extension (should be .json)
-	if !strings.HasSuffix(strings.ToLower(cleanPath), ".json") {
-		return fmt.Errorf("seed file must have .json extension")
+	// Check file extension (should be .sql)
+	if !strings.HasSuffix(strings.ToLower(cleanPath), ".sql") {
+		return fmt.Errorf("seed file must have .sql extension")
 	}
 	
 	// Check file size (prevent extremely large files)
@@ -136,4 +133,41 @@ func validateSeedFilePath(path string) error {
 	}
 	
 	return nil
+}
+
+// splitSQLStatements splits SQL content into individual statements
+// Simple implementation that splits on semicolons, ignoring comments
+func splitSQLStatements(content string) []string {
+	var statements []string
+	lines := strings.Split(content, "\n")
+	var currentStatement strings.Builder
+
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		
+		// Skip empty lines and comments
+		if line == "" || strings.HasPrefix(line, "--") {
+			continue
+		}
+
+		currentStatement.WriteString(line)
+		currentStatement.WriteString(" ")
+
+		// If line ends with semicolon, we have a complete statement
+		if strings.HasSuffix(line, ";") {
+			stmt := strings.TrimSpace(currentStatement.String())
+			if stmt != "" {
+				statements = append(statements, stmt)
+			}
+			currentStatement.Reset()
+		}
+	}
+
+	// Handle any remaining statement without semicolon
+	stmt := strings.TrimSpace(currentStatement.String())
+	if stmt != "" {
+		statements = append(statements, stmt)
+	}
+
+	return statements
 }

@@ -166,7 +166,7 @@ Spanwright is a **project generator** that creates Cloud Spanner E2E testing fra
 
 #### Go Database Tools (`template/cmd/`)
 - `db-validator/`: Batch validation with performance metrics
-- `seed-injector/`: Data seeding with type conversion
+- `seed-injector/`: SQL-based data seeding with direct DML execution
 - Uses pooled connections and structured error handling
 
 #### Internal Go Packages (`template/internal/`)
@@ -200,7 +200,7 @@ template/
 │   └── data/                 # Validation logic
 ├── scenarios/                  # Test scenarios
 │   └── example-01-basic-setup/
-│       ├── seed-data/         # JSON seed files
+│       ├── seed-data/         # SQL seed files
 │       ├── expected-*.yaml    # Expected validation results
 │       └── tests/             # Playwright E2E tests
 ├── tests/                      # Test infrastructure
@@ -231,7 +231,7 @@ Go tools use pooled connections for performance:
 
 ### Scenario-Based Testing
 Each scenario contains:
-1. **Seed Data** (`seed-data/*.json`): Initial database state
+1. **Seed Data** (`seed-data/*.sql`): Initial database state
 2. **Expected Results** (`expected-*.yaml`): Validation configuration
 3. **E2E Tests** (`tests/*.spec.ts`): Browser automation
 

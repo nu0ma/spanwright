@@ -211,7 +211,7 @@ schema: check-wrench
 seed: go-deps
 	@if [ -z "$(SEED_FILE)" ]; then \
 		echo "❌ Error: SEED_FILE is required"; \
-		echo "Usage: make seed SEED_FILE=/path/to/seed.json DATABASE_ID=my-db"; \
+		echo "Usage: make seed SEED_FILE=/path/to/seed.sql DATABASE_ID=my-db"; \
 		exit 1; \
 	fi
 	@echo "🌱 Injecting seed data..."
@@ -318,11 +318,11 @@ new-scenario:
 	@echo "# Scenario-specific file path configuration" >> scenarios/$(SCENARIO)/scenario-config.yaml
 	@echo "scenario_files:" >> scenarios/$(SCENARIO)/scenario-config.yaml
 	@echo "  primary-db:" >> scenarios/$(SCENARIO)/scenario-config.yaml
-	@echo "    seed: seed-data/primary-seed.json" >> scenarios/$(SCENARIO)/scenario-config.yaml
+	@echo "    seed: seed-data/primary-seed.sql" >> scenarios/$(SCENARIO)/scenario-config.yaml
 	@echo "    expected: expected-primary.yaml" >> scenarios/$(SCENARIO)/scenario-config.yaml
 	@echo "  " >> scenarios/$(SCENARIO)/scenario-config.yaml
 	@echo "  secondary-db:" >> scenarios/$(SCENARIO)/scenario-config.yaml
-	@echo "    seed: seed-data/secondary-seed.json" >> scenarios/$(SCENARIO)/scenario-config.yaml
+	@echo "    seed: seed-data/secondary-seed.sql" >> scenarios/$(SCENARIO)/scenario-config.yaml
 	@echo "    expected: expected-secondary.yaml" >> scenarios/$(SCENARIO)/scenario-config.yaml
 	@echo "📝 Creating expected value file templates..."
 	@cp templates/expected-primary.yaml scenarios/$(SCENARIO)/expected-primary.yaml
@@ -330,9 +330,9 @@ new-scenario:
 		cp templates/expected-secondary.yaml scenarios/$(SCENARIO)/expected-secondary.yaml; \
 	fi
 	@echo "📝 Creating seed data file templates..."
-	@cp templates/primary-seed.json scenarios/$(SCENARIO)/seed-data/primary-seed.json
+	@cp templates/primary-seed.sql scenarios/$(SCENARIO)/seed-data/primary-seed.sql
 	@if [ "$(DB_COUNT)" = "2" ]; then \
-		cp templates/secondary-seed.json scenarios/$(SCENARIO)/seed-data/secondary-seed.json; \
+		cp templates/secondary-seed.sql scenarios/$(SCENARIO)/seed-data/secondary-seed.sql; \
 	fi
 	@echo "📝 Creating description file..."
 	@sed 's/SCENARIO_NAME/$(SCENARIO)/g' templates/description.md > scenarios/$(SCENARIO)/description.md
@@ -398,15 +398,15 @@ setup-scenario:
 	else \
 		echo "ℹ️  Spanner emulator is already running"; \
 	fi
-	@if [ -f "scenarios/$(SCENARIO)/seed-data/primary-seed.json" ]; then \
+	@if [ -f "scenarios/$(SCENARIO)/seed-data/primary-seed.sql" ]; then \
 		echo "🔶 Setting up Primary DB for scenario..."; \
 		$(MAKE) schema SCHEMA_PATH=$(PRIMARY_DB_SCHEMA_PATH) DATABASE_ID=$(PRIMARY_DB_ID); \
-		$(MAKE) seed SCHEMA_PATH=$(PRIMARY_DB_SCHEMA_PATH) DATABASE_ID=$(PRIMARY_DB_ID) SEED_FILE="scenarios/$(SCENARIO)/seed-data/primary-seed.json"; \
+		$(MAKE) seed SCHEMA_PATH=$(PRIMARY_DB_SCHEMA_PATH) DATABASE_ID=$(PRIMARY_DB_ID) SEED_FILE="scenarios/$(SCENARIO)/seed-data/primary-seed.sql"; \
 	fi
-	@if [ "$(DB_COUNT)" = "2" ] && [ -f "scenarios/$(SCENARIO)/seed-data/secondary-seed.json" ]; then \
+	@if [ "$(DB_COUNT)" = "2" ] && [ -f "scenarios/$(SCENARIO)/seed-data/secondary-seed.sql" ]; then \
 		echo "☁️ Setting up Secondary DB for scenario..."; \
 		$(MAKE) schema SCHEMA_PATH=$(SECONDARY_DB_SCHEMA_PATH) DATABASE_ID=$(SECONDARY_DB_ID); \
-		$(MAKE) seed SCHEMA_PATH=$(SECONDARY_DB_SCHEMA_PATH) DATABASE_ID=$(SECONDARY_DB_ID) SEED_FILE="scenarios/$(SCENARIO)/seed-data/secondary-seed.json"; \
+		$(MAKE) seed SCHEMA_PATH=$(SECONDARY_DB_SCHEMA_PATH) DATABASE_ID=$(SECONDARY_DB_ID) SEED_FILE="scenarios/$(SCENARIO)/seed-data/secondary-seed.sql"; \
 	fi
 	@echo "✅ Scenario setup completed: $(SCENARIO)"
 
@@ -454,8 +454,8 @@ run-all-scenarios:
 			echo "🎯 Running scenario: $$scenario_name"; \
 			echo "----------------------------------------"; \
 			echo "📦 Setting up databases for scenario..."; \
-			primary_seed_file="scenarios/$$scenario_name/seed-data/primary-seed.json"; \
-			secondary_seed_file="scenarios/$$scenario_name/seed-data/secondary-seed.json"; \
+			primary_seed_file="scenarios/$$scenario_name/seed-data/primary-seed.sql"; \
+			secondary_seed_file="scenarios/$$scenario_name/seed-data/secondary-seed.sql"; \
 			if [ -f "$$primary_seed_file" ]; then \
 				echo "  🔶 Setting up Primary DB..."; \
 				$(MAKE) schema SCHEMA_PATH=$(PRIMARY_DB_SCHEMA_PATH) DATABASE_ID=$(PRIMARY_DB_ID); \

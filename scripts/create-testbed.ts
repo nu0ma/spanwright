@@ -506,17 +506,97 @@ SPANNER_EMULATOR_HOST=localhost:9010
       ],
     };
 
+    // Convert primary data to SQL
+    const primarySQL = this.generatePrimarySeedSQL(primarySeedData);
     fs.writeFileSync(
-      path.join(scenarioDir, 'primary-seed.json'),
-      JSON.stringify(primarySeedData, null, 2)
+      path.join(scenarioDir, 'primary-seed.sql'),
+      primarySQL
     );
 
+    // Convert secondary data to SQL
+    const secondarySQL = this.generateSecondarySeedSQL(secondarySeedData);
     fs.writeFileSync(
-      path.join(scenarioDir, 'secondary-seed.json'),
-      JSON.stringify(secondarySeedData, null, 2)
+      path.join(scenarioDir, 'secondary-seed.sql'),
+      secondarySQL
     );
 
     this.log('Test data generated successfully');
+  }
+
+  /**
+   * Generate SQL for primary database seed data
+   */
+  private generatePrimarySeedSQL(data: any): string {
+    const statements: string[] = [
+      '-- Primary database seed data',
+      '-- Insert Users'
+    ];
+
+    // Generate Users INSERT statements
+    if (data.Users && data.Users.length > 0) {
+      const userValues = data.Users.map((user: any) => 
+        `  ('${user.UserID}', '${user.Name}', '${user.Email}', ${user.Status}, '${user.CreatedAt}')`
+      ).join(',\n');
+      statements.push(`INSERT INTO Users (UserID, Name, Email, Status, CreatedAt) VALUES\n${userValues};`);
+    }
+
+    // Generate Products INSERT statements
+    if (data.Products && data.Products.length > 0) {
+      statements.push('\n-- Insert Products');
+      const productValues = data.Products.map((product: any) => 
+        `  ('${product.ProductID}', '${product.Name}', ${product.Price}, '${product.CategoryID}', ${product.IsActive})`
+      ).join(',\n');
+      statements.push(`INSERT INTO Products (ProductID, Name, Price, CategoryID, IsActive) VALUES\n${productValues};`);
+    }
+
+    // Generate Orders INSERT statements
+    if (data.Orders && data.Orders.length > 0) {
+      statements.push('\n-- Insert Orders');
+      const orderValues = data.Orders.map((order: any) => 
+        `  ('${order.OrderID}', '${order.UserID}', ${order.TotalAmount}, '${order.Status}', '${order.OrderDate}')`
+      ).join(',\n');
+      statements.push(`INSERT INTO Orders (OrderID, UserID, TotalAmount, Status, OrderDate) VALUES\n${orderValues};`);
+    }
+
+    // Generate OrderItems INSERT statements
+    if (data.OrderItems && data.OrderItems.length > 0) {
+      statements.push('\n-- Insert OrderItems');
+      const orderItemValues = data.OrderItems.map((item: any) => 
+        `  ('${item.OrderItemID}', '${item.OrderID}', '${item.ProductID}', ${item.Quantity}, ${item.UnitPrice})`
+      ).join(',\n');
+      statements.push(`INSERT INTO OrderItems (OrderItemID, OrderID, ProductID, Quantity, UnitPrice) VALUES\n${orderItemValues};`);
+    }
+
+    return statements.join('\n');
+  }
+
+  /**
+   * Generate SQL for secondary database seed data
+   */
+  private generateSecondarySeedSQL(data: any): string {
+    const statements: string[] = [
+      '-- Secondary database seed data',
+      '-- Insert Analytics'
+    ];
+
+    // Generate Analytics INSERT statements
+    if (data.Analytics && data.Analytics.length > 0) {
+      const analyticsValues = data.Analytics.map((analytics: any) => 
+        `  ('${analytics.AnalyticsID}', '${analytics.UserID}', '${analytics.EventType}', '${analytics.PageURL}', '${analytics.Timestamp}')`
+      ).join(',\n');
+      statements.push(`INSERT INTO Analytics (AnalyticsID, UserID, EventType, PageURL, Timestamp) VALUES\n${analyticsValues};`);
+    }
+
+    // Generate UserLogs INSERT statements
+    if (data.UserLogs && data.UserLogs.length > 0) {
+      statements.push('\n-- Insert UserLogs');
+      const userLogValues = data.UserLogs.map((log: any) => 
+        `  ('${log.LogID}', '${log.UserID}', '${log.Action}', '${log.IpAddress}', '${log.UserAgent}', '${log.CreatedAt}')`
+      ).join(',\n');
+      statements.push(`INSERT INTO UserLogs (LogID, UserID, Action, IpAddress, UserAgent, CreatedAt) VALUES\n${userLogValues};`);
+    }
+
+    return statements.join('\n');
   }
 
   /**
