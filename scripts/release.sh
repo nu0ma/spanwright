@@ -160,7 +160,7 @@ fi
 
 # Update package.json version
 print_info "📦 Updating version to $NEW_VERSION..."
-npm version "$NEW_VERSION" --no-git-tag-version
+npm version "$NEW_VERSION"
 
 # Update CHANGELOG.md
 print_info "📝 Updating CHANGELOG.md..."
@@ -198,25 +198,11 @@ fi
 # Cleanup
 rm -f new-changelog-section.md
 
-# Git operations
-print_info "🏷️  Creating git tag v$NEW_VERSION..."
-git add package.json CHANGELOG.md
-git commit -m "chore: release $NEW_VERSION"
-git tag -a "v$NEW_VERSION" -m "Release $NEW_VERSION"
-
-# Push to remote
-if [ "$SKIP_PUSH" = false ]; then
-    print_info "🚀 Pushing release to origin..."
-    git push origin main
-    git push origin --tags
-else
-    print_warning "Skipping push to remote (--skip-push flag)"
-fi
+# Git operations (now handled by npm version and postversion script)
+print_info "🏷️  Git operations handled by npm version..."
+git add CHANGELOG.md
+git commit --amend --no-edit
 
 echo
 print_success "Release $NEW_VERSION completed successfully!"
 print_info "🎉 GitHub Actions will automatically publish to npm when the tag is pushed."
-
-if [ "$SKIP_PUSH" = true ]; then
-    print_warning "Don't forget to push the tag: git push origin --tags"
-fi
