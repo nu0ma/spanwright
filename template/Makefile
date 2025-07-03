@@ -37,13 +37,11 @@ init:
 	@echo "🔍 Checking prerequisites..."
 	@$(MAKE) check-prerequisites
 	@echo ""
-	@# Setup .env file
+	@# Check .env file
 	@if [ ! -f ".env" ]; then \
-		echo "📝 Creating .env file..."; \
-		cp .env.example .env; \
-		echo "✅ .env file has been created"; \
+		echo "❌ .env file not found"; \
 		echo ""; \
-		echo "⚠️  Important: Please edit the .env file and configure the following:"; \
+		echo "⚠️  Important: Please configure the .env file with the following settings:"; \
 		echo "  - PRIMARY_DB_SCHEMA_PATH: Primary DB schema path"; \
 		echo "  - SECONDARY_DB_SCHEMA_PATH: Secondary DB schema path (for 2-DB configuration)"; \
 		echo ""; \
@@ -53,7 +51,7 @@ init:
 		echo ""; \
 		echo "📋 After configuration, please run the following:"; \
 		echo "  make run-all-scenarios"; \
-		exit 0; \
+		exit 1; \
 	else \
 		echo "✅ .env file already exists"; \
 	fi
