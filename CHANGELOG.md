@@ -6,6 +6,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.0.8] - 2025-07-03
+
+### ✨ Features
+- feat: add examples system with auto-update mechanism (#2) ([#2](https://github.com/nu0ma/spanwright/pull/2)) ([8373561](https://github.com/nu0ma/spanwright/commit/8373561))
+
+### 🐛 Bug Fixes
+- fix: update make init message to guide users to create new scenario (#1) ([#1](https://github.com/nu0ma/spanwright/pull/1)) ([420051c](https://github.com/nu0ma/spanwright/commit/420051c))
+
+### 🔧 Chores
+- chore: release 0.0.7 ([3407083](https://github.com/nu0ma/spanwright/commit/3407083))
+- 0.0.7 ([65d37cf](https://github.com/nu0ma/spanwright/commit/65d37cf))
+-  ([- Creat](https://github.com/nu0ma/spanwright/commit/- Creat))
+-  ([- Add s](https://github.com/nu0ma/spanwright/commit/- Add s))
+-  ([- Add t](https://github.com/nu0ma/spanwright/commit/- Add t))
+-  ([- Imple](https://github.com/nu0ma/spanwright/commit/- Imple))
+-  ([- Integ](https://github.com/nu0ma/spanwright/commit/- Integ))
+-  ([- Add D](https://github.com/nu0ma/spanwright/commit/- Add D))
+-  ([- Updat](https://github.com/nu0ma/spanwright/commit/- Updat))
+-  ([The exa](https://github.com/nu0ma/spanwright/commit/The exa))
+-  ([updated](https://github.com/nu0ma/spanwright/commit/updated))
+-  ([* refac](https://github.com/nu0ma/spanwright/commit/* refac))
+-  ([- Renam](https://github.com/nu0ma/spanwright/commit/- Renam))
+-  ([- Updat](https://github.com/nu0ma/spanwright/commit/- Updat))
+-  ([- Fix .](https://github.com/nu0ma/spanwright/commit/- Fix .))
+-  ([- Updat](https://github.com/nu0ma/spanwright/commit/- Updat))
+-  ([- Impro](https://github.com/nu0ma/spanwright/commit/- Impro))
+- Ryota Ishikawa ([The new](https://github.com/nu0ma/spanwright/commit/The new))
+
+
+
 ## [0.0.7] - 2025-07-03
 
 ### ✨ Features
