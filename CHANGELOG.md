@@ -6,6 +6,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.0.5] - 2025-07-03
+
+### 🔧 Chores
+- refactor: improve code architecture with modular design ([4f1c824](https://github.com/nu0ma/spanwright/commit/4f1c824))
+-  ([- Extra](https://github.com/nu0ma/spanwright/commit/- Extra))
+-  ([- Add c](https://github.com/nu0ma/spanwright/commit/- Add c))
+-  ([- Imple](https://github.com/nu0ma/spanwright/commit/- Imple))
+-  ([- Impro](https://github.com/nu0ma/spanwright/commit/- Impro))
+-  ([- Reduc](https://github.com/nu0ma/spanwright/commit/- Reduc))
+-  ([- Maint](https://github.com/nu0ma/spanwright/commit/- Maint))
+-  ([- Pass ](https://github.com/nu0ma/spanwright/commit/- Pass ))
+-  ([Modules](https://github.com/nu0ma/spanwright/commit/Modules))
+-  ([- const](https://github.com/nu0ma/spanwright/commit/- const))
+-  ([- error](https://github.com/nu0ma/spanwright/commit/- error))
+-  ([- valid](https://github.com/nu0ma/spanwright/commit/- valid))
+-  ([- cli.t](https://github.com/nu0ma/spanwright/commit/- cli.t))
+-  ([- file-](https://github.com/nu0ma/spanwright/commit/- file-))
+-  ([- confi](https://github.com/nu0ma/spanwright/commit/- confi))
+-  ([Benefit](https://github.com/nu0ma/spanwright/commit/Benefit))
+-  ([- Bette](https://github.com/nu0ma/spanwright/commit/- Bette))
+-  ([- Robus](https://github.com/nu0ma/spanwright/commit/- Robus))
+-  ([- Clean](https://github.com/nu0ma/spanwright/commit/- Clean))
+-  ([- Produ](https://github.com/nu0ma/spanwright/commit/- Produ))
+
+
+
 ## [0.0.3] - 2025-07-03
 
 ### ✨ Features
