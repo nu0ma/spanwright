@@ -20,7 +20,7 @@ export const test = base.extend<DBValidatorFixtures>({
       console.log(`🔍 Validating ${databaseId}...`);
       
       try {
-        // Goプログラムを実行
+        // Execute Go program
         const output = safeGoRun(
           validatorPath,
           [databaseId, fullExpectedPath],
@@ -30,16 +30,16 @@ export const test = base.extend<DBValidatorFixtures>({
               ...process.env,
               SPANNER_EMULATOR_HOST: 'localhost:9010'
             },
-            stdio: ['ignore', 'pipe', 'pipe'], // stdin無視, stdout/stderrキャプチャ
-            timeout: 30000, // 30秒でタイムアウト
-            maxBuffer: 1024 * 1024 * 10, // 10MBまでの出力を許可
+            stdio: ['ignore', 'pipe', 'pipe'], // ignore stdin, capture stdout/stderr
+            timeout: 30000, // 30 second timeout
+            maxBuffer: 1024 * 1024 * 10, // allow up to 10MB output
           }
         );
         
-        // 出力を解析
+        // Parse output
         const lines = output.trim().split('\n');
         
-        // 成功パターンを探す
+        // Look for success patterns
         const hasSuccess = lines.some(line => 
           line.includes('✅') || 
           line.includes('SUCCESS') || 
@@ -47,7 +47,7 @@ export const test = base.extend<DBValidatorFixtures>({
           line.includes('All validations passed')
         );
         
-        // エラーパターンを探す
+        // Look for error patterns
         const hasError = lines.some(line => 
           line.includes('❌') || 
           line.includes('FAILED') || 
@@ -62,7 +62,7 @@ export const test = base.extend<DBValidatorFixtures>({
         }
         
         if (!hasSuccess) {
-          // 成功マーカーが見つからない場合は、JSONパースを試みる
+          // If no success marker is found, try JSON parsing
           try {
             const jsonLine = lines[lines.length - 1];
             const result = JSON.parse(jsonLine);
@@ -70,7 +70,7 @@ export const test = base.extend<DBValidatorFixtures>({
               throw new Error(`Validation failed: ${JSON.stringify(result.errors)}`);
             }
           } catch (parseError) {
-            // JSONパースも失敗した場合は、出力全体を表示
+            // If JSON parsing also fails, display entire output
             console.log('Validator output:', output);
             console.warn('⚠️  Could not determine validation result, assuming success');
           }
@@ -83,7 +83,7 @@ export const test = base.extend<DBValidatorFixtures>({
         }
         
         if (error.status) {
-          // 終了コードが0以外
+          // Exit code is non-zero
           console.error(`Validator exited with code ${error.status}`);
           if (error.stdout) {
             console.error('stdout:', error.stdout);
@@ -103,7 +103,7 @@ export const test = base.extend<DBValidatorFixtures>({
     await use((scenario: string = 'scenario-01-basic-setup') => {
       console.log(`📋 Validating all databases for ${scenario}`);
       
-      // Primary DB検証
+      // Primary DB validation
       try {
         validateDB('primary-db', `scenarios/${scenario}/expected-primary.yaml`);
       } catch (error) {
@@ -111,7 +111,7 @@ export const test = base.extend<DBValidatorFixtures>({
         throw error;
       }
       
-      // Secondary DB検証
+      // Secondary DB validation
       try {
         validateDB('secondary-db', `scenarios/${scenario}/expected-secondary.yaml`);
       } catch (error) {

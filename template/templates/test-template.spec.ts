@@ -11,7 +11,7 @@ test.describe('SCENARIO_NAME', async() => {
       // Validate scenario name
       validateScenarioName(scenarioName);
       
-      // エミュレータ起動とデータセットアップ
+      // Start emulator and setup data
       console.log('📋 Starting emulator and setting up data...');
       safeMakeRun('setup-scenario', [`SCENARIO=${scenarioName}`], { 
         stdio: 'inherit',
@@ -27,7 +27,7 @@ test.describe('SCENARIO_NAME', async() => {
   test.afterAll(async () => {
     console.log('🧹 Cleaning up test environment...');
     try {
-      // 必要に応じてクリーンアップ（エミュレータは残しておく）
+      // Clean up as needed (keep emulator running)
       console.log('✅ Cleanup complete');
     } catch (error: any) {
       console.warn('⚠️  Cleanup warning:', error.message);
@@ -48,14 +48,14 @@ test.describe('SCENARIO_NAME', async() => {
     await validateAllDBs(scenarioName);
   });
 
-  test('ブラウザ基本動作テスト（動作確認用）', async ({ page }) => {
+  test('Browser basic functionality test (for verification)', async ({ page }) => {
     console.log('🌐 Testing basic browser functionality...');
     
-    // about:blankページでブラウザ基本動作確認
+    // Basic browser functionality test with about:blank page
     await page.goto('about:blank');
     await expect(page).toHaveURL('about:blank');
     
-    // スクリーンショット保存テスト
+    // Screenshot save test
     await page.screenshot({ 
       path: 'test-results/browser-test.png',
       fullPage: true 
@@ -64,18 +64,18 @@ test.describe('SCENARIO_NAME', async() => {
     console.log('✅ Browser functionality test passed');
   });
 
-  test('データベース検証テスト', async ({ validateAllDBs }) => {
+  test('Database validation test', async ({ validateAllDBs }) => {
     console.log('🔍 Testing database validation...');
     
-    // データベースの状態を検証
+    // Validate database state
     await validateAllDBs(scenarioName);
     
     console.log('✅ Database validation test passed');
   });
 
-  // 追加のテストケースをここに記述してください
-  // 例:
-  // test('特定の機能のテスト', async ({ page, validateAllDBs }) => {
-  //   // テストロジックをここに記述
+  // Add additional test cases here
+  // Example:
+  // test('Test for specific functionality', async ({ page, validateAllDBs }) => {
+  //   // Write test logic here
   // });
 });

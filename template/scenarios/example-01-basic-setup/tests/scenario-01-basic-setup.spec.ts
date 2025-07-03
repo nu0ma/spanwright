@@ -54,7 +54,7 @@ test.describe('Scenario 01: Basic Setup', async() => {
   });
 
 
-  test('データベース状態検証（分離環境）', async () => {
+  test('Database state validation (isolated environment)', async () => {
     console.log('🔍 Testing database validation in isolated environment...');
     
     try {
@@ -73,14 +73,14 @@ test.describe('Scenario 01: Basic Setup', async() => {
     }
   });
 
-  test('ブラウザ基本動作テスト（動作確認用）', async ({ page }) => {
+  test('Browser basic functionality test (for verification)', async ({ page }) => {
     console.log('🌐 Testing basic browser functionality...');
     
-    // about:blankページでブラウザ基本動作確認
+    // Basic browser functionality test with about:blank page
     await page.goto('about:blank');
     await expect(page).toHaveURL('about:blank');
     
-    // スクリーンショット保存テスト
+    // Screenshot save test
     await page.screenshot({ 
       path: 'test-results/browser-test.png',
       fullPage: true 
