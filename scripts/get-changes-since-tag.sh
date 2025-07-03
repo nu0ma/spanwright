@@ -48,7 +48,7 @@ fi
 
 # Get commits since last tag
 get_commits() {
-    git log $RANGE --pretty=format:'%H|%s|%b|%an|%ae|%ad' --date=short 2>/dev/null || echo ""
+    git log $RANGE --pretty=format:"%H|%s|%b|%an|%ae|%ad" --date=short 2>/dev/null || echo ""
 }
 
 # Parse commit type from subject
@@ -56,7 +56,7 @@ get_commit_type() {
     local subject="$1"
     
     # Check conventional commit format
-    if [[ $subject =~ ^(feat|fix|docs|style|refactor|test|chore|template)(\([^)]+\))?!?:\ .* ]]; then
+    if [[ $subject =~ ^(feat|fix|docs|style|refactor|test|chore|template)(\([^\)]+\))?!?:\ .* ]]; then
         echo "${BASH_REMATCH[1]}"
     elif [[ ${subject,,} =~ feat|add ]]; then
         echo "feat"
@@ -104,7 +104,7 @@ format_commit() {
     
     # Extract scope if present
     local scope=""
-    if [[ $subject =~ ^[^:]+\(([^)]+)\): ]]; then
+    if [[ $subject =~ ^[^:]+\(([^\)]+)\): ]]; then
         scope="**${BASH_REMATCH[1]}**: "
         subject=$(echo "$subject" | sed 's/^[^:]\+([^)]\+): //')
     else
