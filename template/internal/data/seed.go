@@ -6,7 +6,7 @@ import (
 
 	"cloud.google.com/go/spanner"
 
-	"e2e-sandbox/internal/db"
+	"PROJECT_NAME/internal/db"
 )
 
 // SeedDataProcessor handles processing and inserting seed data

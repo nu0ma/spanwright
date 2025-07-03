@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"e2e-sandbox/internal/config"
-	"e2e-sandbox/internal/data"
-	"e2e-sandbox/internal/db"
+	"PROJECT_NAME/internal/config"
+	"PROJECT_NAME/internal/data"
+	"PROJECT_NAME/internal/db"
 )
 
 func main() {

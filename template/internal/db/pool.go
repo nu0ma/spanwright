@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/spanner"
-	"e2e-sandbox/internal/config"
+	"PROJECT_NAME/internal/config"
 )
 
 // ConnectionPool manages a pool of Spanner client connections

@@ -57,18 +57,18 @@ func (amb *AutoMutationBuilder) BuildMutationsFromSeedData(seedData map[string]i
 		
 		log.Printf("🔍 Found schema for %s with %d columns: %v", actualTableName, len(tableSchema), tableSchema)
 		
-		// Build mutation for this table
-		mutation, err := amb.buildTableMutation(actualTableName, tableSchema, tableData)
+		// Build mutations for this table (supports multiple rows)
+		tableMutations, err := amb.buildTableMutation(actualTableName, tableSchema, tableData)
 		if err != nil {
-			log.Printf("❌ Failed to build mutation for table %s: %v", actualTableName, err)
+			log.Printf("❌ Failed to build mutations for table %s: %v", actualTableName, err)
 			continue
 		}
 		
-		if mutation != nil {
-			mutations = append(mutations, mutation)
-			log.Printf("✅ Prepared %s data for insertion", actualTableName)
+		if len(tableMutations) > 0 {
+			mutations = append(mutations, tableMutations...)
+			log.Printf("✅ Prepared %s data for insertion (%d rows)", actualTableName, len(tableMutations))
 		} else {
-			log.Printf("⚠️  No mutation generated for table %s", actualTableName)
+			log.Printf("⚠️  No mutations generated for table %s", actualTableName)
 		}
 	}
 	
@@ -85,8 +85,8 @@ func getSchemaTableNames(schemaMap map[string]map[string]string) []string {
 	return names
 }
 
-// buildTableMutation builds a mutation for a single table
-func (amb *AutoMutationBuilder) buildTableMutation(tableName string, tableSchema map[string]string, tableData interface{}) (*spanner.Mutation, error) {
+// buildTableMutation builds mutations for a single table (supports multiple rows)
+func (amb *AutoMutationBuilder) buildTableMutation(tableName string, tableSchema map[string]string, tableData interface{}) ([]*spanner.Mutation, error) {
 	// Handle both array and object formats
 	var dataItems []map[string]interface{}
 	
@@ -114,12 +114,7 @@ func (amb *AutoMutationBuilder) buildTableMutation(tableName string, tableSchema
 		return nil, nil
 	}
 	
-	// For now, process only the first item (single row insertion)
-	// TODO: Support multiple row insertion in the future
-	dataMap := dataItems[0]
-	if len(dataItems) > 1 {
-		log.Printf("⚠️  Multiple rows detected for table %s, processing only the first row", tableName)
-	}
+	log.Printf("🔍 Processing %d rows for table %s", len(dataItems), tableName)
 	
 	// Get all columns from schema, sorted for consistent ordering
 	var allColumns []string
@@ -128,30 +123,41 @@ func (amb *AutoMutationBuilder) buildTableMutation(tableName string, tableSchema
 	}
 	sort.Strings(allColumns)
 	
-	// Build columns and values arrays
-	var columns []string
-	var values []interface{}
+	// Build mutations for all rows
+	var mutations []*spanner.Mutation
 	
-	for _, columnName := range allColumns {
-		// Check if data exists for this column
-		if value, exists := dataMap[columnName]; exists {
-			columns = append(columns, columnName)
-			
-			// Convert value based on column type
-			convertedValue := amb.convertValueForColumn(tableName, columnName, value, tableSchema[columnName])
-			values = append(values, convertedValue)
+	for rowIndex, dataMap := range dataItems {
+		log.Printf("🔍 Processing row %d for table %s", rowIndex+1, tableName)
+		
+		// Build columns and values arrays for this row
+		var columns []string
+		var values []interface{}
+		
+		for _, columnName := range allColumns {
+			// Check if data exists for this column
+			if value, exists := dataMap[columnName]; exists {
+				columns = append(columns, columnName)
+				
+				// Convert value based on column type
+				convertedValue := amb.convertValueForColumn(tableName, columnName, value, tableSchema[columnName])
+				values = append(values, convertedValue)
+			}
+		}
+		
+		// If no columns found, skip this row
+		if len(columns) == 0 {
+			log.Printf("⚠️  No matching columns found for table %s row %d", tableName, rowIndex+1)
+			continue
+		}
+		
+		// Build the mutation for this row
+		mutation := amb.mutationBuilder.BuildInsertMutation(tableName, columns, values)
+		if mutation != nil {
+			mutations = append(mutations, mutation)
 		}
 	}
 	
-	// If no columns found, skip this table
-	if len(columns) == 0 {
-		log.Printf("⚠️  No matching columns found for table %s", tableName)
-		return nil, nil
-	}
-	
-	// Build the mutation
-	mutation := amb.mutationBuilder.BuildInsertMutation(tableName, columns, values)
-	return mutation, nil
+	return mutations, nil
 }
 
 // convertValueForColumn converts a value based on the column type

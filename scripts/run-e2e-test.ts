@@ -15,7 +15,7 @@ const TESTBED_PROJECT_PATH = path.join(TESTBED_DIR, 'spanwright-testbed');
 
 interface CommandResult {
   success: boolean;
-  output?: Buffer;
+  output?: string;
   error?: string;
   code?: number;
 }
@@ -58,7 +58,7 @@ class E2ETestRunner {
     try {
       this.log(`Executing command: ${command}`);
       const result = execSync(command, defaultOptions);
-      return { success: true, output: result };
+      return { success: true, output: result.toString() };
     } catch (error: any) {
       return { 
         success: false, 

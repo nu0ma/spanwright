@@ -135,6 +135,26 @@ async function main(): Promise<void> {
       fs.renameSync(path.join(projectPath, 'go.mod.template'), goModPath);
     }
     
+    // Replace PROJECT_NAME in all Go files
+    console.log('🔧 Configuring Go modules...');
+    const replaceInGoFiles = (dir: string) => {
+      const items = fs.readdirSync(dir);
+      items.forEach(item => {
+        const fullPath = path.join(dir, item);
+        const stat = fs.statSync(fullPath);
+        
+        if (stat.isDirectory()) {
+          replaceInGoFiles(fullPath);
+        } else if (item.endsWith('.go')) {
+          replaceInFile(fullPath, {
+            'PROJECT_NAME': projectName
+          });
+        }
+      });
+    };
+    
+    replaceInGoFiles(projectPath);
+    
     // Configure .env.example
     console.log('⚙️  Creating environment configuration file...');
     const envExamplePath = path.join(projectPath, '.env.example');

@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"cloud.google.com/go/spanner"
-	"e2e-sandbox/internal/config"
+	"PROJECT_NAME/internal/config"
 )
 
 // Global pool manager instance

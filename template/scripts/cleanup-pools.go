@@ -2,7 +2,7 @@ package main
 
 import (
 	"log"
-	"e2e-sandbox/internal/db"
+	"PROJECT_NAME/internal/db"
 )
 
 // cleanup-pools.go - Utility script to cleanup database connection pools

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"e2e-sandbox/internal/data"
+	"PROJECT_NAME/internal/data"
 )
 
 func TestValidateConfigFilePath(t *testing.T) {

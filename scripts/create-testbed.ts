@@ -182,9 +182,42 @@ CREATE TABLE AuditLogs (
       if (stat.isDirectory()) {
         this.copyDirectory(srcPath, destPath);
       } else {
+        // Copy file
         fs.copyFileSync(srcPath, destPath);
+        
+        // Replace PROJECT_NAME in Go files
+        if (item.endsWith('.go')) {
+          this.replaceInFile(destPath, {
+            'PROJECT_NAME': TESTBED_PROJECT_NAME
+          });
+        }
+        
+        // Handle template files
+        if (item === 'go.mod.template') {
+          this.replaceInFile(destPath, {
+            'PROJECT_NAME': TESTBED_PROJECT_NAME
+          });
+          fs.renameSync(destPath, path.join(dest, 'go.mod'));
+        } else if (item === '_package.json') {
+          fs.renameSync(destPath, path.join(dest, 'package.json'));
+        } else if (item === '_gitignore') {
+          fs.renameSync(destPath, path.join(dest, '.gitignore'));
+        }
       }
     }
+  }
+
+  /**
+   * Replace content in file
+   */
+  private replaceInFile(filePath: string, replacements: Record<string, string>): void {
+    let content = fs.readFileSync(filePath, 'utf8');
+    
+    Object.entries(replacements).forEach(([search, replace]) => {
+      content = content.replace(new RegExp(search, 'g'), replace);
+    });
+    
+    fs.writeFileSync(filePath, content, 'utf8');
   }
 
   /**
@@ -270,60 +303,51 @@ SPANNER_EMULATOR_HOST=localhost:9010
     
     const scenarioDir = path.join(newScenarioDir, 'seed-data');
     
-    // Primary DB test data
-    const primarySeedData = [
-      {
-        table: "Companies",
-        data: [
-          {
-            company_id: "test-company-001",
-            name: "Test Company Ltd.",
-            email: "contact@testcompany.com",
-            created_at: "2024-01-01T00:00:00Z",
-            updated_at: "2024-01-01T00:00:00Z"
-          }
-        ]
-      },
-      {
-        table: "Users",
-        data: [
-          {
-            user_id: "test-user-001",
-            company_id: "test-company-001",
-            email: "e2e-test-user@example.com",
-            name: "E2E Test User",
-            password_hash: "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewRRJQc8rDKFJiY6", // test-password-123
-            role: "admin",
-            is_active: true,
-            created_at: "2024-01-01T00:00:00Z",
-            updated_at: "2024-01-01T00:00:00Z"
-          }
-        ]
-      }
-    ];
+    // Primary DB test data - object format for Go parser
+    const primarySeedData = {
+      "Companies": [
+        {
+          company_id: "test-company-001",
+          name: "Test Company Ltd.",
+          email: "contact@testcompany.com",
+          created_at: "2024-01-01T00:00:00Z",
+          updated_at: "2024-01-01T00:00:00Z"
+        }
+      ],
+      "Users": [
+        {
+          user_id: "test-user-001",
+          company_id: "test-company-001",
+          email: "e2e-test-user@example.com",
+          name: "E2E Test User",
+          password_hash: "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewRRJQc8rDKFJiY6", // test-password-123
+          role: "admin",
+          is_active: true,
+          created_at: "2024-01-01T00:00:00Z",
+          updated_at: "2024-01-01T00:00:00Z"
+        }
+      ]
+    };
     
-    // Secondary DB test data
-    const secondarySeedData = [
-      {
-        table: "SystemConfig",
-        data: [
-          {
-            config_key: "app_version",
-            config_value: "1.0.0",
-            description: "Application version",
-            created_at: "2024-01-01T00:00:00Z",
-            updated_at: "2024-01-01T00:00:00Z"
-          },
-          {
-            config_key: "maintenance_mode",
-            config_value: "false",
-            description: "Maintenance mode flag",
-            created_at: "2024-01-01T00:00:00Z",
-            updated_at: "2024-01-01T00:00:00Z"
-          }
-        ]
-      }
-    ];
+    // Secondary DB test data - object format for Go parser
+    const secondarySeedData = {
+      "SystemConfig": [
+        {
+          config_key: "app_version",
+          config_value: "1.0.0",
+          description: "Application version",
+          created_at: "2024-01-01T00:00:00Z",
+          updated_at: "2024-01-01T00:00:00Z"
+        },
+        {
+          config_key: "maintenance_mode",
+          config_value: "false",
+          description: "Maintenance mode flag",
+          created_at: "2024-01-01T00:00:00Z",
+          updated_at: "2024-01-01T00:00:00Z"
+        }
+      ]
+    };
     
     fs.writeFileSync(
       path.join(scenarioDir, 'primary-seed.json'),

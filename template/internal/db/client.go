@@ -12,7 +12,7 @@ import (
 	"google.golang.org/api/iterator"
 	"google.golang.org/grpc/codes"
 
-	"e2e-sandbox/internal/config"
+	"PROJECT_NAME/internal/config"
 )
 
 // SpannerManager manages Spanner database client
