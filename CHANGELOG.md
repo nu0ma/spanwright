@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.0.9] - 2025-07-03
+
+### 🔧 Chores
+- remove: delete redundant .env.example files from template and examples (#3) ([#3](https://github.com/nu0ma/spanwright/pull/3)) ([be01943](https://github.com/nu0ma/spanwright/commit/be01943))
+-  ([- Updat](https://github.com/nu0ma/spanwright/commit/- Updat))
+-  ([- Simpl](https://github.com/nu0ma/spanwright/commit/- Simpl))
+-  ([- Remov](https://github.com/nu0ma/spanwright/commit/- Remov))
+-  ([The .en](https://github.com/nu0ma/spanwright/commit/The .en))
+- Ryota Ishikawa ([generat](https://github.com/nu0ma/spanwright/commit/generat))
+- 0.0.8 ([09b5800](https://github.com/nu0ma/spanwright/commit/09b5800))
+
+
+
 ## [0.0.8] - 2025-07-03
 
 ### ✨ Features
