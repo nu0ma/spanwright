@@ -1,18 +1,15 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
-	"cloud.google.com/go/spanner"
 	"PROJECT_NAME/internal/config"
-	"PROJECT_NAME/internal/db"
 )
 
 func main() {
@@ -40,56 +37,32 @@ func main() {
 		log.Fatalf("Environment configuration error: %v", err)
 	}
 
-	ctx := context.Background()
-	dbConfig, err := config.NewDatabaseConfig(*databaseID)
-	if err != nil {
-		log.Fatalf("Failed to create database config: %v", err)
-	}
-
-	// Create pooled Spanner manager for better performance
-	spannerManager, err := db.NewPooledSpannerManager(ctx, dbConfig)
-	if err != nil {
-		log.Fatalf("Failed to create pooled Spanner manager: %v", err)
-	}
-	defer spannerManager.Close()
+	// Get environment variables for spemu
+	projectID := os.Getenv("PROJECT_ID")
+	instanceID := os.Getenv("INSTANCE_ID")
 	
-	// Print pool statistics
-	stats := spannerManager.GetPoolStats()
-	log.Printf("📊 Connection Pool: %d/%d active, %d idle", 
-		stats.ActiveConnections, stats.MaxConnections, stats.IdleConnections)
-
-	// Read and execute SQL seed file
-	log.Printf("Reading SQL seed data from: %s", *seedFile)
-	sqlContent, err := ioutil.ReadFile(*seedFile)
-	if err != nil {
-		log.Fatalf("Failed to read SQL file: %v", err)
+	if projectID == "" || instanceID == "" {
+		log.Fatal("PROJECT_ID and INSTANCE_ID environment variables are required")
 	}
 
-	// Split SQL content into individual statements
-	statements := splitSQLStatements(string(sqlContent))
-	if len(statements) == 0 {
-		log.Println("No SQL statements found in file")
-		return
-	}
+	// Execute spemu command
+	log.Printf("🌱 Injecting seed data using spemu...")
+	log.Printf("📁 Seed file: %s", *seedFile)
+	log.Printf("🎯 Target: %s/%s/%s", projectID, instanceID, *databaseID)
 
-	log.Printf("Executing %d SQL statements...", len(statements))
+	cmd := exec.Command("spemu",
+		"--project="+projectID,
+		"--instance="+instanceID,
+		"--database="+*databaseID,
+		"--port=9010",
+		*seedFile,
+	)
 
-	// Execute each SQL statement
-	for i, statement := range statements {
-		statement = strings.TrimSpace(statement)
-		if statement == "" {
-			continue
-		}
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 
-		log.Printf("Executing statement %d/%d...", i+1, len(statements))
-		_, err := spannerManager.Client().ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
-			_, err := txn.Update(ctx, spanner.Statement{SQL: statement})
-			return err
-		})
-
-		if err != nil {
-			log.Fatalf("Failed to execute SQL statement %d: %v\nStatement: %s", i+1, err, statement)
-		}
+	if err := cmd.Run(); err != nil {
+		log.Fatalf("spemu execution failed: %v", err)
 	}
 
 	log.Println("✅ Seed data injection completed successfully")
@@ -133,41 +106,4 @@ func validateSeedFilePath(path string) error {
 	}
 	
 	return nil
-}
-
-// splitSQLStatements splits SQL content into individual statements
-// Simple implementation that splits on semicolons, ignoring comments
-func splitSQLStatements(content string) []string {
-	var statements []string
-	lines := strings.Split(content, "\n")
-	var currentStatement strings.Builder
-
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		
-		// Skip empty lines and comments
-		if line == "" || strings.HasPrefix(line, "--") {
-			continue
-		}
-
-		currentStatement.WriteString(line)
-		currentStatement.WriteString(" ")
-
-		// If line ends with semicolon, we have a complete statement
-		if strings.HasSuffix(line, ";") {
-			stmt := strings.TrimSpace(currentStatement.String())
-			if stmt != "" {
-				statements = append(statements, stmt)
-			}
-			currentStatement.Reset()
-		}
-	}
-
-	// Handle any remaining statement without semicolon
-	stmt := strings.TrimSpace(currentStatement.String())
-	if stmt != "" {
-		statements = append(statements, stmt)
-	}
-
-	return statements
 }

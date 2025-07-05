@@ -73,17 +73,12 @@ func printDatabaseSummary(databaseID string) error {
 		return fmt.Errorf("failed to create database config: %v", err)
 	}
 
-	// Create pooled Spanner manager for better performance
-	spannerManager, err := db.NewPooledSpannerManager(ctx, dbConfig)
+	// Create Spanner manager
+	spannerManager, err := db.NewSpannerManager(ctx, dbConfig)
 	if err != nil {
-		return fmt.Errorf("failed to create pooled Spanner manager: %v", err)
+		return fmt.Errorf("failed to create Spanner manager: %v", err)
 	}
 	defer spannerManager.Close()
-
-	// Print pool statistics
-	stats := spannerManager.GetPoolStats()
-	fmt.Printf("📊 Connection Pool: %d/%d active, %d idle\n\n", 
-		stats.ActiveConnections, stats.MaxConnections, stats.IdleConnections)
 
 	// Print table summary using shared utility
 	return db.PrintTableSummary(ctx, spannerManager.Client(), databaseID)
@@ -102,10 +97,10 @@ func validateDatabase(databaseID, configPath string) (*data.ValidationResult, er
 		return nil, fmt.Errorf("failed to read/parse config file: %v", err)
 	}
 
-	// Create pooled Spanner manager for better performance
-	spannerManager, err := db.NewPooledSpannerManager(ctx, dbConfig)
+	// Create Spanner manager
+	spannerManager, err := db.NewSpannerManager(ctx, dbConfig)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create pooled Spanner manager: %v", err)
+		return nil, fmt.Errorf("failed to create Spanner manager: %v", err)
 	}
 	defer spannerManager.Close()
 

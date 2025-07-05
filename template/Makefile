@@ -206,17 +206,24 @@ schema: check-wrench
 	@echo "✅ Schema application using wrench completed"
 
 .PHONY: seed
-seed: go-deps
+seed: ensure-spemu
 	@if [ -z "$(SEED_FILE)" ]; then \
 		echo "❌ Error: SEED_FILE is required"; \
 		echo "Usage: make seed SEED_FILE=/path/to/seed.sql DATABASE_ID=my-db"; \
 		exit 1; \
 	fi
-	@echo "🌱 Injecting seed data..."
+	@echo "🌱 Injecting seed data using spemu..."
 	@echo "📁 Seed data: $(SEED_FILE)"
 	@echo "🎯 Target DB: $(DATABASE_ID)"
-	@SPANNER_EMULATOR_HOST=localhost:9010 SCHEMA_PATH=$(SCHEMA_PATH) go run ./cmd/seed-injector --database-id=$(DATABASE_ID) --seed-file=$(SEED_FILE)
+	@SPANNER_EMULATOR_HOST=localhost:9010 spemu --project=$(PROJECT_ID) --instance=$(INSTANCE_ID) --database=$(DATABASE_ID) --port=9010 $(SEED_FILE)
 	@echo "✅ Seed data injection completed"
+
+.PHONY: ensure-spemu
+ensure-spemu:
+	@if ! command -v spemu >/dev/null 2>&1; then \
+		echo "📦 Installing spemu..."; \
+		go install github.com/nu0ma/spemu@latest; \
+	fi
 
 .PHONY: check-data
 check-data: go-deps
