@@ -1,23 +1,21 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
 	"PROJECT_NAME/internal/config"
-	"PROJECT_NAME/internal/data"
-	"PROJECT_NAME/internal/db"
 )
 
 func main() {
 	// Parse command-line flags for seed injection
 	var databaseID = flag.String("database-id", "", "Database ID to inject seed data")
-	var seedFile = flag.String("seed-file", "", "Path to seed data file")
+	var seedFile = flag.String("seed-file", "", "Path to SQL seed data file")
 	flag.Parse()
 
 	if *databaseID == "" || *seedFile == "" {
@@ -39,60 +37,32 @@ func main() {
 		log.Fatalf("Environment configuration error: %v", err)
 	}
 
-	ctx := context.Background()
-	dbConfig, err := config.NewDatabaseConfig(*databaseID)
-	if err != nil {
-		log.Fatalf("Failed to create database config: %v", err)
-	}
-
-	// Create pooled Spanner manager for better performance
-	spannerManager, err := db.NewPooledSpannerManager(ctx, dbConfig)
-	if err != nil {
-		log.Fatalf("Failed to create pooled Spanner manager: %v", err)
-	}
-	defer spannerManager.Close()
+	// Get environment variables for spemu
+	projectID := os.Getenv("PROJECT_ID")
+	instanceID := os.Getenv("INSTANCE_ID")
 	
-	// Print pool statistics
-	stats := spannerManager.GetPoolStats()
-	log.Printf("📊 Connection Pool: %d/%d active, %d idle", 
-		stats.ActiveConnections, stats.MaxConnections, stats.IdleConnections)
-
-	// List all tables to get schema information
-	log.Println("Getting table schema information...")
-	tables, err := db.ListTables(ctx, spannerManager.Client())
-	if err != nil {
-		log.Fatalf("Failed to list tables: %v", err)
+	if projectID == "" || instanceID == "" {
+		log.Fatal("PROJECT_ID and INSTANCE_ID environment variables are required")
 	}
 
-	if len(tables) == 0 {
-		log.Fatal("No tables found. Please apply schema first using 'make schema'")
-	}
+	// Execute spemu command
+	log.Printf("🌱 Injecting seed data using spemu...")
+	log.Printf("📁 Seed file: %s", *seedFile)
+	log.Printf("🎯 Target: %s/%s/%s", projectID, instanceID, *databaseID)
 
-	log.Printf("Found %d tables in database", len(tables))
+	cmd := exec.Command("spemu",
+		"--project="+projectID,
+		"--instance="+instanceID,
+		"--database="+*databaseID,
+		"--port=9010",
+		*seedFile,
+	)
 
-	// Get schema path from environment variable
-	schemaPath := os.Getenv("SCHEMA_PATH")
-	if schemaPath == "" {
-		log.Fatal("SCHEMA_PATH environment variable is required for schema parsing")
-	}
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 
-	// Read DDL files from schema path
-	log.Printf("Reading schema files from: %s", schemaPath)
-	ddlStatements, err := db.ReadSchemaFiles(schemaPath)
-	if err != nil {
-		log.Fatalf("Failed to read schema files from %s: %v", schemaPath, err)
-	}
-
-	// Parse schema information from DDL statements using existing function
-	schemaMap := db.ParseSchemaFromDDL(ddlStatements)
-
-	// Create seed data processor
-	processor := data.NewSeedDataProcessor(schemaMap)
-
-	// Process seed data
-	log.Printf("Processing seed data from: %s", *seedFile)
-	if err := processor.ProcessSeedData(ctx, spannerManager.Client(), *seedFile, tables); err != nil {
-		log.Fatalf("Failed to process seed data: %v", err)
+	if err := cmd.Run(); err != nil {
+		log.Fatalf("spemu execution failed: %v", err)
 	}
 
 	log.Println("✅ Seed data injection completed successfully")
@@ -124,9 +94,9 @@ func validateSeedFilePath(path string) error {
 		return fmt.Errorf("seed file must be a regular file, not directory or special file")
 	}
 	
-	// Check file extension (should be .json)
-	if !strings.HasSuffix(strings.ToLower(cleanPath), ".json") {
-		return fmt.Errorf("seed file must have .json extension")
+	// Check file extension (should be .sql)
+	if !strings.HasSuffix(strings.ToLower(cleanPath), ".sql") {
+		return fmt.Errorf("seed file must have .sql extension")
 	}
 	
 	// Check file size (prevent extremely large files)
