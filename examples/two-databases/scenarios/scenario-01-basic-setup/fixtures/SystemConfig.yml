@@ -1,5 +1,0 @@
-# Minimal SystemConfig fixture for testfixtures
-- ConfigID: "config-001"
-  ConfigKey: "test_mode"
-  ConfigValue: "enabled"
-  CreatedAt: "2024-01-01T00:00:00Z"
