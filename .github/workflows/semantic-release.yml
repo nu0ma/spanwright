@@ -1,0 +1,70 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read # for checkout
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # to be able to publish a GitHub release
+      issues: write # to be able to comment on released issues
+      pull-requests: write # to be able to comment on released pull requests
+      id-token: write # to enable use of OIDC for npm provenance
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+          
+      - name: Read Go version
+        id: go-version
+        run: echo "version=$(grep '^go ' .tool-versions | cut -d' ' -f2)" >> $GITHUB_OUTPUT
+        
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ steps.go-version.outputs.version }}
+          cache: true
+          
+      - name: Install wrench
+        run: go install github.com/cloudspannerecosystem/wrench@latest
+        
+      - name: Install dependencies
+        run: npm clean-install
+        
+      - name: Verify dependency integrity
+        run: npm audit signatures
+        
+      - name: Build project
+        run: npm run build
+        
+      - name: Install Playwright with system dependencies
+        run: npx playwright install --with-deps
+        
+      - name: Run tests
+        run: npm test
+        
+      - name: Run linting
+        run: npm run lint
+        
+      - name: Check TypeScript compilation
+        run: npx tsc --noEmit
+        
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npx semantic-release
