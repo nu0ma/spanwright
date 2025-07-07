@@ -16,7 +16,7 @@ DOCKER_IMAGE ?= gcr.io/cloud-spanner-emulator/emulator
 DOCKER_CONTAINER_NAME ?= spanner-emulator
 DOCKER_PORT ?= 9010
 
-.PHONY: help init clean start stop setup run-all test-e2e test-scenario-only reset-scenario-data
+.PHONY: help init clean start stop setup run-all test-e2e test-scenario-only reset-scenario-data debug-containers force-cleanup
 
 help: ## Show this help
 	@echo "Spanwright E2E Testing Framework"
@@ -45,22 +45,58 @@ setup-playwright: ## Setup Playwright
 
 start: ## Start Spanner emulator
 	@echo "🐳 Starting Spanner emulator..."
+	@echo "🔍 Checking for existing containers..."
 	@if docker ps -a --format '{{.Names}}' | grep -q "^$(DOCKER_CONTAINER_NAME)$$"; then \
 		echo "📦 Existing container found, stopping and removing..."; \
 		docker stop $(DOCKER_CONTAINER_NAME) >/dev/null 2>&1 || true; \
 		docker rm -f $(DOCKER_CONTAINER_NAME) >/dev/null 2>&1 || true; \
-		sleep 2; \
+		sleep 3; \
+	fi
+	@echo "🔌 Checking port availability..."
+	@if lsof -i :$(DOCKER_PORT) >/dev/null 2>&1; then \
+		echo "⚠️ Port $(DOCKER_PORT) is still in use, waiting..."; \
+		sleep 5; \
+		if lsof -i :$(DOCKER_PORT) >/dev/null 2>&1; then \
+			echo "❌ Port $(DOCKER_PORT) is still occupied. Please check for other processes."; \
+			exit 1; \
+		fi; \
 	fi
 	@echo "🚀 Starting new container..."
 	@docker run -d --name $(DOCKER_CONTAINER_NAME) -p $(DOCKER_PORT):9010 $(DOCKER_IMAGE) >/dev/null
 	@echo "⏳ Waiting for emulator to be ready..."
-	@sleep 15
+	@sleep 3
+	@echo "🔍 Verifying container health..."
+	@for i in 1 2 3 4 5; do \
+		if docker ps --format '{{.Names}}' | grep -q "^$(DOCKER_CONTAINER_NAME)$$"; then \
+			echo "✅ Container is running"; \
+			break; \
+		fi; \
+		echo "⏳ Waiting for container to start (attempt $$i/5)..."; \
+		sleep 3; \
+		if [ $$i -eq 5 ]; then \
+			echo "❌ Container failed to start properly"; \
+			docker logs $(DOCKER_CONTAINER_NAME) 2>/dev/null || true; \
+			exit 1; \
+		fi; \
+	done
+	@sleep 12
 	@echo "✅ Spanner emulator ready on localhost:$(DOCKER_PORT)"
 
 stop: ## Stop Spanner emulator
 	@echo "🛑 Stopping Spanner emulator..."
-	@docker stop $(DOCKER_CONTAINER_NAME) 2>/dev/null || true
-	@docker rm -f $(DOCKER_CONTAINER_NAME) 2>/dev/null || true
+	@if docker ps -a --format '{{.Names}}' | grep -q "^$(DOCKER_CONTAINER_NAME)$$"; then \
+		echo "📦 Container found, stopping..."; \
+		docker stop $(DOCKER_CONTAINER_NAME) 2>/dev/null || true; \
+		docker rm -f $(DOCKER_CONTAINER_NAME) 2>/dev/null || true; \
+		echo "🔍 Verifying container removal..."; \
+		sleep 2; \
+		if docker ps -a --format '{{.Names}}' | grep -q "^$(DOCKER_CONTAINER_NAME)$$"; then \
+			echo "⚠️ Container still exists, forcing removal..."; \
+			docker rm -f $(DOCKER_CONTAINER_NAME) 2>/dev/null || true; \
+		fi; \
+	else \
+		echo "📦 No container found to stop"; \
+	fi
 	@echo "✅ Spanner emulator stopped"
 
 clean: ## Clean up containers and artifacts
@@ -70,6 +106,7 @@ clean: ## Clean up containers and artifacts
 
 setup: ## Setup databases and schemas
 	@echo "🏗️ Setting up databases..."
+	@trap 'echo "🚨 Setup interrupted! Cleaning up..."; $(MAKE) stop; exit 1' INT TERM
 	@$(MAKE) start
 	@$(MAKE) setup-primary
 ifeq ($(DB_COUNT),2)
@@ -108,12 +145,18 @@ run-all: run-all-scenarios ## Alias for run-all-scenarios
 run-all-scenarios: ## Run all scenarios
 	@echo "🚀 Running all scenarios..."
 	@echo "🏗️ Setting up once for all scenarios..."
+	@trap 'echo "🚨 Interrupted! Cleaning up..."; $(MAKE) stop; exit 1' INT TERM
 	@$(MAKE) setup
-	@for scenario in $$(ls scenarios/ | grep -E '^(scenario|example)-'); do \
+	@scenarios=$$(ls scenarios/ | grep -E '^(scenario|example)-'); \
+	echo "📋 Found scenarios: $$scenarios"; \
+	for scenario in $$scenarios; do \
 		echo "▶️ Running $$scenario"; \
-		SCENARIO=$$scenario $(MAKE) reset-scenario-data || exit 1; \
-		SCENARIO=$$scenario $(MAKE) test-scenario-only || exit 1; \
+		SCENARIO=$$scenario $(MAKE) reset-scenario-data || { echo "❌ Failed to reset data for $$scenario"; $(MAKE) stop; exit 1; }; \
+		KEEP_EMULATOR_AFTER_TESTS=true SCENARIO=$$scenario $(MAKE) test-scenario-only || { echo "❌ Failed to run $$scenario"; $(MAKE) stop; exit 1; }; \
+		echo "✅ Completed $$scenario"; \
 	done
+	@echo "🧹 Cleaning up after all scenarios..."
+	@$(MAKE) stop
 	@echo "✅ All scenarios completed"
 
 test-e2e: ## Run Playwright E2E tests
@@ -145,3 +188,27 @@ build: ## Build Go tools
 dev: ## Development mode - setup and watch
 	@$(MAKE) setup
 	@echo "👀 Development mode - run 'make test-e2e' to test"
+
+debug-containers: ## Debug Docker container status
+	@echo "🔍 Docker Container Debug Information"
+	@echo "====================================="
+	@echo "📋 All containers:"
+	@docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" || true
+	@echo ""
+	@echo "🔍 Spanner emulator containers:"
+	@docker ps -a --filter "name=spanner-emulator" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" || true
+	@echo ""
+	@echo "🔌 Port usage for $(DOCKER_PORT):"
+	@lsof -i :$(DOCKER_PORT) || echo "Port $(DOCKER_PORT) is free"
+	@echo ""
+	@echo "📝 Container logs (last 20 lines):"
+	@docker logs spanner-emulator --tail 20 2>/dev/null || echo "No logs available"
+
+force-cleanup: ## Force cleanup of all emulator containers and processes
+	@echo "🧹 Force cleanup of Spanner emulator..."
+	@echo "🛑 Stopping all spanner-emulator containers..."
+	@docker ps -a --filter "name=spanner-emulator" --format "{{.Names}}" | xargs -r docker stop 2>/dev/null || true
+	@docker ps -a --filter "name=spanner-emulator" --format "{{.Names}}" | xargs -r docker rm -f 2>/dev/null || true
+	@echo "🔌 Killing processes on port $(DOCKER_PORT)..."
+	@lsof -ti :$(DOCKER_PORT) | xargs -r kill -9 2>/dev/null || true
+	@echo "✅ Force cleanup completed"
