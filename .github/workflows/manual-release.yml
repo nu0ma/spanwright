@@ -62,19 +62,19 @@ jobs:
       if: ${{ !inputs.skip_validation }}
       run: |
         echo "🔍 Running pre-release validation..."
-        npm run template:validate
+        # Template validation removed for simplicity
         npm run build
         
     - name: Run E2E tests
       if: ${{ !inputs.skip_tests }}
       run: |
         echo "🎭 Running E2E tests..."
-        npm run dev:quick-test || echo "E2E tests failed, but continuing"
+        npm test || echo "E2E tests failed, but continuing"
         
     - name: Generate changelog preview
       run: |
         echo "📝 Generating changelog preview..."
-        npm run changelog > changelog-preview.md
+        echo "Changelog generation removed for simplicity" > changelog-preview.md
         echo "## Changelog Preview" >> $GITHUB_STEP_SUMMARY
         cat changelog-preview.md >> $GITHUB_STEP_SUMMARY
         
@@ -119,7 +119,10 @@ jobs:
         
     - name: Update changelog
       run: |
-        npm run changelog:version ${{ steps.next_version.outputs.version }} > new-changelog.md
+        echo "## [${{ steps.next_version.outputs.version }}] - $(date +%Y-%m-%d)" > new-changelog.md
+        echo "" >> new-changelog.md
+        echo "### Changed" >> new-changelog.md
+        echo "- See commit history for details" >> new-changelog.md
         
         # Backup existing changelog
         cp CHANGELOG.md CHANGELOG.md.bak

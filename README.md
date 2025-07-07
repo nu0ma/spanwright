@@ -122,17 +122,9 @@ Generated projects provide:
 ### Template Development
 
 ```bash
-# Validate templates
-npm run template:validate
-
-# Create development testbed
-npm run dev:create-testbed
-
-# Run full E2E test
-npm run dev:test-e2e
-
-# Quick development cycle
-npm run dev:quick-test
+# Build and test the CLI
+npm run build
+npm test
 ```
 
 ### Contributing

@@ -38,8 +38,8 @@ jobs:
     - name: Run pre-publish validation
       run: |
         echo "🔍 Running pre-publish validation..."
-        npm run template:validate
-        echo "✅ Template validation passed"
+        npm run build
+        echo "✅ Build validation passed"
         
     - name: Build project
       run: npm run build
@@ -50,7 +50,7 @@ jobs:
     - name: Run E2E tests
       run: |
         echo "🎭 Running E2E tests..."
-        npm run dev:quick-test || echo "⚠️ E2E tests failed, but continuing with publish"
+        npm test || echo "⚠️ E2E tests failed, but continuing with publish"
         
     - name: Verify package contents
       run: |

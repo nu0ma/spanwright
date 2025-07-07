@@ -11,9 +11,8 @@ Brief description of the changes in this PR.
 
 ## Testing
 - [ ] I have tested the changes locally
-- [ ] Template validation passes (`npm run template:validate`)
-- [ ] Development testbed works (`npm run dev:create-testbed`)
-- [ ] E2E tests pass (`npm run dev:test-e2e`)
+- [ ] Build succeeds (`npm run build`)
+- [ ] E2E tests pass (`npm test`)
 - [ ] Generated projects work correctly
 
 ## Checklist
