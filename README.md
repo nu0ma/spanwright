@@ -1,7 +1,5 @@
 # Spanwright
 
-> **Note**: This is an unofficial third-party tool, not affiliated with Google Cloud or the Cloud Spanner team.
-
 A CLI tool for generating Cloud Spanner E2E testing framework projects that combine Go database tools with Playwright browser automation.
 
 ## Quick Start
@@ -29,22 +27,6 @@ make run-all-scenarios
 - **Docker Integration**: Automated Spanner emulator management
 - **High-Performance Tools**: Go-based database validation and seeding
 - **Make-Based Workflows**: Automated development and testing workflows
-
-## Technology Stack
-
-### Go
-- **cloud.google.com/go/spanner** - Official Cloud Spanner SDK
-- **github.com/go-testfixtures/testfixtures/v3** - YAML-based database fixtures
-- **github.com/googleapis/go-sql-spanner** - SQL interface for Spanner
-
-### TypeScript/Node.js
-- **@playwright/test** - E2E testing framework
-- **@types/node** - TypeScript definitions
-- **typescript** - Type-safe JavaScript
-
-### External Tools
-- **wrench** - Spanner schema migration tool
-- **Docker** - Container runtime for emulator
 
 ## Prerequisites
 
