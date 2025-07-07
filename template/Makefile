@@ -14,7 +14,7 @@ SCENARIO ?= scenario-01-basic-setup
 # Docker settings
 DOCKER_IMAGE ?= gcr.io/cloud-spanner-emulator/emulator
 DOCKER_CONTAINER_NAME ?= spanner-emulator
-DOCKER_PORT ?= 9010
+DOCKER_SPANNER_PORT ?= 9010
 
 .PHONY: help init clean start stop setup run-all test-e2e
 
@@ -50,10 +50,10 @@ start: ## Start Spanner emulator
 		docker stop $(DOCKER_CONTAINER_NAME) >/dev/null 2>&1 || true; \
 		docker rm $(DOCKER_CONTAINER_NAME) >/dev/null 2>&1 || true; \
 	fi
-	@docker run -d --name $(DOCKER_CONTAINER_NAME) -p $(DOCKER_PORT):9010 $(DOCKER_IMAGE) >/dev/null
+	@docker run -d --name $(DOCKER_CONTAINER_NAME) -p $(DOCKER_SPANNER_PORT):9010 $(DOCKER_IMAGE) >/dev/null
 	@echo "⏳ Waiting for emulator to be ready..."
 	@sleep 15
-	@echo "✅ Spanner emulator ready on localhost:$(DOCKER_PORT)"
+	@echo "✅ Spanner emulator ready on localhost:$(DOCKER_SPANNER_PORT)"
 
 stop: ## Stop Spanner emulator
 	@echo "🛑 Stopping Spanner emulator..."
@@ -76,18 +76,18 @@ endif
 
 setup-primary: ## Setup primary database
 	@echo "🔶 Setting up primary database..."
-	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_PORT) wrench instance create --project $(PROJECT_ID) --instance $(INSTANCE_ID) >/dev/null 2>&1 || true
-	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_PORT) wrench reset --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(PRIMARY_DB_ID) --directory "$$(pwd)/$(PRIMARY_DB_SCHEMA_PATH)" >/dev/null 2>&1 || \
-	SPANNER_EMULATOR_HOST=localhost:$(DOCKER_PORT) wrench create --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(PRIMARY_DB_ID) --directory "$$(pwd)/$(PRIMARY_DB_SCHEMA_PATH)" >/dev/null 2>&1
+	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench instance create --project $(PROJECT_ID) --instance $(INSTANCE_ID) >/dev/null 2>&1 || true
+	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench reset --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(PRIMARY_DB_ID) --directory "$$(pwd)/$(PRIMARY_DB_SCHEMA_PATH)" --schema_file "001_initial_schema.sql" >/dev/null 2>&1 || \
+	SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench create --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(PRIMARY_DB_ID) --directory "$$(pwd)/$(PRIMARY_DB_SCHEMA_PATH)" --schema_file "001_initial_schema.sql" >/dev/null 2>&1
 	@echo "✅ Primary database ready"
-	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_PORT) go run cmd/seed-injector/main.go --database-id $(PRIMARY_DB_ID) --fixture-dir "$$(pwd)/scenarios/$(SCENARIO)/fixtures"
+	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) go run cmd/seed-injector/main.go --database-id $(PRIMARY_DB_ID) --fixture-dir "$$(pwd)/scenarios/$(SCENARIO)/fixtures"
 
 setup-secondary: ## Setup secondary database
 	@echo "☁️ Setting up secondary database..."
-	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_PORT) wrench reset --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(SECONDARY_DB_ID) --directory "$$(pwd)/$(SECONDARY_DB_SCHEMA_PATH)" >/dev/null 2>&1 || \
-	SPANNER_EMULATOR_HOST=localhost:$(DOCKER_PORT) wrench create --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(SECONDARY_DB_ID) --directory "$$(pwd)/$(SECONDARY_DB_SCHEMA_PATH)" >/dev/null 2>&1
+	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench reset --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(SECONDARY_DB_ID) --directory "$$(pwd)/$(SECONDARY_DB_SCHEMA_PATH)" --schema_file "001_initial_schema.sql" >/dev/null 2>&1 || \
+	SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench create --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(SECONDARY_DB_ID) --directory "$$(pwd)/$(SECONDARY_DB_SCHEMA_PATH)" --schema_file "001_initial_schema.sql" >/dev/null 2>&1
 	@echo "✅ Secondary database ready"
-	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_PORT) go run cmd/seed-injector/main.go --database-id $(SECONDARY_DB_ID) --fixture-dir "$$(pwd)/scenarios/$(SCENARIO)/fixtures"
+	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) go run cmd/seed-injector/main.go --database-id $(SECONDARY_DB_ID) --fixture-dir "$$(pwd)/scenarios/$(SCENARIO)/fixtures"
 
 test-scenario: ## Run specific scenario test
 	@echo "🧪 Running scenario: $(SCENARIO)"

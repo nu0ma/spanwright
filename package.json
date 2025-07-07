@@ -31,7 +31,16 @@
     "examples": "npx ts-node scripts/create-examples.ts",
     "update-go": "npx ts-node scripts/update-go-version.ts",
     "release": "./scripts/release.sh",
-    "preversion": "npm run validate && npm run build"
+    "preversion": "npm run validate && npm run build",
+    "template:validate": "npx ts-node scripts/validate.ts",
+    "template:validate-go": "npx ts-node scripts/validate.ts --go-only",
+    "template:validate-ts": "npx ts-node scripts/validate.ts --ts-only",
+    "template:validate-config": "npx ts-node scripts/validate.ts --config-only",
+    "dev:create-testbed": "npx ts-node scripts/create-testbed.ts",
+    "dev:test-e2e": "npx ts-node scripts/run-e2e-test.ts",
+    "dev:watch": "npm run template:validate && npm run dev:create-testbed",
+    "dev:quick-test": "npm run template:validate && npm run dev:create-testbed && npm run dev:test-e2e",
+    "update-go-version": "npx ts-node scripts/update-go-version.ts"
   },
   "keywords": [
     "spanner",
