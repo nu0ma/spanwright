@@ -1,5 +1,0 @@
-- OrderID: order-001
-  UserID: user-001
-  TotalAmount: 2500
-  Status: completed
-  OrderDate: 2024-01-15T10:30:00Z
