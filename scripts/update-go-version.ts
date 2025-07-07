@@ -12,23 +12,17 @@ const GO_VERSION_LOCATIONS = [
     ]
   },
   {
-    file: '.github/workflows/ci.yml',
+    file: '.mise.toml',
     patterns: [
-      { regex: /go-version: '\d+\.\d+(\.\d+)?'/g, replacement: (version: string) => `go-version: '${version.split('.').slice(0, 2).join('.')}'` }
+      { regex: /^go = "\d+\.\d+(\.\d+)?"$/m, replacement: (version: string) => `go = "${version}"` }
     ]
   },
   {
-    file: '.github/workflows/template-validation.yml',
+    file: '.tool-versions',
     patterns: [
-      { regex: /go-version: '\d+\.\d+(\.\d+)?'/g, replacement: (version: string) => `go-version: '${version.split('.').slice(0, 2).join('.')}'` }
+      { regex: /^go \d+\.\d+(\.\d+)?$/m, replacement: (version: string) => `go ${version}` }
     ]
   },
-  {
-    file: 'scripts/validate-template.ts',
-    patterns: [
-      { regex: /go \d+\.\d+(\.\d+)?/g, replacement: (version: string) => `go ${version}` }
-    ]
-  }
 ];
 
 function updateGoVersion(newVersion: string) {
@@ -71,10 +65,10 @@ function updateGoVersion(newVersion: string) {
   
   console.log(`\n🎉 Successfully updated Go version in ${updatedFiles} files`);
   console.log(`\n📋 Next steps:`);
-  console.log(`   1. Run: npm run template:validate`);
-  console.log(`   2. Run: npm run dev:create-testbed`);
-  console.log(`   3. Test: npm run dev:test-e2e`);
-  console.log(`   4. Commit changes if everything works`);
+  console.log(`   1. Run: npm run build`);
+  console.log(`   2. Run: npm test`);
+  console.log(`   3. Commit changes if everything works`);
+  console.log(`\n💡 Note: GitHub workflows now read from .tool-versions file`);
 }
 
 // CLI usage
