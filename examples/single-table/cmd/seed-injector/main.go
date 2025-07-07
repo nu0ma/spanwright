@@ -12,7 +12,7 @@ import (
 	"sort"
 	"strings"
 
-	"PROJECT_NAME/internal/spanwright"
+	"single-table/internal/spanwright"
 	"github.com/go-testfixtures/testfixtures/v3"
 	_ "github.com/googleapis/go-sql-spanner"
 )

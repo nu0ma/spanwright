@@ -8,11 +8,11 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 
-	"two-databases/internal/config"
-	"two-databases/internal/retry"
+	"two-databases/internal/spanwright"
 	"github.com/go-testfixtures/testfixtures/v3"
 	_ "github.com/googleapis/go-sql-spanner"
 )
@@ -28,7 +28,7 @@ func main() {
 	}
 
 	// Validate database ID format to prevent injection attacks
-	if err := config.ValidateDatabaseID(*databaseID); err != nil {
+	if err := validateDatabaseID(*databaseID); err != nil {
 		log.Fatalf("Invalid database ID: %v", err)
 	}
 
@@ -37,25 +37,18 @@ func main() {
 		log.Fatalf("Invalid fixture directory path: %v", err)
 	}
 
-	// Load .env file and validate required environment variables
-	if err := config.LoadEnvFile(); err != nil {
-		log.Fatalf("Environment configuration error: %v", err)
-	}
-
-	// Get environment variables
-	projectID := os.Getenv("PROJECT_ID")
-	instanceID := os.Getenv("INSTANCE_ID")
-	
-	if projectID == "" || instanceID == "" {
-		log.Fatal("PROJECT_ID and INSTANCE_ID environment variables are required")
+	// Load configuration
+	config, err := spanwright.LoadConfig()
+	if err != nil {
+		log.Fatalf("Configuration error: %v", err)
 	}
 
 	// Execute seed injection with retry logic
 	log.Printf("🌱 Injecting seed data using testfixtures...")
 	log.Printf("📁 Fixture directory: %s", *fixtureDir)
-	log.Printf("🎯 Target: %s/%s/%s", projectID, instanceID, *databaseID)
+	log.Printf("🎯 Target: %s/%s/%s", config.ProjectID, config.InstanceID, *databaseID)
 
-	if err := injectSeedData(projectID, instanceID, *databaseID, *fixtureDir); err != nil {
+	if err := injectSeedData(config.ProjectID, config.InstanceID, *databaseID, *fixtureDir); err != nil {
 		log.Fatalf("Seed injection failed: %v", err)
 	}
 
@@ -73,7 +66,7 @@ func injectSeedData(projectID, instanceID, databaseID, fixtureDir string) error 
 	var db *sql.DB
 	var err error
 	
-	err = retry.DatabaseOperation(ctx, "Open database connection", func(ctx context.Context, attempt int) error {
+	err = spanwright.WithRetry(ctx, "Open database connection", func(ctx context.Context, attempt int) error {
 		var openErr error
 		db, openErr = sql.Open("spanner", dsn)
 		if openErr != nil {
@@ -104,7 +97,7 @@ func injectSeedData(projectID, instanceID, databaseID, fixtureDir string) error 
 		return fmt.Errorf("failed to get fixture files: %v", err)
 	}
 
-	err = retry.DatabaseOperation(ctx, "Create testfixtures loader", func(ctx context.Context, attempt int) error {
+	err = spanwright.WithRetry(ctx, "Create testfixtures loader", func(ctx context.Context, attempt int) error {
 		var loadErr error
 		fixtures, loadErr = testfixtures.New(
 			testfixtures.Database(db),
@@ -120,7 +113,7 @@ func injectSeedData(projectID, instanceID, databaseID, fixtureDir string) error 
 	}
 
 	// Load fixtures with retry logic
-	err = retry.DatabaseOperation(ctx, "Load fixtures", func(ctx context.Context, attempt int) error {
+	err = spanwright.WithRetry(ctx, "Load fixtures", func(ctx context.Context, attempt int) error {
 		return fixtures.Load()
 	})
 	
@@ -286,5 +279,23 @@ func validateFixtureDir(path string) error {
 		return fmt.Errorf("fixture directory must contain at least one YAML file (.yml or .yaml)")
 	}
 	
+	return nil
+}
+
+// validateDatabaseID validates that a database ID is safe
+func validateDatabaseID(databaseID string) error {
+	if databaseID == "" {
+		return fmt.Errorf("database ID cannot be empty")
+	}
+
+	if len(databaseID) > 64 {
+		return fmt.Errorf("database ID exceeds maximum length of 64 characters")
+	}
+
+	validPattern := regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_-]*$`)
+	if !validPattern.MatchString(databaseID) {
+		return fmt.Errorf("database ID contains invalid characters")
+	}
+
 	return nil
 }

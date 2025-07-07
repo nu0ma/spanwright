@@ -315,6 +315,11 @@ SPANNER_EMULATOR_HOST=localhost:9010
 
     const scenarioDir = path.join(newScenarioDir, 'seed-data');
 
+    // Ensure seed-data directory exists
+    if (!fs.existsSync(scenarioDir)) {
+      fs.mkdirSync(scenarioDir, { recursive: true });
+    }
+
     // Primary DB test data - matches template expected data
     const primarySeedData = {
       Users: [
@@ -534,7 +539,7 @@ SPANNER_EMULATOR_HOST=localhost:9010
 
     // Generate Users INSERT statements
     if (data.Users && data.Users.length > 0) {
-      const userValues = data.Users.map((user: Record<string, unknown>) => 
+      const userValues = (data.Users as Record<string, unknown>[]).map((user: Record<string, unknown>) => 
         `  ('${user.UserID}', '${user.Name}', '${user.Email}', ${user.Status}, '${user.CreatedAt}')`
       ).join(',\n');
       statements.push(`INSERT INTO Users (UserID, Name, Email, Status, CreatedAt) VALUES\n${userValues};`);
@@ -543,7 +548,7 @@ SPANNER_EMULATOR_HOST=localhost:9010
     // Generate Products INSERT statements
     if (data.Products && data.Products.length > 0) {
       statements.push('\n-- Insert Products');
-      const productValues = data.Products.map((product: Record<string, unknown>) => 
+      const productValues = (data.Products as Record<string, unknown>[]).map((product: Record<string, unknown>) => 
         `  ('${product.ProductID}', '${product.Name}', ${product.Price}, '${product.CategoryID}', ${product.IsActive})`
       ).join(',\n');
       statements.push(`INSERT INTO Products (ProductID, Name, Price, CategoryID, IsActive) VALUES\n${productValues};`);
@@ -552,7 +557,7 @@ SPANNER_EMULATOR_HOST=localhost:9010
     // Generate Orders INSERT statements
     if (data.Orders && data.Orders.length > 0) {
       statements.push('\n-- Insert Orders');
-      const orderValues = data.Orders.map((order: Record<string, unknown>) => 
+      const orderValues = (data.Orders as Record<string, unknown>[]).map((order: Record<string, unknown>) => 
         `  ('${order.OrderID}', '${order.UserID}', ${order.TotalAmount}, '${order.Status}', '${order.OrderDate}')`
       ).join(',\n');
       statements.push(`INSERT INTO Orders (OrderID, UserID, TotalAmount, Status, OrderDate) VALUES\n${orderValues};`);
@@ -561,7 +566,7 @@ SPANNER_EMULATOR_HOST=localhost:9010
     // Generate OrderItems INSERT statements
     if (data.OrderItems && data.OrderItems.length > 0) {
       statements.push('\n-- Insert OrderItems');
-      const orderItemValues = data.OrderItems.map((item: Record<string, unknown>) => 
+      const orderItemValues = (data.OrderItems as Record<string, unknown>[]).map((item: Record<string, unknown>) => 
         `  ('${item.OrderItemID}', '${item.OrderID}', '${item.ProductID}', ${item.Quantity}, ${item.UnitPrice})`
       ).join(',\n');
       statements.push(`INSERT INTO OrderItems (OrderItemID, OrderID, ProductID, Quantity, UnitPrice) VALUES\n${orderItemValues};`);
@@ -581,7 +586,7 @@ SPANNER_EMULATOR_HOST=localhost:9010
 
     // Generate Analytics INSERT statements
     if (data.Analytics && data.Analytics.length > 0) {
-      const analyticsValues = data.Analytics.map((analytics: Record<string, unknown>) => 
+      const analyticsValues = (data.Analytics as Record<string, unknown>[]).map((analytics: Record<string, unknown>) => 
         `  ('${analytics.AnalyticsID}', '${analytics.UserID}', '${analytics.EventType}', '${analytics.PageURL}', '${analytics.Timestamp}')`
       ).join(',\n');
       statements.push(`INSERT INTO Analytics (AnalyticsID, UserID, EventType, PageURL, Timestamp) VALUES\n${analyticsValues};`);
@@ -590,7 +595,7 @@ SPANNER_EMULATOR_HOST=localhost:9010
     // Generate UserLogs INSERT statements
     if (data.UserLogs && data.UserLogs.length > 0) {
       statements.push('\n-- Insert UserLogs');
-      const userLogValues = data.UserLogs.map((log: Record<string, unknown>) => 
+      const userLogValues = (data.UserLogs as Record<string, unknown>[]).map((log: Record<string, unknown>) => 
         `  ('${log.LogID}', '${log.UserID}', '${log.Action}', '${log.IpAddress}', '${log.UserAgent}', '${log.CreatedAt}')`
       ).join(',\n');
       statements.push(`INSERT INTO UserLogs (LogID, UserID, Action, IpAddress, UserAgent, CreatedAt) VALUES\n${userLogValues};`);

@@ -132,12 +132,16 @@ export function generateEnvironmentContent(config: DatabaseConfig): string {
 # 🔧 Database Settings
 DB_COUNT=${config.count}
 PRIMARY_DB_ID=${config.primaryDbName}
+PRIMARY_DATABASE_ID=${config.primaryDbName}
 PRIMARY_DB_SCHEMA_PATH=${config.primarySchemaPath}
+PRIMARY_SCHEMA_PATH=${config.primarySchemaPath}
 `;
   
   if (config.count === '2' && config.secondaryDbName && config.secondarySchemaPath) {
     envContent += `SECONDARY_DB_ID=${config.secondaryDbName}
+SECONDARY_DATABASE_ID=${config.secondaryDbName}
 SECONDARY_DB_SCHEMA_PATH=${config.secondarySchemaPath}
+SECONDARY_SCHEMA_PATH=${config.secondarySchemaPath}
 `;
   }
   

@@ -30,13 +30,19 @@ jobs:
         go-version: '1.23'
         cache: true
         
+    - name: Install wrench
+      run: go install github.com/cloudspannerecosystem/wrench@latest
+        
     - name: Install dependencies
       run: npm ci
       
     - name: Build project
       run: npm run build
       
-    - name: Run tests
+    - name: Install Playwright with system dependencies
+      run: npx playwright install --with-deps
+      
+    - name: Run E2E tests with real CLI
       run: npm test
       
     - name: Check TypeScript compilation
@@ -82,19 +88,31 @@ jobs:
     - name: Build project
       run: npm run build
       
+    - name: Create temporary schema files for testing
+      run: |
+        mkdir -p /tmp/test-schemas/{primary,secondary}
+        echo "CREATE TABLE TestTable (ID STRING(36) NOT NULL) PRIMARY KEY (ID);" > /tmp/test-schemas/primary/001_schema.sql
+        echo "CREATE TABLE LogTable (ID STRING(36) NOT NULL) PRIMARY KEY (ID);" > /tmp/test-schemas/secondary/001_schema.sql
+        
     - name: Test CLI installation
       run: |
         npm pack
         npm install -g spanwright-*.tgz
         spanwright --help || echo "CLI help not available yet"
         
-    - name: Test project generation
+    - name: Test project generation with real CLI
       run: |
         mkdir test-output
         cd test-output
         
-        # Test project generation in non-interactive mode
-        env SPANWRIGHT_DB_COUNT=1 SPANWRIGHT_PRIMARY_DB_NAME=test-primary SPANWRIGHT_PRIMARY_SCHEMA_PATH=/tmp/schema1 spanwright test-project
+        # Test project generation in non-interactive mode with real schemas
+        env SPANWRIGHT_DB_COUNT=2 \
+            SPANWRIGHT_PRIMARY_DB_NAME=test-primary \
+            SPANWRIGHT_PRIMARY_SCHEMA_PATH=/tmp/test-schemas/primary \
+            SPANWRIGHT_SECONDARY_DB_NAME=test-secondary \
+            SPANWRIGHT_SECONDARY_SCHEMA_PATH=/tmp/test-schemas/secondary \
+            CI=true \
+            spanwright test-project
         
         # Verify project structure was created
         if [ ! -d "test-project" ]; then
@@ -155,13 +173,42 @@ jobs:
         npm pack
         npm install -g spanwright-*.tgz
         
+    - name: Create test schemas for E2E project
+      run: |
+        mkdir -p /tmp/e2e-schemas/{primary,secondary}
+        cat > /tmp/e2e-schemas/primary/001_schema.sql << 'EOF'
+        CREATE TABLE Users (
+          UserID STRING(36) NOT NULL,
+          Name STRING(255) NOT NULL,
+          Email STRING(255) NOT NULL,
+          Status INT64 NOT NULL,
+          CreatedAt TIMESTAMP NOT NULL
+        ) PRIMARY KEY (UserID);
+        EOF
+        
+        cat > /tmp/e2e-schemas/secondary/001_schema.sql << 'EOF'
+        CREATE TABLE Analytics (
+          AnalyticsID STRING(36) NOT NULL,
+          UserID STRING(36) NOT NULL,
+          EventType STRING(100) NOT NULL,
+          PageURL STRING(500),
+          Timestamp TIMESTAMP NOT NULL
+        ) PRIMARY KEY (AnalyticsID);
+        EOF
+    
     - name: Generate test project
       run: |
         mkdir generated-project-test
         cd generated-project-test
         
-        # Generate project with 2 databases in non-interactive mode
-        env SPANWRIGHT_DB_COUNT=2 SPANWRIGHT_PRIMARY_DB_NAME=test-primary SPANWRIGHT_PRIMARY_SCHEMA_PATH=/tmp/schema1 SPANWRIGHT_SECONDARY_DB_NAME=test-secondary SPANWRIGHT_SECONDARY_SCHEMA_PATH=/tmp/schema2 spanwright test-e2e-project
+        # Generate project with 2 databases in non-interactive mode with real schemas
+        env SPANWRIGHT_DB_COUNT=2 \
+            SPANWRIGHT_PRIMARY_DB_NAME=test-primary \
+            SPANWRIGHT_PRIMARY_SCHEMA_PATH=/tmp/e2e-schemas/primary \
+            SPANWRIGHT_SECONDARY_DB_NAME=test-secondary \
+            SPANWRIGHT_SECONDARY_SCHEMA_PATH=/tmp/e2e-schemas/secondary \
+            CI=true \
+            spanwright test-e2e-project
         
         cd test-e2e-project
         echo "📁 Generated project structure:"
@@ -193,6 +240,12 @@ jobs:
         
         echo "✅ TypeScript compilation successful"
         
+    - name: Install Playwright in generated project
+      run: |
+        cd generated-project-test/test-e2e-project
+        npm install
+        npx playwright install --with-deps
+        
     - name: Test basic project setup
       run: |
         cd generated-project-test/test-e2e-project
@@ -203,6 +256,6 @@ jobs:
         make help || echo "Help command tested"
         
         # Test prerequisite check
-        make check-prerequisites || echo "Prerequisites checked"
+        make check-tools || echo "Prerequisites checked"
         
         echo "✅ Basic project setup verified"

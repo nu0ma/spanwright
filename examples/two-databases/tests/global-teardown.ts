@@ -1,5 +1,5 @@
 import { FullConfig } from '@playwright/test';
-import { safeMakeRun } from './utils/command-utils';
+import { runMake } from './test-utils';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -38,10 +38,7 @@ async function globalTeardown(config: FullConfig) {
     if (stopEmulator) {
       console.log('🛑 Stopping Spanner emulator...');
       try {
-        safeMakeRun('stop', [], {
-          stdio: 'inherit',
-          cwd: process.cwd()
-        });
+        runMake('stop');
         console.log('✅ Emulator stopped successfully');
       } catch (error: any) {
         console.warn('⚠️ Failed to stop emulator:', error.message);

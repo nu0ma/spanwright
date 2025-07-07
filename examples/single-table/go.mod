@@ -1,4 +1,4 @@
-module two-databases
+module single-table
 
 go 1.23.0
 
