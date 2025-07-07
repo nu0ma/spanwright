@@ -206,3 +206,25 @@ git commit --amend --no-edit
 echo
 print_success "Release $NEW_VERSION completed successfully!"
 print_info "🎉 GitHub Actions will automatically publish to npm when the tag is pushed."
+
+# Check release status
+print_info "🔍 Checking release status..."
+sleep 5
+
+# Check if GitHub Actions workflow started
+if command -v gh >/dev/null 2>&1; then
+    print_info "📊 GitHub Actions status:"
+    gh run list --limit 3 | head -4
+    
+    print_info ""
+    print_info "📝 To monitor the release:"
+    print_info "  - GitHub Actions: https://github.com/$(git config --get remote.origin.url | sed 's/.*github.com[/:]\([^/]*\/[^.]*\).*/\1/')/actions"
+    print_info "  - NPM Package: https://www.npmjs.com/package/spanwright"
+    print_info "  - GitHub Releases: https://github.com/$(git config --get remote.origin.url | sed 's/.*github.com[/:]\([^/]*\/[^.]*\).*/\1/')/releases"
+    
+    print_info ""
+    print_info "🔧 If GitHub Release creation fails:"
+    print_info "  Run: gh workflow run create-missing-release.yml -f tag_name=v$NEW_VERSION"
+else
+    print_warning "GitHub CLI not installed. Install with: brew install gh"
+fi
