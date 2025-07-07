@@ -162,7 +162,7 @@ class E2ETestRunner {
   async setupDatabaseSchemas(): Promise<void> {
     this.log('Setting up database schemas...');
 
-    const setupResult = this.runCommand('make setup-all');
+    const setupResult = this.runCommand('make setup');
     if (!setupResult.success) {
       throw new Error(`Schema setup error: ${setupResult.error}`);
     }
@@ -175,12 +175,6 @@ class E2ETestRunner {
    */
   async runScenarioTests(): Promise<void> {
     this.log('Running scenario-based tests...');
-
-    // Check available scenarios
-    const listResult = this.runCommand('make list-scenarios', { stdio: 'pipe' });
-    if (!listResult.success) {
-      throw new Error('Failed to get scenario list');
-    }
 
     // Run all scenarios
     const runAllResult = this.runCommand('make run-all-scenarios');
@@ -288,16 +282,10 @@ class E2ETestRunner {
       // 2. Initialize testbed
       await this.initializeTestbed();
 
-      // 3. Start Spanner emulator
-      await this.startSpannerEmulator();
-
-      // 4. Setup database schemas
-      await this.setupDatabaseSchemas();
-
-      // 5. Run scenario-based tests
+      // 3. Run scenario-based tests (includes emulator setup)
       await this.runScenarioTests();
 
-      // 6. Run Playwright E2E tests
+      // 4. Run Playwright E2E tests
       await this.runPlaywrightTests();
 
       success = true;

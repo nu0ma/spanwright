@@ -45,17 +45,8 @@ jobs:
     - name: Build CLI
       run: npm run build
       
-    - name: Validate Go template files
-      run: npm run template:validate-go
-      
-    - name: Validate TypeScript template files
-      run: npm run template:validate-ts
-      
-    - name: Validate configuration files
-      run: npm run template:validate-config
-      
-    - name: Run full template validation
-      run: npm run template:validate
+    - name: Run template validation
+      run: npm run validate
 
   e2e-testing:
     name: End-to-End Testing
