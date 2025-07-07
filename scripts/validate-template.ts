@@ -427,6 +427,106 @@ export { expect } from '@playwright/test';
   }
 
   /**
+   * Validate YAML fixtures format and structure
+   */
+  async validateFixtures(): Promise<boolean> {
+    this.log('Starting YAML fixtures validation...');
+
+    try {
+      const fixturesDir = path.join(TEMPLATE_DIR, 'scenarios');
+      if (!fs.existsSync(fixturesDir)) {
+        this.log('No scenarios directory found, skipping fixtures validation');
+        return true;
+      }
+
+      let fixturesFound = false;
+      const scenarioDirs = fs.readdirSync(fixturesDir).filter(item => {
+        const fullPath = path.join(fixturesDir, item);
+        return fs.statSync(fullPath).isDirectory() && item.startsWith('scenario-');
+      });
+
+      for (const scenarioDir of scenarioDirs) {
+        const scenarioPath = path.join(fixturesDir, scenarioDir);
+        const fixturesDirPath = path.join(scenarioPath, 'fixtures');
+        
+        if (!fs.existsSync(fixturesDirPath)) {
+          continue;
+        }
+
+        const fixtureFiles = fs.readdirSync(fixturesDirPath).filter(file => 
+          file.endsWith('.yml') || file.endsWith('.yaml')
+        );
+
+        if (fixtureFiles.length === 0) {
+          continue;
+        }
+
+        fixturesFound = true;
+        this.log(`Validating fixtures in ${scenarioDir}...`);
+
+        for (const fixtureFile of fixtureFiles) {
+          const filePath = path.join(fixturesDirPath, fixtureFile);
+          try {
+            const content = fs.readFileSync(filePath, 'utf8');
+            const data = yaml.load(content);
+
+            // Validate that it's an array of objects (typical fixture format)
+            if (!Array.isArray(data)) {
+              this.errors.push(`Fixture file ${filePath} should contain an array of objects`);
+              continue;
+            }
+
+            // Validate each fixture object
+            for (let i = 0; i < data.length; i++) {
+              const item = data[i];
+              if (typeof item !== 'object' || item === null) {
+                this.errors.push(`Fixture file ${filePath}, item ${i}: should be an object`);
+                continue;
+              }
+
+              // Check that object has at least some properties
+              if (Object.keys(item).length === 0) {
+                this.warnings.push(`Fixture file ${filePath}, item ${i}: empty object`);
+              }
+
+              // Validate common ID patterns (optional but recommended)
+              const idFields = Object.keys(item).filter(key => 
+                key.toLowerCase().includes('id') || key.toLowerCase().includes('_id')
+              );
+              
+              if (idFields.length === 0) {
+                this.warnings.push(`Fixture file ${filePath}, item ${i}: no ID field found (recommended: *_id or *Id)`);
+              }
+            }
+
+          } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : String(error);
+            this.errors.push(`YAML syntax error in ${filePath}: ${message}`);
+          }
+        }
+      }
+
+      if (!fixturesFound) {
+        this.log('No YAML fixtures found in scenarios, skipping validation');
+        return true;
+      }
+
+      if (this.errors.length === 0) {
+        this.log('YAML fixtures validation: PASSED');
+        return true;
+      } else {
+        this.log(`YAML fixtures validation: ${this.errors.length} errors found`, 'error');
+        return false;
+      }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.errors.push(`Fixtures validation error: ${message}`);
+      this.log(`YAML fixtures validation: FAILED - ${message}`, 'error');
+      return false;
+    }
+  }
+
+  /**
    * Validate YAML/JSON configuration files
    */
   async validateConfigFiles(): Promise<boolean> {
@@ -567,6 +667,11 @@ export { expect } from '@playwright/test';
         allPassed = false;
       }
 
+      // Validate YAML fixtures
+      if (!(await this.validateFixtures())) {
+        allPassed = false;
+      }
+
       // Show results
       this.log('='.repeat(50));
       if (allPassed) {
@@ -599,6 +704,7 @@ if (process.argv[1] === __filename) {
   const goOnly = args.includes('--go-only');
   const tsOnly = args.includes('--ts-only');
   const configOnly = args.includes('--config-only');
+  const fixturesOnly = args.includes('--fixtures-only');
 
   const validator = new TemplateValidator();
 
@@ -626,6 +732,16 @@ if (process.argv[1] === __filename) {
   } else if (configOnly) {
     validator
       .validateConfigFiles()
+      .then(success => {
+        process.exit(success ? 0 : 1);
+      })
+      .catch(error => {
+        console.error('❌ Unexpected error:', error);
+        process.exit(1);
+      });
+  } else if (fixturesOnly) {
+    validator
+      .validateFixtures()
       .then(success => {
         process.exit(success ? 0 : 1);
       })

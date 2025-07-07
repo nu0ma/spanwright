@@ -208,7 +208,7 @@ func validateAllColumns(ctx context.Context, client *spanner.Client, tableName s
 				return fmt.Errorf("failed to read int column %s: %v", colName, err)
 			}
 			if intVal != nil {
-				value = int(*intVal)
+				value = *intVal // Keep as int64 to match Spanner's type
 			}
 		case float64:
 			var floatVal *float64
@@ -251,8 +251,14 @@ func validateAllColumns(ctx context.Context, client *spanner.Client, tableName s
 
 		// Handle type conversions and comparisons
 		if !CompareValues(expectedValue, actualValue) {
-			mismatches = append(mismatches, fmt.Sprintf("Column %s: expected %v (type: %T), got %v (type: %T)",
-				expectedColumn, expectedValue, expectedValue, actualValue, actualValue))
+			// Enhanced error message with detailed type information
+			expectedType := fmt.Sprintf("%T", expectedValue)
+			actualType := fmt.Sprintf("%T", actualValue)
+			isNumericExpected := isNumeric(expectedValue)
+			isNumericActual := isNumeric(actualValue)
+			
+			mismatches = append(mismatches, fmt.Sprintf("Column %s: expected %v (%s, numeric:%t), got %v (%s, numeric:%t)",
+				expectedColumn, expectedValue, expectedType, isNumericExpected, actualValue, actualType, isNumericActual))
 		}
 	}
 
@@ -273,11 +279,60 @@ func CompareValues(expected, actual interface{}) bool {
 		return false
 	}
 
-	// Convert both values to strings for comparison to handle type differences
+	// Handle numeric type conversions (int from YAML vs int64 from Spanner)
+	if isNumeric(expected) && isNumeric(actual) {
+		expectedInt := toInt64(expected)
+		actualInt := toInt64(actual)
+		return expectedInt == actualInt
+	}
+
+	// For non-numeric types, convert to strings for comparison
 	expectedStr := fmt.Sprintf("%v", expected)
 	actualStr := fmt.Sprintf("%v", actual)
 
 	return expectedStr == actualStr
+}
+
+// isNumeric checks if a value is a numeric type
+func isNumeric(value interface{}) bool {
+	switch value.(type) {
+	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:
+		return true
+	default:
+		return false
+	}
+}
+
+// toInt64 converts numeric values to int64
+func toInt64(value interface{}) int64 {
+	switch v := value.(type) {
+	case int:
+		return int64(v)
+	case int8:
+		return int64(v)
+	case int16:
+		return int64(v)
+	case int32:
+		return int64(v)
+	case int64:
+		return v
+	case uint:
+		return int64(v)
+	case uint8:
+		return int64(v)
+	case uint16:
+		return int64(v)
+	case uint32:
+		return int64(v)
+	case uint64:
+		return int64(v)
+	case float32:
+		return int64(v)
+	case float64:
+		return int64(v)
+	default:
+		return 0
+	}
 }
 
 // validateIdentifier validates that an identifier (table/column name) is safe to use in SQL
