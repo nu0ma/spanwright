@@ -1,5 +1,0 @@
-# Minimal Companies fixture for testfixtures
-- CompanyID: "company-001"
-  Name: "Test Company Ltd."
-  Status: 1
-  CreatedAt: "2024-01-01T00:00:00Z"

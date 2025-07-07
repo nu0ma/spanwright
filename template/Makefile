@@ -81,7 +81,7 @@ setup-primary: ## Setup primary database
 	SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench create --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(PRIMARY_DB_ID) --directory "$(PRIMARY_SCHEMA_PATH)" --schema_file "001_initial_schema.sql" >/dev/null 2>&1
 	@echo "✅ Primary database ready"
 	@go mod tidy >/dev/null 2>&1
-	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) go run cmd/seed-injector/main.go --database-id $(PRIMARY_DB_ID) --fixture-dir "$$(pwd)/scenarios/$(SCENARIO)/fixtures"
+	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) go run cmd/seed-injector/main.go --database-id $(PRIMARY_DB_ID) --fixture-dir "$$(pwd)/scenarios/$(SCENARIO)/fixtures/primary"
 
 setup-secondary: ## Setup secondary database
 	@echo "☁️ Setting up secondary database..."
@@ -89,7 +89,7 @@ setup-secondary: ## Setup secondary database
 	SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench create --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(SECONDARY_DB_ID) --directory "$(SECONDARY_SCHEMA_PATH)" --schema_file "001_initial_schema.sql" >/dev/null 2>&1
 	@echo "✅ Secondary database ready"
 	@go mod tidy >/dev/null 2>&1
-	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) go run cmd/seed-injector/main.go --database-id $(SECONDARY_DB_ID) --fixture-dir "$$(pwd)/scenarios/$(SCENARIO)/fixtures"
+	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) go run cmd/seed-injector/main.go --database-id $(SECONDARY_DB_ID) --fixture-dir "$$(pwd)/scenarios/$(SCENARIO)/fixtures/secondary"
 
 test-scenario: ## Run specific scenario test  
 	@echo "🧪 Running scenario: $(SCENARIO)"
