@@ -1,0 +1,5 @@
+# Minimal SystemConfig fixture for testfixtures
+- ConfigKey: "test_mode"
+  ConfigValue: "enabled"
+  Description: "Enable test mode for E2E testing"
+  UpdatedAt: "2024-01-01T00:00:00Z"
