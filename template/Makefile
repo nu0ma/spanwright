@@ -206,24 +206,17 @@ schema: check-wrench
 	@echo "✅ Schema application using wrench completed"
 
 .PHONY: seed
-seed: ensure-spemu
-	@if [ -z "$(SEED_FILE)" ]; then \
-		echo "❌ Error: SEED_FILE is required"; \
-		echo "Usage: make seed SEED_FILE=/path/to/seed.sql DATABASE_ID=my-db"; \
+seed: go-deps
+	@if [ -z "$(FIXTURE_DIR)" ]; then \
+		echo "❌ Error: FIXTURE_DIR is required"; \
+		echo "Usage: make seed FIXTURE_DIR=/path/to/fixtures DATABASE_ID=my-db"; \
 		exit 1; \
 	fi
-	@echo "🌱 Injecting seed data using spemu..."
-	@echo "📁 Seed data: $(SEED_FILE)"
+	@echo "🌱 Injecting seed data using testfixtures..."
+	@echo "📁 Fixture directory: $(FIXTURE_DIR)"
 	@echo "🎯 Target DB: $(DATABASE_ID)"
-	@SPANNER_EMULATOR_HOST=localhost:9010 spemu --project=$(PROJECT_ID) --instance=$(INSTANCE_ID) --database=$(DATABASE_ID) --port=9010 $(SEED_FILE)
+	@SPANNER_EMULATOR_HOST=localhost:9010 go run ./cmd/seed-injector --database-id=$(DATABASE_ID) --fixture-dir=$(FIXTURE_DIR)
 	@echo "✅ Seed data injection completed"
-
-.PHONY: ensure-spemu
-ensure-spemu:
-	@if ! command -v spemu >/dev/null 2>&1; then \
-		echo "📦 Installing spemu..."; \
-		go install github.com/nu0ma/spemu@latest; \
-	fi
 
 .PHONY: check-data
 check-data: go-deps
@@ -313,7 +306,7 @@ new-scenario:
 		exit 1; \
 	fi
 	@echo "📁 Creating new scenario: $(SCENARIO)"
-	@mkdir -p scenarios/$(SCENARIO)/seed-data
+	@mkdir -p scenarios/$(SCENARIO)/fixtures
 	@mkdir -p scenarios/$(SCENARIO)/tests/fixtures
 	@echo "📝 Creating configuration file..."
 	@echo "name: $(SCENARIO)" > scenarios/$(SCENARIO)/scenario-config.yaml
@@ -322,13 +315,9 @@ new-scenario:
 	@echo "" >> scenarios/$(SCENARIO)/scenario-config.yaml
 	@echo "# Scenario-specific file path configuration" >> scenarios/$(SCENARIO)/scenario-config.yaml
 	@echo "scenario_files:" >> scenarios/$(SCENARIO)/scenario-config.yaml
-	@echo "  primary-db:" >> scenarios/$(SCENARIO)/scenario-config.yaml
-	@echo "    seed: seed-data/primary-seed.sql" >> scenarios/$(SCENARIO)/scenario-config.yaml
-	@echo "    expected: expected-primary.yaml" >> scenarios/$(SCENARIO)/scenario-config.yaml
-	@echo "  " >> scenarios/$(SCENARIO)/scenario-config.yaml
-	@echo "  secondary-db:" >> scenarios/$(SCENARIO)/scenario-config.yaml
-	@echo "    seed: seed-data/secondary-seed.sql" >> scenarios/$(SCENARIO)/scenario-config.yaml
-	@echo "    expected: expected-secondary.yaml" >> scenarios/$(SCENARIO)/scenario-config.yaml
+	@echo "  fixtures: fixtures/" >> scenarios/$(SCENARIO)/scenario-config.yaml
+	@echo "  expected-primary: expected-primary.yaml" >> scenarios/$(SCENARIO)/scenario-config.yaml
+	@echo "  expected-secondary: expected-secondary.yaml" >> scenarios/$(SCENARIO)/scenario-config.yaml
 	@echo "📝 Creating expected value file templates..."
 	@cp templates/expected-primary.yaml scenarios/$(SCENARIO)/expected-primary.yaml
 	@if [ "$(DB_COUNT)" = "2" ]; then \
@@ -351,7 +340,7 @@ new-scenario:
 	@echo "✅ Scenario $(SCENARIO) has been created!"
 	@echo ""
 	@echo "📋 Next steps:"
-	@echo "  1. Edit scenarios/$(SCENARIO)/seed-data/ SQL files"
+	@echo "  1. Edit scenarios/$(SCENARIO)/fixtures/ YAML files"
 	@echo "  2. Edit scenarios/$(SCENARIO)/expected-*.yaml expected values"
 	@echo "  3. Edit scenarios/$(SCENARIO)/tests/$(SCENARIO).spec.ts test cases"
 	@echo ""
@@ -403,15 +392,15 @@ setup-scenario:
 	else \
 		echo "ℹ️  Spanner emulator is already running"; \
 	fi
-	@if [ -f "scenarios/$(SCENARIO)/seed-data/primary-seed.sql" ]; then \
+	@if [ -d "scenarios/$(SCENARIO)/fixtures" ]; then \
 		echo "🔶 Setting up Primary DB for scenario..."; \
 		$(MAKE) schema SCHEMA_PATH=$(PRIMARY_DB_SCHEMA_PATH) DATABASE_ID=$(PRIMARY_DB_ID); \
-		$(MAKE) seed SCHEMA_PATH=$(PRIMARY_DB_SCHEMA_PATH) DATABASE_ID=$(PRIMARY_DB_ID) SEED_FILE="scenarios/$(SCENARIO)/seed-data/primary-seed.sql"; \
+		$(MAKE) seed DATABASE_ID=$(PRIMARY_DB_ID) FIXTURE_DIR="scenarios/$(SCENARIO)/fixtures"; \
 	fi
-	@if [ "$(DB_COUNT)" = "2" ] && [ -f "scenarios/$(SCENARIO)/seed-data/secondary-seed.sql" ]; then \
+	@if [ "$(DB_COUNT)" = "2" ] && [ -d "scenarios/$(SCENARIO)/fixtures" ]; then \
 		echo "☁️ Setting up Secondary DB for scenario..."; \
 		$(MAKE) schema SCHEMA_PATH=$(SECONDARY_DB_SCHEMA_PATH) DATABASE_ID=$(SECONDARY_DB_ID); \
-		$(MAKE) seed SCHEMA_PATH=$(SECONDARY_DB_SCHEMA_PATH) DATABASE_ID=$(SECONDARY_DB_ID) SEED_FILE="scenarios/$(SCENARIO)/seed-data/secondary-seed.sql"; \
+		$(MAKE) seed DATABASE_ID=$(SECONDARY_DB_ID) FIXTURE_DIR="scenarios/$(SCENARIO)/fixtures"; \
 	fi
 	@echo "✅ Scenario setup completed: $(SCENARIO)"
 
@@ -459,17 +448,16 @@ run-all-scenarios:
 			echo "🎯 Running scenario: $$scenario_name"; \
 			echo "----------------------------------------"; \
 			echo "📦 Setting up databases for scenario..."; \
-			primary_seed_file="scenarios/$$scenario_name/seed-data/primary-seed.sql"; \
-			secondary_seed_file="scenarios/$$scenario_name/seed-data/secondary-seed.sql"; \
-			if [ -f "$$primary_seed_file" ]; then \
+			fixture_dir="scenarios/$$scenario_name/fixtures"; \
+			if [ -d "$$fixture_dir" ]; then \
 				echo "  🔶 Setting up Primary DB..."; \
 				$(MAKE) schema SCHEMA_PATH=$(PRIMARY_DB_SCHEMA_PATH) DATABASE_ID=$(PRIMARY_DB_ID); \
-				$(MAKE) seed SCHEMA_PATH=$(PRIMARY_DB_SCHEMA_PATH) DATABASE_ID=$(PRIMARY_DB_ID) SEED_FILE="$$primary_seed_file"; \
+				$(MAKE) seed DATABASE_ID=$(PRIMARY_DB_ID) FIXTURE_DIR="$$fixture_dir"; \
 			fi; \
-			if [ "$(DB_COUNT)" = "2" ] && [ -f "$$secondary_seed_file" ]; then \
+			if [ "$(DB_COUNT)" = "2" ] && [ -d "$$fixture_dir" ]; then \
 				echo "  ☁️ Setting up Secondary DB..."; \
 				$(MAKE) schema SCHEMA_PATH=$(SECONDARY_DB_SCHEMA_PATH) DATABASE_ID=$(SECONDARY_DB_ID); \
-				$(MAKE) seed SCHEMA_PATH=$(SECONDARY_DB_SCHEMA_PATH) DATABASE_ID=$(SECONDARY_DB_ID) SEED_FILE="$$secondary_seed_file"; \
+				$(MAKE) seed DATABASE_ID=$(SECONDARY_DB_ID) FIXTURE_DIR="$$fixture_dir"; \
 			fi; \
 			echo "🔍 Validating scenario with DB checks..."; \
 			if $(MAKE) validate-scenario SCENARIO=$$scenario_name; then \
@@ -604,7 +592,7 @@ help:
 	@echo "Environment variables:"
 	@echo "  SCHEMA_PATH   - Schema directory path"
 	@echo "  DATABASE_ID   - Database name (default: test-db)"
-	@echo "  SEED_FILE     - Seed data file"
+	@echo "  FIXTURE_DIR   - Fixture directory path"
 	@echo "  SCENARIO      - Scenario name"
 	@echo "  CONFIG        - Expected value configuration file (expected-*.yaml)"
 	@echo ""
@@ -619,7 +607,7 @@ help:
 	@echo "  make list-scenarios                                   # List scenarios"
 	@echo "  make setup-all                                        # Setup both DBs"
 	@echo "  make schema SCHEMA_PATH=/path DATABASE_ID=my-db       # Apply individual schema"
-	@echo "  make seed DATABASE_ID=my-db SEED_FILE=data.sql       # Inject individual seed"
+	@echo "  make seed DATABASE_ID=my-db FIXTURE_DIR=fixtures/    # Inject individual seed"
 	@echo "  make check-data DATABASE_ID=my-db                     # Check individual data"
 	@echo "  make stop                                             # Stop emulator"
 	@echo ""
