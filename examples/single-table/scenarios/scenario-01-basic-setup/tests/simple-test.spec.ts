@@ -8,13 +8,6 @@ test.describe('Simple Basic Test', () => {
     
     const dbConfig = getDatabaseConfig();
     console.log(`🔧 Process ${dbConfig.processId}: Using databases ${dbConfig.primaryDbId}, ${dbConfig.secondaryDbId}`);
-    
-    try {
-      runMake('setup');
-      console.log('✅ Database setup complete');
-    } catch (error) {
-      console.log('⚠️ Database setup failed, continuing with test...');
-    }
   });
 
   test('Basic Page Test', async ({ page }) => {
