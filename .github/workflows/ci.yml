@@ -111,7 +111,6 @@ jobs:
           "test-project/go.mod"
           "test-project/.env"
           "test-project/playwright.config.ts"
-          "test-project/cmd/db-validator/main.go"
           "test-project/cmd/seed-injector/main.go"
         )
         
@@ -178,7 +177,6 @@ jobs:
         go mod verify
         
         echo "🔨 Testing Go compilation..."
-        go build ./cmd/db-validator/
         go build ./cmd/seed-injector/
         
         echo "✅ Go compilation successful"
