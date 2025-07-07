@@ -148,7 +148,8 @@ Each scenario contains:
 - **wrench**: Spanner schema migration tool
 - **Docker**: Spanner emulator hosting
 - **Node.js**: >=22.0.0 for CLI, >=16.0.0 for generated projects
-- **Go**: For testfixtures-based seed injection tool in generated projects
+- **Go**: Version managed via `.tool-versions` and `.mise.toml` for consistency
+- **mise** (optional): For local development version management
 
 ## Version Management
 
@@ -185,8 +186,8 @@ The project includes automation for Go version updates:
 #### 3. **Updated Files**
 The automation updates Go version references in:
 - `template/go.mod.template` - Go module version and toolchain
-- `.github/workflows/ci.yml` - GitHub Actions Go version
-- `.github/workflows/template-validation.yml` - Template validation Go version  
+- `.mise.toml` - Mise tool configuration
+- `.tool-versions` - Universal tool version file (used by GitHub Actions)
 - `scripts/validate-template.ts` - Fallback Go version
 
 ### Version Update Workflow
@@ -220,3 +221,41 @@ For automated updates via GitHub Actions:
 5. Merge after CI passes
 
 This ensures all Go version references stay synchronized across the entire project.
+
+### Local Development with Version Management
+
+The project now uses `.tool-versions` and `.mise.toml` for consistent Go version management:
+
+#### Using mise (recommended)
+```bash
+# Install mise if not already installed
+curl https://mise.run | sh
+
+# Install the Go version specified in .mise.toml
+mise install
+
+# Use mise-managed Go
+mise use
+```
+
+#### Using asdf
+```bash
+# Install Go plugin if not already installed
+asdf plugin add golang
+
+# Install the Go version specified in .tool-versions
+asdf install
+
+# Set local Go version
+asdf local golang $(cat .tool-versions | grep go | cut -d' ' -f2)
+```
+
+#### Manual Installation
+Check `.tool-versions` for the current Go version and install it manually.
+
+### GitHub Actions Version Management
+
+GitHub workflows automatically read the Go version from `.tool-versions`:
+- No hardcoded versions in workflow files
+- Single source of truth for Go version across local and CI environments
+- Automatic version synchronization when `.tool-versions` is updated
