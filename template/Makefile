@@ -9,7 +9,7 @@ INSTANCE_ID ?= test-instance
 PRIMARY_DB_ID ?= primary-db
 SECONDARY_DB_ID ?= secondary-db
 DB_COUNT ?= 2
-SCENARIO ?= scenario-01-basic-setup
+SCENARIO ?= example-01-basic-setup
 
 # Docker settings
 DOCKER_IMAGE ?= gcr.io/cloud-spanner-emulator/emulator
@@ -77,21 +77,22 @@ endif
 setup-primary: ## Setup primary database
 	@echo "🔶 Setting up primary database..."
 	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench instance create --project $(PROJECT_ID) --instance $(INSTANCE_ID) >/dev/null 2>&1 || true
-	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench reset --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(PRIMARY_DB_ID) --directory "$$(pwd)/$(PRIMARY_DB_SCHEMA_PATH)" --schema_file "001_initial_schema.sql" >/dev/null 2>&1 || \
-	SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench create --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(PRIMARY_DB_ID) --directory "$$(pwd)/$(PRIMARY_DB_SCHEMA_PATH)" --schema_file "001_initial_schema.sql" >/dev/null 2>&1
+	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench reset --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(PRIMARY_DB_ID) --directory "$(PRIMARY_SCHEMA_PATH)" --schema_file "001_initial_schema.sql" >/dev/null 2>&1 || \
+	SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench create --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(PRIMARY_DB_ID) --directory "$(PRIMARY_SCHEMA_PATH)" --schema_file "001_initial_schema.sql" >/dev/null 2>&1
 	@echo "✅ Primary database ready"
+	@go mod tidy >/dev/null 2>&1
 	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) go run cmd/seed-injector/main.go --database-id $(PRIMARY_DB_ID) --fixture-dir "$$(pwd)/scenarios/$(SCENARIO)/fixtures"
 
 setup-secondary: ## Setup secondary database
 	@echo "☁️ Setting up secondary database..."
-	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench reset --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(SECONDARY_DB_ID) --directory "$$(pwd)/$(SECONDARY_DB_SCHEMA_PATH)" --schema_file "001_initial_schema.sql" >/dev/null 2>&1 || \
-	SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench create --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(SECONDARY_DB_ID) --directory "$$(pwd)/$(SECONDARY_DB_SCHEMA_PATH)" --schema_file "001_initial_schema.sql" >/dev/null 2>&1
+	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench reset --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(SECONDARY_DB_ID) --directory "$(SECONDARY_SCHEMA_PATH)" --schema_file "001_initial_schema.sql" >/dev/null 2>&1 || \
+	SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench create --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(SECONDARY_DB_ID) --directory "$(SECONDARY_SCHEMA_PATH)" --schema_file "001_initial_schema.sql" >/dev/null 2>&1
 	@echo "✅ Secondary database ready"
+	@go mod tidy >/dev/null 2>&1
 	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) go run cmd/seed-injector/main.go --database-id $(SECONDARY_DB_ID) --fixture-dir "$$(pwd)/scenarios/$(SCENARIO)/fixtures"
 
-test-scenario: ## Run specific scenario test
+test-scenario: ## Run specific scenario test  
 	@echo "🧪 Running scenario: $(SCENARIO)"
-	@$(MAKE) setup
 	@npx playwright test --grep $(SCENARIO)
 
 run-all: run-all-scenarios ## Alias for run-all-scenarios
@@ -107,6 +108,10 @@ run-all-scenarios: ## Run all scenarios
 
 test-e2e: ## Run Playwright E2E tests
 	@npx playwright test
+
+test-report: ## Open test report
+	@echo "📊 Opening test report..."
+	@npx playwright show-report
 
 new-scenario: ## Create new scenario (SCENARIO=name required)
 	@if [ -z "$(SCENARIO)" ]; then echo "❌ SCENARIO required"; exit 1; fi

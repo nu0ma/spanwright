@@ -58,6 +58,13 @@ CREATE TABLE Users (
   CreatedAt TIMESTAMP NOT NULL
 ) PRIMARY KEY (UserID);
 
+CREATE TABLE Companies (
+  CompanyID STRING(36) NOT NULL,
+  Name STRING(255) NOT NULL,
+  Status INT64 NOT NULL,
+  CreatedAt TIMESTAMP NOT NULL
+) PRIMARY KEY (CompanyID);
+
 CREATE TABLE Products (
   ProductID STRING(36) NOT NULL,
   Name STRING(255) NOT NULL,
@@ -96,6 +103,13 @@ CREATE TABLE OrderItems (
 
     const secondarySchema = `-- Secondary Database Schema for CI Testing
 -- Analytics tables matching template expectations
+
+CREATE TABLE SystemConfig (
+  ConfigID STRING(36) NOT NULL,
+  ConfigKey STRING(255) NOT NULL,
+  ConfigValue STRING(1000) NOT NULL,
+  CreatedAt TIMESTAMP NOT NULL
+) PRIMARY KEY (ConfigID);
 
 CREATE TABLE Analytics (
   AnalyticsID STRING(36) NOT NULL,

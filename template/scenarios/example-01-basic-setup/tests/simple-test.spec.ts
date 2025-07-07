@@ -2,19 +2,12 @@ import { test, expect } from '@playwright/test';
 import { getDatabaseConfig } from '../../../tests/database-isolation';
 import { runMake, mockValidateDatabase } from '../../../tests/test-utils';
 
-test.describe('Simple Basic Test', () => {
+test.describe('example-01-basic-setup', () => {
   test.beforeAll(async () => {
-    console.log('🚀 Setting up test environment...');
+    console.log('🚀 Test environment ready...');
     
     const dbConfig = getDatabaseConfig();
     console.log(`🔧 Process ${dbConfig.processId}: Using databases ${dbConfig.primaryDbId}, ${dbConfig.secondaryDbId}`);
-    
-    try {
-      runMake('setup');
-      console.log('✅ Database setup complete');
-    } catch (error) {
-      console.log('⚠️ Database setup failed, continuing with test...');
-    }
   });
 
   test('Basic Page Test', async ({ page }) => {
