@@ -165,20 +165,18 @@ Spanwright is a **project generator** that creates Cloud Spanner E2E testing fra
 - Dynamic `.env` file generation based on DB count (1 or 2)
 
 #### Go Database Tools (`template/cmd/`)
-- `db-validator/`: Batch validation with performance metrics
 - `seed-injector/`: SQL-based data seeding with direct DML execution
 - Uses pooled connections and structured error handling
 
 #### Internal Go Packages (`template/internal/`)
 - `config/`: Environment validation and database configuration
 - `db/`: Spanner client interfaces and pooled connection management
-- `data/`: Validation logic, batch processing, and performance tracking
 - `retry/`: Resilient operation patterns
 
 #### Testing Framework
 - **Scenario-based**: Each test scenario has seed data, expected results, and E2E tests
 - **Database Isolation**: Parallel test execution with worker-specific databases
-- **Hybrid Validation**: Go tools for data validation + Playwright for browser testing
+- **Hybrid Validation**: Spalidate for data validation + Playwright for browser testing
 
 ## Project Structure
 
@@ -190,19 +188,18 @@ Spanwright is a **project generator** that creates Cloud Spanner E2E testing fra
 ### Template Structure (Generated Projects)
 ```
 template/
-├── Makefile                    # Workflow automation
+├── Makefile                    # Workflow automation with spalidate integration
 ├── cmd/                        # Go CLI tools
-│   ├── db-validator/          # Database validation
 │   └── seed-injector/         # Data seeding
 ├── internal/                   # Go internal packages
 │   ├── config/               # Configuration management
 │   ├── db/                   # Database interfaces
-│   └── data/                 # Validation logic
+│   └── retry/                # Retry logic
 ├── scenarios/                  # Test scenarios
 │   └── example-01-basic-setup/
 │       ├── seed-data/         # SQL seed files
-│       ├── expected-*.yaml    # Expected validation results
-│       └── tests/             # Playwright E2E tests
+│       ├── expected-*.yaml    # Expected validation results for spalidate
+│       └── tests/             # Playwright E2E tests with spalidate integration
 ├── tests/                      # Test infrastructure
 │   ├── global-setup.ts        # Database isolation setup
 │   └── database-isolation.ts  # Worker-specific DB management
@@ -223,9 +220,9 @@ Go tools use pooled connections for performance:
 - Connection pool statistics and monitoring
 
 ### Validation System
-- **Batch Validation**: `data.BatchValidator` for optimal performance
+- **Spalidate Integration**: External command-line tool for database validation
 - **YAML Configuration**: Expected results defined in `expected-*.yaml`
-- **Performance Metrics**: Built-in timing and connection tracking
+- **Simple Integration**: Direct CLI calls without complex Go dependencies
 
 ## Testing Strategy
 
@@ -245,7 +242,7 @@ Each scenario contains:
 2. Apply schema migrations (wrench)
 3. Inject seed data (Go tool)
 4. Run browser tests (Playwright)
-5. Validate database state (Go tool)
+5. Validate database state (spalidate)
 
 ## Development Notes
 
@@ -268,9 +265,10 @@ Each scenario contains:
 
 ### Environment Requirements
 - **wrench**: Spanner schema migration tool
+- **spalidate**: Database validation tool (`go install github.com/nu0ma/spalidate@latest`)
 - **Docker**: Spanner emulator hosting
 - **Node.js**: >=22.0.0 for CLI, >=16.0.0 for generated projects
-- **Go**: For database tools in generated projects
+- **Go**: For seed injection tool in generated projects
 
 ## Version Management
 

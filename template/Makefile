@@ -68,6 +68,7 @@ init:
 check-prerequisites:
 	@echo "🔍 Checking required tools..."
 	@$(MAKE) check-wrench
+	@$(MAKE) check-spalidate
 	@$(MAKE) check-docker
 	@$(MAKE) check-node
 	@echo "✅ All prerequisites are satisfied"
@@ -170,6 +171,18 @@ check-wrench:
 	fi
 	@echo "✅ wrench is available"
 
+# spalidate availability check
+.PHONY: check-spalidate
+check-spalidate:
+	@if ! command -v spalidate >/dev/null 2>&1; then \
+		echo "❌ Error: spalidate not found"; \
+		echo "💡 Installation instructions:"; \
+		echo "  go install github.com/nu0ma/spalidate@latest"; \
+		echo "  or refer to https://github.com/nu0ma/spalidate#installation"; \
+		exit 1; \
+	fi
+	@echo "✅ spalidate is available"
+
 .PHONY: schema
 schema: check-wrench
 	@if [ -z "$(SCHEMA_PATH)" ]; then \
@@ -219,9 +232,14 @@ seed: go-deps
 	@echo "✅ Seed data injection completed"
 
 .PHONY: check-data
-check-data: go-deps
+check-data:
 	@echo "🔍 Checking data..."
-	@SPANNER_EMULATOR_HOST=localhost:9010 go run ./cmd/db-validator $(DATABASE_ID) --summary
+	@# Simple table existence check using wrench
+	@export SPANNER_PROJECT_ID=$(PROJECT_ID) && \
+	 export SPANNER_INSTANCE_ID=$(INSTANCE_ID) && \
+	 export SPANNER_DATABASE_ID=$(DATABASE_ID) && \
+	 export SPANNER_EMULATOR_HOST=localhost:9010 && \
+	 wrench query --sql="SELECT table_name FROM information_schema.tables WHERE table_schema = ''" | head -20
 	@echo "✅ Data check completed"
 
 # Dedicated commands for Primary DB
@@ -356,19 +374,19 @@ list-scenarios:
 
 
 .PHONY: validate-db
-validate-db: go-deps
+validate-db: check-spalidate
 	@if [ -z "$(DATABASE_ID)" ]; then \
 		echo "❌ Error: DATABASE_ID is required"; \
-		echo "Usage: make validate-db DATABASE_ID=portal-db CONFIG=validation-config.json"; \
+		echo "Usage: make validate-db DATABASE_ID=portal-db CONFIG=validation-config.yaml"; \
 		exit 1; \
 	fi
 	@if [ -z "$(CONFIG)" ]; then \
 		echo "❌ Error: CONFIG is required"; \
-		echo "Usage: make validate-db DATABASE_ID=portal-db CONFIG=validation-config.json"; \
+		echo "Usage: make validate-db DATABASE_ID=portal-db CONFIG=validation-config.yaml"; \
 		exit 1; \
 	fi
-	@echo "🔍 Validating database: $(DATABASE_ID)"
-	@SPANNER_EMULATOR_HOST=localhost:9010 go run ./cmd/db-validator $(DATABASE_ID) $(CONFIG)
+	@echo "🔍 Validating database: $(DATABASE_ID) using spalidate"
+	@spalidate --project=$(PROJECT_ID) --instance=$(INSTANCE_ID) --database=$(DATABASE_ID) --port=9010 $(CONFIG)
 
 .PHONY: setup-scenario
 setup-scenario:
@@ -558,7 +576,7 @@ help:
 	@echo "  make new-scenario SCENARIO=scenario-xx-name   - 📁 Create new scenario"
 	@echo ""
 	@echo "Basic commands:"
-	@echo "  make check-prerequisites - Check prerequisites (wrench, Docker, Node.js)"
+	@echo "  make check-prerequisites - Check prerequisites (wrench, spalidate, Docker, Node.js)"
 	@echo "  make check-env      - Check .env file existence"
 	@echo "  make go-deps        - Setup Go dependencies (run go mod tidy)"
 	@echo "  make start          - Start Spanner emulator"
@@ -578,7 +596,7 @@ help:
 	@echo "  make list-scenarios                           - List available scenarios"
 	@echo "  make setup-scenario SCENARIO=<name>           - Setup scenario DB only"
 	@echo "  make validate-scenario SCENARIO=<name>        - Validate scenario DB only"
-	@echo "  make validate-db DATABASE_ID=<id> CONFIG=<expected.yaml> - Validate DB"
+	@echo "  make validate-db DATABASE_ID=<id> CONFIG=<expected.yaml> - Validate DB with spalidate"
 	@echo ""
 	@echo "E2E test commands:"
 	@echo "  make test-e2e                                           - Run E2E tests"

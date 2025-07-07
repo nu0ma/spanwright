@@ -9,7 +9,7 @@ import (
 	"cloud.google.com/go/spanner"
 	"google.golang.org/api/iterator"
 	"google.golang.org/grpc/codes"
-	"single-table/internal/retry"
+	"single-database/internal/retry"
 )
 
 // ListTables returns all table names in the database with retry logic

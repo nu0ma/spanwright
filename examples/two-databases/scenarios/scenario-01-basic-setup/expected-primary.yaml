@@ -1,6 +1,39 @@
 # Primary Database expected values configuration
-# Two databases example - Primary DB with Users table
+# This example assumes a typical e-commerce site table structure
 
 tables:
   Users:
     count: 2
+    columns:
+      UserID: "user-001"
+      Name: "Sample User"
+      Email: "user@example.com"
+      Status: 1
+      CreatedAt: "2024-01-01T00:00:00Z"
+  
+  Products:
+    count: 3
+    columns:
+      ProductID: "prod-001" 
+      Name: "Sample Product"
+      Price: 1000
+      CategoryID: "cat-001"
+      IsActive: true
+  
+  Orders:
+    count: 1
+    columns:
+      OrderID: "order-001"
+      UserID: "user-001"
+      TotalAmount: 2500
+      Status: "completed"
+      OrderDate: "2024-01-15T10:30:00Z"
+  
+  OrderItems:
+    count: 2
+    columns:
+      OrderItemID: "item-001"
+      OrderID: "order-001" 
+      ProductID: "prod-001"
+      Quantity: 2
+      UnitPrice: 1000

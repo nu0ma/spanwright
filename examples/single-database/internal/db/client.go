@@ -14,7 +14,7 @@ import (
 	"google.golang.org/api/iterator"
 	"google.golang.org/grpc/codes"
 
-	"single-table/internal/config"
+	"single-database/internal/config"
 )
 
 // BoundedSchemaMap implements a memory-bounded schema map with LRU eviction
