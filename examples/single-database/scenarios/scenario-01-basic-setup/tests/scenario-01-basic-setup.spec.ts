@@ -15,7 +15,7 @@ test.describe('Scenario 01: Basic Setup', async() => {
     try {
       // Get worker-specific database configuration
       const dbConfig = getWorkerDatabaseConfig();
-      console.log(`🔧 Worker ${dbConfig.workerId}: Using databases ${dbConfig.primaryDbId}, ${dbConfig.secondaryDbId}`);
+      console.log(`🔧 Worker ${dbConfig.workerId}: Using database ${dbConfig.primaryDbId}`);
       
       // For now, skip the actual setup to avoid Docker conflicts
       // setupIsolatedScenario(scenarioName);
@@ -31,7 +31,7 @@ test.describe('Scenario 01: Basic Setup', async() => {
     console.log('🧹 Cleaning up isolated test environment...');
     try {
       const dbConfig = getWorkerDatabaseConfig();
-      console.log(`🗑️ Worker ${dbConfig.workerId}: Cleanup complete for databases ${dbConfig.primaryDbId}, ${dbConfig.secondaryDbId}`);
+      console.log(`🗑️ Worker ${dbConfig.workerId}: Cleanup complete for database ${dbConfig.primaryDbId}`);
       
       // Note: Individual worker cleanup is handled by global teardown
       console.log('✅ Isolated cleanup complete');
@@ -60,11 +60,10 @@ test.describe('Scenario 01: Basic Setup', async() => {
     try {
       // Get worker-specific database configuration
       const dbConfig = getWorkerDatabaseConfig();
-      console.log(`🔧 Worker ${dbConfig.workerId}: Testing with databases ${dbConfig.primaryDbId}, ${dbConfig.secondaryDbId}`);
+      console.log(`🔧 Worker ${dbConfig.workerId}: Testing with database ${dbConfig.primaryDbId}`);
       
       // For now, just verify the configuration is correct
       expect(dbConfig.primaryDbId).toMatch(/^primary-db-worker-\d+$/);
-      expect(dbConfig.secondaryDbId).toMatch(/^secondary-db-worker-\d+$/);
       
       console.log(`✅ Database isolation test passed for worker ${dbConfig.workerId}`);
     } catch (error: any) {

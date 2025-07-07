@@ -1,10 +1,6 @@
-- UserID: user-001
-  Name: Sample User
-  Email: user@example.com
+# Minimal Users fixture for testfixtures
+- UserID: "user-001"
+  Name: "E2E Test User"
+  Email: "e2e-test-user@example.com"
   Status: 1
-  CreatedAt: 2024-01-01T00:00:00Z
-- UserID: user-002
-  Name: Test User
-  Email: test@example.com
-  Status: 1
-  CreatedAt: 2024-01-02T00:00:00Z
+  CreatedAt: "2024-01-01T00:00:00Z"

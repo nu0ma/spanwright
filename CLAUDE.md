@@ -174,9 +174,9 @@ Spanwright is a **project generator** that creates Cloud Spanner E2E testing fra
 - `retry/`: Resilient operation patterns
 
 #### Testing Framework
-- **Scenario-based**: Each test scenario has seed data, expected results, and E2E tests
-- **Database Isolation**: Parallel test execution with worker-specific databases
-- **Hybrid Validation**: Spalidate for data validation + Playwright for browser testing
+- **Scenario-based**: Each test scenario has minimal seed data and inline E2E tests
+- **Database Isolation**: Simple process-based database naming for parallel execution
+- **Inline Validation**: Direct SQL queries for database validation + Playwright for browser testing
 
 ## Project Structure
 
@@ -197,12 +197,13 @@ template/
 │   └── retry/                # Retry logic
 ├── scenarios/                  # Test scenarios
 │   └── example-01-basic-setup/
-│       ├── seed-data/         # SQL seed files
-│       ├── expected-*.yaml    # Expected validation results for spalidate
-│       └── tests/             # Playwright E2E tests with spalidate integration
+│       ├── fixtures/          # Minimal YAML fixture files for testfixtures
+│       └── tests/             # Playwright E2E tests with inline validation
 ├── tests/                      # Test infrastructure
-│   ├── global-setup.ts        # Database isolation setup
-│   └── database-isolation.ts  # Worker-specific DB management
+│   ├── global-setup.ts        # Simple emulator startup
+│   ├── database-isolation.ts  # Process-based DB management
+│   └── utils/
+│       └── sql-validator.ts   # Direct SQL validation utility
 └── playwright.config.ts       # Playwright configuration
 ```
 
@@ -220,29 +221,29 @@ Go tools use pooled connections for performance:
 - Connection pool statistics and monitoring
 
 ### Validation System
-- **Spalidate Integration**: External command-line tool for database validation
-- **YAML Configuration**: Expected results defined in `expected-*.yaml`
-- **Simple Integration**: Direct CLI calls without complex Go dependencies
+- **SQL-based Validation**: Direct SQL queries for database state validation
+- **Inline Configuration**: Test expectations defined directly in test files
+- **Simple Integration**: No external dependencies for validation logic
 
 ## Testing Strategy
 
 ### Scenario-Based Testing
 Each scenario contains:
-1. **Seed Data** (`seed-data/*.sql`): Initial database state
-2. **Expected Results** (`expected-*.yaml`): Validation configuration
-3. **E2E Tests** (`tests/*.spec.ts`): Browser automation
+1. **Minimal Seed Data**: Essential records only via YAML fixtures (`fixtures/*.yml`)
+2. **Inline Tests** (`tests/*.spec.ts`): Browser automation with embedded validation
+3. **Direct SQL Validation**: Simple database state checks
 
 ### Database Isolation
-- Worker-specific database names (`primary-db-worker-1`, etc.)
+- Process-specific database names (`primary-db-{process.pid}`)
 - Parallel test execution without conflicts
-- Global setup/teardown with cleanup
+- Simplified setup without complex worker coordination
 
 ### Validation Flow
 1. Start Spanner emulator (Docker)
 2. Apply schema migrations (wrench)
-3. Inject seed data (Go tool)
+3. Inject minimal seed data (testfixtures with YAML files)
 4. Run browser tests (Playwright)
-5. Validate database state (spalidate)
+5. Validate database state (SQL queries)
 
 ## Development Notes
 
@@ -265,10 +266,9 @@ Each scenario contains:
 
 ### Environment Requirements
 - **wrench**: Spanner schema migration tool
-- **spalidate**: Database validation tool (`go install github.com/nu0ma/spalidate@latest`)
 - **Docker**: Spanner emulator hosting
 - **Node.js**: >=22.0.0 for CLI, >=16.0.0 for generated projects
-- **Go**: For seed injection tool in generated projects
+- **Go**: For testfixtures-based seed injection tool in generated projects
 
 ## Version Management
 
