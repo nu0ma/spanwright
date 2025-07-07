@@ -2,16 +2,11 @@
 # Common settings are defined in config/common-database-config.yaml
 # Only scenario-specific information is described here
 
-name: example-01-basic-setup
-description: Basic setup sample
+name: scenario-01-basic-setup
+description: Basic setup sample for single database
 version: "1.0"
 
 # Scenario-specific file path settings
 scenario_files:
-  primary-db:
-    seed: seed-data/primary-seed.json
-    expected: expected-primary.yaml
-  
-  secondary-db:
-    seed: seed-data/secondary-seed.json
-    expected: expected-secondary.yaml
+  fixtures: fixtures/
+  expected-primary: expected-primary.yaml
