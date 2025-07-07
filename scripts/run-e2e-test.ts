@@ -6,12 +6,13 @@ import { execFileSync } from 'child_process';
 
 /**
  * Complete automated E2E test script
- * Automates full E2E test execution in testbed environment
+ * Tests actual CLI by creating a real Spanwright project and running E2E tests
  */
 
 const PROJECT_ROOT = path.join(__dirname, '..');
-const TESTBED_DIR = path.join(PROJECT_ROOT, 'dev-testbed');
-const TESTBED_PROJECT_PATH = path.join(TESTBED_DIR, 'spanwright-testbed');
+const TEST_PROJECT_NAME = 'ci-test-project';
+const TEST_PROJECT_PATH = path.join(PROJECT_ROOT, TEST_PROJECT_NAME);
+const TEMP_SCHEMA_BASE = '/tmp/ci-schemas';
 
 interface CommandResult {
   success: boolean;
@@ -24,7 +25,7 @@ class E2ETestRunner {
   private startTime: number;
 
   constructor() {
-    this.log('Starting complete automated E2E test execution...');
+    this.log('Starting real CLI E2E test execution...');
     this.startTime = Date.now();
   }
 
@@ -49,7 +50,7 @@ class E2ETestRunner {
    */
   private runCommand(command: string, options: Record<string, unknown> = {}): CommandResult {
     const defaultOptions = {
-      cwd: TESTBED_PROJECT_PATH,
+      cwd: TEST_PROJECT_PATH,
       stdio: 'inherit',
       timeout: 300000, // 5 minute timeout
       ...options,
@@ -98,118 +99,148 @@ class E2ETestRunner {
   checkPrerequisites(): void {
     this.log('Checking prerequisites...');
 
-    // Check if testbed exists
-    if (!fs.existsSync(TESTBED_PROJECT_PATH)) {
-      throw new Error(
-        `Testbed not found: ${TESTBED_PROJECT_PATH}\nPlease run 'npm run dev:create-testbed' first.`
-      );
-    }
-
     // Check Docker
     this.checkDocker();
 
     // Check wrench (will be checked by Makefile, but check here as well)
-    const wrenchResult = this.runCommand('which wrench', { stdio: 'pipe' });
+    const wrenchResult = this.runCommand('which wrench', { stdio: 'pipe', cwd: PROJECT_ROOT });
     if (!wrenchResult.success) {
       throw new Error(
         'wrench not found.\nInstall with: go install github.com/cloudspannerecosystem/wrench@latest'
       );
     }
 
+    // Check Node.js
+    const nodeResult = this.runCommand('node --version', { stdio: 'pipe', cwd: PROJECT_ROOT });
+    if (!nodeResult.success) {
+      throw new Error('Node.js not found');
+    }
+
     this.log('Prerequisites check completed');
   }
 
   /**
-   * Initialize testbed
+   * Setup CI schemas
    */
-  async initializeTestbed(): Promise<void> {
-    this.log('Initializing testbed...');
+  async setupCISchemas(): Promise<void> {
+    this.log('Setting up CI schemas...');
+
+    // Run the schema setup script
+    const schemaResult = this.runCommand('npx ts-node scripts/setup-ci-schemas.ts', { cwd: PROJECT_ROOT });
+    if (!schemaResult.success) {
+      throw new Error(`CI schema setup error: ${schemaResult.error}`);
+    }
+
+    this.log('CI schemas setup completed');
+  }
+
+  /**
+   * Create project using actual CLI
+   */
+  async createProjectWithCLI(): Promise<void> {
+    this.log('Creating project with actual CLI...');
+
+    // Clean up existing test project
+    if (fs.existsSync(TEST_PROJECT_PATH)) {
+      fs.rmSync(TEST_PROJECT_PATH, { recursive: true, force: true });
+    }
+
+    // Build CLI first
+    this.log('Building CLI...');
+    const buildResult = this.runCommand('npm run build', { cwd: PROJECT_ROOT });
+    if (!buildResult.success) {
+      throw new Error(`CLI build error: ${buildResult.error}`);
+    }
+
+    // Set environment variables for non-interactive mode
+    const env = {
+      ...process.env,
+      SPANWRIGHT_DB_COUNT: '2',
+      SPANWRIGHT_PRIMARY_DB_NAME: 'ci-primary-db',
+      SPANWRIGHT_PRIMARY_SCHEMA_PATH: path.join(TEMP_SCHEMA_BASE, 'primary'),
+      SPANWRIGHT_SECONDARY_DB_NAME: 'ci-secondary-db',
+      SPANWRIGHT_SECONDARY_SCHEMA_PATH: path.join(TEMP_SCHEMA_BASE, 'secondary'),
+      CI: 'true'
+    };
+
+    // Run actual CLI
+    this.log('Running actual CLI...');
+    const cliResult = this.runCommand(`node dist/index.js ${TEST_PROJECT_NAME}`, {
+      cwd: PROJECT_ROOT,
+      env
+    });
+
+    if (!cliResult.success) {
+      throw new Error(`CLI execution error: ${cliResult.error}`);
+    }
+
+    // Verify project was created
+    if (!fs.existsSync(TEST_PROJECT_PATH)) {
+      throw new Error(`Project directory was not created: ${TEST_PROJECT_PATH}`);
+    }
+
+    this.log('Project created successfully with actual CLI');
+  }
+
+  /**
+   * Initialize the generated project
+   */
+  async initializeProject(): Promise<void> {
+    this.log('Initializing generated project...');
 
     // Run make init (.env file check and Playwright setup)
     const initResult = this.runCommand('make init');
     if (!initResult.success) {
-      throw new Error(`Testbed initialization error: ${initResult.error}`);
+      throw new Error(`Project initialization error: ${initResult.error}`);
     }
 
-    this.log('Testbed initialization completed');
+    this.log('Project initialization completed');
   }
 
   /**
-   * Start Spanner emulator
+   * Test make commands in generated project
    */
-  async startSpannerEmulator(): Promise<void> {
-    this.log('Starting Spanner emulator...');
+  async testMakeCommands(): Promise<void> {
+    this.log('Testing make commands in generated project...');
 
-    // Stop and remove existing containers
-    this.runCommand('make stop');
-
-    // Start emulator
-    const startResult = this.runCommand('make start');
-    if (!startResult.success) {
-      throw new Error(`Spanner emulator startup error: ${startResult.error}`);
+    // Test help command
+    const helpResult = this.runCommand('make help');
+    if (!helpResult.success) {
+      this.log('Make help command failed, but continuing...', 'warn');
     }
 
-    // Wait for emulator to stabilize
-    this.log('Waiting for emulator to stabilize...');
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    // Test prerequisite check
+    const prereqResult = this.runCommand('make check-tools');
+    if (!prereqResult.success) {
+      throw new Error(`Make check-tools failed: ${prereqResult.error}`);
+    }
 
-    this.log('Spanner emulator startup completed');
+    this.log('Make commands test completed');
   }
 
   /**
-   * Setup database schemas
+   * Run full E2E scenarios
    */
-  async setupDatabaseSchemas(): Promise<void> {
-    this.log('Setting up database schemas...');
+  async runFullE2ETests(): Promise<void> {
+    this.log('Running full E2E test pipeline...');
 
-    const setupResult = this.runCommand('make setup');
-    if (!setupResult.success) {
-      throw new Error(`Schema setup error: ${setupResult.error}`);
+    try {
+      // Run all scenarios - this includes emulator setup, schema creation, seeding, and Playwright tests
+      const runAllResult = this.runCommand('make run-all-scenarios');
+      if (!runAllResult.success) {
+        throw new Error(`E2E pipeline failed: ${runAllResult.error}`);
+      }
+
+      this.log('Full E2E test pipeline completed successfully');
+    } catch (error) {
+      // Try to generate report even if tests fail
+      this.log('E2E tests failed, attempting to generate report...', 'warn');
+      const reportResult = this.runCommand('make test-report || true', { stdio: 'pipe' });
+      if (reportResult.success) {
+        this.log('Test report generated despite failures');
+      }
+      throw error;
     }
-
-    this.log('Database schema setup completed');
-  }
-
-  /**
-   * Run scenario-based tests
-   */
-  async runScenarioTests(): Promise<void> {
-    this.log('Running scenario-based tests...');
-
-    // Run all scenarios
-    const runAllResult = this.runCommand('make run-all-scenarios');
-    if (!runAllResult.success) {
-      throw new Error(`Scenario test error: ${runAllResult.error}`);
-    }
-
-    this.log('Scenario-based tests completed');
-  }
-
-  /**
-   * Run Playwright E2E tests
-   */
-  async runPlaywrightTests(): Promise<void> {
-    this.log('Running Playwright E2E tests...');
-
-    // Run Playwright tests
-    const e2eResult = this.runCommand('npm test');
-    if (!e2eResult.success) {
-      // Generate test report even if tests fail
-      this.log('E2E tests failed, but generating report...', 'warn');
-    }
-
-    // Generate test report (continue even if it fails)
-    this.log('Generating test report...');
-    const reportResult = this.runCommand('npm run report', { stdio: 'pipe' });
-    if (reportResult.success) {
-      this.log('Test report generated: test-results/report/index.html');
-    }
-
-    if (!e2eResult.success) {
-      throw new Error(`Playwright E2E test error: ${e2eResult.error}`);
-    }
-
-    this.log('Playwright E2E tests completed');
   }
 
   /**
@@ -218,8 +249,22 @@ class E2ETestRunner {
   async cleanup(): Promise<void> {
     this.log('Running cleanup...');
 
-    // Stop Spanner emulator
-    this.runCommand('make stop');
+    // Stop Spanner emulator if project exists
+    if (fs.existsSync(TEST_PROJECT_PATH)) {
+      this.runCommand('make stop');
+    }
+
+    // Clean up temporary schemas
+    if (fs.existsSync(TEMP_SCHEMA_BASE)) {
+      fs.rmSync(TEMP_SCHEMA_BASE, { recursive: true, force: true });
+      this.log('Temporary schemas cleaned up');
+    }
+
+    // Clean up test project
+    if (fs.existsSync(TEST_PROJECT_PATH)) {
+      fs.rmSync(TEST_PROJECT_PATH, { recursive: true, force: true });
+      this.log('Test project cleaned up');
+    }
 
     this.log('Cleanup completed');
   }
@@ -231,25 +276,29 @@ class E2ETestRunner {
     const elapsedTime = this.getElapsedTime();
 
     this.log('='.repeat(70));
-    this.log('🧪 E2E Test Results Summary');
+    this.log('🧪 Real CLI E2E Test Results Summary');
     this.log('='.repeat(70));
     this.log(`Execution time: ${elapsedTime}`);
 
     if (success) {
-      this.log('🎉 All tests completed successfully!');
+      this.log('🎉 Real CLI E2E tests completed successfully!');
+      this.log('');
+      this.log('✅ Verified:');
+      this.log('  - Actual CLI project generation');
+      this.log('  - Template file integrity');
+      this.log('  - Go module compilation');
+      this.log('  - Spanner emulator integration');
+      this.log('  - Database schema setup');
+      this.log('  - Playwright browser tests');
       this.log('');
       this.log('📊 Generated files:');
       this.log(
-        `  - Test report: ${path.join(TESTBED_PROJECT_PATH, 'test-results/report/index.html')}`
+        `  - Test project: ${TEST_PROJECT_PATH}`
       );
-      this.log(`  - Screenshots: ${path.join(TESTBED_PROJECT_PATH, 'test-results/')}`);
-      this.log('');
-      this.log('🔍 Detailed inspection:');
-      this.log(`  cd ${path.relative(process.cwd(), TESTBED_PROJECT_PATH)}`);
-      this.log('  make test-report                 # Show test report');
-      this.log('  make test-e2e-ui                 # Test UI mode');
+      this.log(`  - Test results: ${path.join(TEST_PROJECT_PATH, 'test-results/')}`
+      );
     } else {
-      this.log('💥 Errors occurred during test execution', 'error');
+      this.log('💥 Real CLI E2E test failed', 'error');
       if (error) {
         this.log(`Error details: ${error}`, 'error');
       }
@@ -258,11 +307,13 @@ class E2ETestRunner {
       this.log('  1. Ensure Docker Desktop is running');
       this.log('  2. Ensure wrench is installed');
       this.log('  3. Ensure ports 9010, 9020 are not in use');
+      this.log('  4. Check schema files in /tmp/ci-schemas/');
       this.log('');
-      this.log('🔍 Detailed inspection:');
-      this.log(`  cd ${path.relative(process.cwd(), TESTBED_PROJECT_PATH)}`);
-      this.log('  make help                        # Available commands');
-      this.log('  make check-prerequisites         # Check prerequisites');
+      this.log('🔍 Manual testing:');
+      this.log('  npx ts-node scripts/setup-ci-schemas.ts');
+      this.log('  # Set environment variables');
+      this.log('  npx spanwright test-project');
+      this.log('  cd test-project && make init && make run-all-scenarios');
     }
 
     this.log('='.repeat(70));
@@ -279,19 +330,25 @@ class E2ETestRunner {
       // 1. Check prerequisites
       this.checkPrerequisites();
 
-      // 2. Initialize testbed
-      await this.initializeTestbed();
+      // 2. Setup CI schemas
+      await this.setupCISchemas();
 
-      // 3. Run scenario-based tests (includes emulator setup)
-      await this.runScenarioTests();
+      // 3. Create project using actual CLI
+      await this.createProjectWithCLI();
 
-      // 4. Run Playwright E2E tests
-      await this.runPlaywrightTests();
+      // 4. Initialize the generated project
+      await this.initializeProject();
+
+      // 5. Test make commands
+      await this.testMakeCommands();
+
+      // 6. Run full E2E test pipeline
+      await this.runFullE2ETests();
 
       success = true;
     } catch (err: unknown) {
       error = err instanceof Error ? err.message : String(err);
-      this.log(`E2E test execution error: ${error}`, 'error');
+      this.log(`Real CLI E2E test execution error: ${error}`, 'error');
     } finally {
       // 7. Cleanup
       await this.cleanup();
