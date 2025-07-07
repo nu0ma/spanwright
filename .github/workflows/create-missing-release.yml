@@ -1,0 +1,124 @@
+name: Create Missing GitHub Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag name (e.g., v0.0.10)'
+        required: true
+        type: string
+      release_name:
+        description: 'Release name (e.g., Release v0.0.10)'
+        required: false
+        type: string
+      use_changelog:
+        description: 'Use changelog content for release body'
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Verify tag exists
+      run: |
+        tag_name="${{ inputs.tag_name }}"
+        if ! git tag -l | grep -q "^${tag_name}$"; then
+          echo "❌ Tag ${tag_name} does not exist"
+          exit 1
+        fi
+        echo "✅ Tag ${tag_name} exists"
+        
+    - name: Check if release already exists
+      id: check_release
+      run: |
+        tag_name="${{ inputs.tag_name }}"
+        if gh release view "${tag_name}" > /dev/null 2>&1; then
+          echo "release_exists=true" >> $GITHUB_OUTPUT
+          echo "⚠️ Release ${tag_name} already exists"
+        else
+          echo "release_exists=false" >> $GITHUB_OUTPUT
+          echo "✅ Release ${tag_name} does not exist yet"
+        fi
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Extract changelog for version
+      id: changelog
+      if: ${{ inputs.use_changelog == true }}
+      run: |
+        tag_name="${{ inputs.tag_name }}"
+        version="${tag_name#v}"  # Remove 'v' prefix
+        
+        # Extract changelog section for this version
+        if grep -q "## \[${version}\]" CHANGELOG.md; then
+          # Extract content between this version and the next section
+          awk "/## \[${version}\]/{flag=1;next} /^## \[/{flag=0} flag" CHANGELOG.md > release_body.md
+          echo "changelog_found=true" >> $GITHUB_OUTPUT
+          echo "✅ Found changelog for version ${version}"
+        else
+          echo "changelog_found=false" >> $GITHUB_OUTPUT
+          echo "⚠️ No changelog found for version ${version}"
+        fi
+        
+    - name: Create default release body
+      if: ${{ inputs.use_changelog == false || steps.changelog.outputs.changelog_found == 'false' }}
+      run: |
+        tag_name="${{ inputs.tag_name }}"
+        cat > release_body.md << EOF
+        ## Changes
+        
+        See the [CHANGELOG](./CHANGELOG.md) for details.
+        
+        ## Installation
+        
+        \`\`\`bash
+        npm install -g spanwright@${tag_name}
+        \`\`\`
+        
+        Or use npx:
+        
+        \`\`\`bash
+        npx spanwright@${tag_name} my-project
+        \`\`\`
+        EOF
+        
+    - name: Create GitHub Release
+      if: ${{ steps.check_release.outputs.release_exists == 'false' }}
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ inputs.tag_name }}
+        name: ${{ inputs.release_name || format('Release {0}', inputs.tag_name) }}
+        body_path: release_body.md
+        draft: false
+        prerelease: false
+        
+    - name: Summary
+      run: |
+        tag_name="${{ inputs.tag_name }}"
+        release_exists="${{ steps.check_release.outputs.release_exists }}"
+        
+        echo "## 📋 Release Creation Summary" >> $GITHUB_STEP_SUMMARY
+        echo "- **Tag**: ${tag_name}" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "$release_exists" = "true" ]; then
+          echo "- **Status**: ⚠️ Release already existed" >> $GITHUB_STEP_SUMMARY
+          echo "- **Action**: No action taken" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "- **Status**: ✅ Release created successfully" >> $GITHUB_STEP_SUMMARY
+          echo "- **URL**: [${tag_name}](https://github.com/${{ github.repository }}/releases/tag/${tag_name})" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+    - name: Cleanup
+      run: |
+        rm -f release_body.md
