@@ -2,7 +2,6 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { execFileSync } from 'child_process';
 
 /**
  * Simplified validation script
@@ -184,7 +183,6 @@ class SimpleValidator {
 }
 
 // Handle command line arguments
-const args = process.argv.slice(2);
 const validator = new SimpleValidator();
 
 // Run validation
