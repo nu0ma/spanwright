@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [1.0.0](https://github.com/nu0ma/spanwright/compare/v0.0.9...v1.0.0) (2025-07-07)
+
+
+### Features
+
+* migrate CI from hardcoded Go versions to tool version management ([#15](https://github.com/nu0ma/spanwright/issues/15)) ([1612373](https://github.com/nu0ma/spanwright/commit/1612373e6c2f77ec240c17b24f392dc892cc2a0d))
+* migrate to semantic-release for automated versioning ([#16](https://github.com/nu0ma/spanwright/issues/16)) ([38a6406](https://github.com/nu0ma/spanwright/commit/38a6406c8a31703bb3bfddc012baf9e59df1f337))
+
+
+### BREAKING CHANGES
+
+* Manual release process has been replaced with semantic-release.
+Use conventional commit messages for automated version management.
+
+* fix: update lock file
+
+* fix: update CI to work with semantic-release by using npm install instead of npm pack
 
 No changes since last tag.
 
