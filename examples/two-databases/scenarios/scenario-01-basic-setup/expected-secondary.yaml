@@ -1,22 +1,12 @@
 # Secondary Database expected values configuration  
-# This example assumes analytics and logging table structures
+# Simplified schema with only Logs table
 
 tables:
-  Analytics:
-    count: 5
-    columns:
-      AnalyticsID: "analytics-001"
-      UserID: "user-001"
-      EventType: "page_view"
-      PageURL: "/products"
-      Timestamp: "2024-01-15T10:30:00Z"
-  
-  UserLogs:
-    count: 10
+  Logs:
+    count: 1
     columns:
       LogID: "log-001"
       UserID: "user-001"
       Action: "login"
       IpAddress: "192.168.1.1"
-      UserAgent: "Mozilla/5.0"
-      CreatedAt: "2024-01-15T09:00:00Z"
+      CreatedAt: "2024-01-01T09:00:00Z"
