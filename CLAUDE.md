@@ -197,7 +197,7 @@ template/
 │   └── retry/                # Retry logic
 ├── scenarios/                  # Test scenarios
 │   └── example-01-basic-setup/
-│       ├── seed-data/         # Minimal SQL seed files
+│       ├── fixtures/          # Minimal YAML fixture files for testfixtures
 │       └── tests/             # Playwright E2E tests with inline validation
 ├── tests/                      # Test infrastructure
 │   ├── global-setup.ts        # Simple emulator startup
@@ -229,7 +229,7 @@ Go tools use pooled connections for performance:
 
 ### Scenario-Based Testing
 Each scenario contains:
-1. **Minimal Seed Data** (`seed-data/*.sql`): Essential records only
+1. **Minimal Seed Data**: Essential records only via YAML fixtures (`fixtures/*.yml`)
 2. **Inline Tests** (`tests/*.spec.ts`): Browser automation with embedded validation
 3. **Direct SQL Validation**: Simple database state checks
 
@@ -241,7 +241,7 @@ Each scenario contains:
 ### Validation Flow
 1. Start Spanner emulator (Docker)
 2. Apply schema migrations (wrench)
-3. Inject minimal seed data (Go tool)
+3. Inject minimal seed data (testfixtures with YAML files)
 4. Run browser tests (Playwright)
 5. Validate database state (SQL queries)
 
@@ -268,7 +268,7 @@ Each scenario contains:
 - **wrench**: Spanner schema migration tool
 - **Docker**: Spanner emulator hosting
 - **Node.js**: >=22.0.0 for CLI, >=16.0.0 for generated projects
-- **Go**: For seed injection tool in generated projects
+- **Go**: For testfixtures-based seed injection tool in generated projects
 
 ## Version Management
 
