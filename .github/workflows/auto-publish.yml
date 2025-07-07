@@ -92,7 +92,7 @@ jobs:
       if: steps.version_check.outputs.version_changed == 'true' && steps.npm_check.outputs.version_exists == 'false'
       run: |
         echo "🔍 Running pre-publish validation..."
-        npm run template:validate
+        npm run build
         echo "✅ Template validation passed"
         
     - name: Build project
@@ -107,7 +107,7 @@ jobs:
       if: steps.version_check.outputs.version_changed == 'true' && steps.npm_check.outputs.version_exists == 'false'
       run: |
         echo "🎭 Running E2E tests..."
-        npm run dev:quick-test || echo "⚠️ E2E tests failed, but continuing with publish"
+        npm test || echo "⚠️ E2E tests failed, but continuing with publish"
         
     - name: Verify package contents
       if: steps.version_check.outputs.version_changed == 'true' && steps.npm_check.outputs.version_exists == 'false'

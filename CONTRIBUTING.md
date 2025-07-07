@@ -32,17 +32,8 @@ npm run build
 # Watch mode for development
 npm run dev
 
-# Validate templates
-npm run template:validate
-
-# Create development testbed
-npm run dev:create-testbed
-
-# Run full E2E tests
-npm run dev:test-e2e
-
-# Quick test pipeline
-npm run dev:quick-test
+# Run E2E tests
+npm test
 ```
 
 ## Project Structure
@@ -62,16 +53,9 @@ npm run dev:quick-test
 
 ### Template Changes
 When modifying templates:
-1. **Always validate templates** before committing:
+1. **Always test** before committing:
    ```bash
-   npm run template:validate
-   ```
-2. **Test with real project** generation:
-   ```bash
-   npm run dev:create-testbed
-   cd dev-testbed/spanwright-testbed
-   make init
-   make run-all-scenarios
+   npm test
    ```
 
 ### Testing

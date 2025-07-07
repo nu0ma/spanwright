@@ -48,8 +48,6 @@ jobs:
     - name: Check TypeScript compilation
       run: npx tsc --noEmit
       
-    # Template validation is handled by template-validation.yml workflow
-      
   lint:
     runs-on: ubuntu-latest
     
