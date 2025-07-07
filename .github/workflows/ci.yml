@@ -98,8 +98,8 @@ jobs:
         
     - name: Test CLI installation
       run: |
-        npm pack
-        npm install -g spanwright-*.tgz
+        # Install CLI from built files
+        npm install -g .
         spanwright --help || echo "CLI help not available yet"
         
     - name: Test project generation with real CLI
@@ -176,8 +176,8 @@ jobs:
       
     - name: Install CLI globally
       run: |
-        npm pack
-        npm install -g spanwright-*.tgz
+        # Install CLI from built files
+        npm install -g .
         
     - name: Create test schemas for E2E project
       run: |

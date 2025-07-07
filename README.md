@@ -147,6 +147,44 @@ npm test
 
 We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
+### Release Process
+
+This project uses [semantic-release](https://semantic-release.gitbook.io/semantic-release/) for automated versioning and publishing. Releases are triggered automatically when changes are merged to the main branch.
+
+#### Commit Message Convention
+
+We follow [Conventional Commits](https://conventionalcommits.org/) to determine version bumps:
+
+- `feat:` - New feature (minor version bump)
+- `fix:` - Bug fix (patch version bump)  
+- `BREAKING CHANGE:` - Breaking change (major version bump)
+- `chore:`, `docs:`, `test:` - No release
+
+#### Examples
+```bash
+feat: add support for custom database schemas
+fix: resolve timeout issues in emulator startup
+docs: update installation instructions
+chore: update dependencies
+
+# Breaking change
+feat: redesign CLI interface
+
+BREAKING CHANGE: The CLI interface has been completely redesigned.
+Previous commands are no longer supported.
+```
+
+#### Release Workflow
+
+1. **Create PR** with conventional commit messages
+2. **Merge to main** triggers automatic release
+3. **semantic-release** analyzes commits and:
+   - Determines version bump
+   - Updates CHANGELOG.md
+   - Creates GitHub release
+   - Publishes to npm
+   - Commits updated files
+
 ## Examples
 
 We provide working examples that you can try immediately:
