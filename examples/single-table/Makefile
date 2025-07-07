@@ -16,7 +16,7 @@ DOCKER_IMAGE ?= gcr.io/cloud-spanner-emulator/emulator
 DOCKER_CONTAINER_NAME ?= spanner-emulator
 DOCKER_PORT ?= 9010
 
-.PHONY: help init clean start stop setup run-all test-e2e
+.PHONY: help init clean start stop setup run-all test-e2e test-scenario-only reset-scenario-data
 
 help: ## Show this help
 	@echo "Spanwright E2E Testing Framework"
@@ -46,10 +46,12 @@ setup-playwright: ## Setup Playwright
 start: ## Start Spanner emulator
 	@echo "🐳 Starting Spanner emulator..."
 	@if docker ps -a --format '{{.Names}}' | grep -q "^$(DOCKER_CONTAINER_NAME)$$"; then \
-		echo "📦 Existing container found, restarting..."; \
+		echo "📦 Existing container found, stopping and removing..."; \
 		docker stop $(DOCKER_CONTAINER_NAME) >/dev/null 2>&1 || true; \
-		docker rm $(DOCKER_CONTAINER_NAME) >/dev/null 2>&1 || true; \
+		docker rm -f $(DOCKER_CONTAINER_NAME) >/dev/null 2>&1 || true; \
+		sleep 2; \
 	fi
+	@echo "🚀 Starting new container..."
 	@docker run -d --name $(DOCKER_CONTAINER_NAME) -p $(DOCKER_PORT):9010 $(DOCKER_IMAGE) >/dev/null
 	@echo "⏳ Waiting for emulator to be ready..."
 	@sleep 15
@@ -58,7 +60,8 @@ start: ## Start Spanner emulator
 stop: ## Stop Spanner emulator
 	@echo "🛑 Stopping Spanner emulator..."
 	@docker stop $(DOCKER_CONTAINER_NAME) 2>/dev/null || true
-	@docker rm $(DOCKER_CONTAINER_NAME) 2>/dev/null || true
+	@docker rm -f $(DOCKER_CONTAINER_NAME) 2>/dev/null || true
+	@echo "✅ Spanner emulator stopped"
 
 clean: ## Clean up containers and artifacts
 	@$(MAKE) stop
@@ -92,14 +95,24 @@ test-scenario: ## Run specific scenario test
 	@$(MAKE) setup
 	@npx playwright test --grep $(SCENARIO)
 
+test-scenario-only: ## Run specific scenario test without setup
+	@echo "🧪 Running scenario: $(SCENARIO) (no setup)"
+	@npx playwright test --grep $(SCENARIO)
+
+reset-scenario-data: ## Reset scenario data for next test
+	@echo "🔄 Resetting scenario data for: $(SCENARIO)"
+	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_PORT) go run cmd/seed-injector/main.go --database-id $(PRIMARY_DB_ID) --fixture-dir "$$(pwd)/scenarios/$(SCENARIO)/fixtures"
+
 run-all: run-all-scenarios ## Alias for run-all-scenarios
 
 run-all-scenarios: ## Run all scenarios
 	@echo "🚀 Running all scenarios..."
+	@echo "🏗️ Setting up once for all scenarios..."
 	@$(MAKE) setup
 	@for scenario in $$(ls scenarios/ | grep -E '^(scenario|example)-'); do \
 		echo "▶️ Running $$scenario"; \
-		SCENARIO=$$scenario $(MAKE) test-scenario || exit 1; \
+		SCENARIO=$$scenario $(MAKE) reset-scenario-data || exit 1; \
+		SCENARIO=$$scenario $(MAKE) test-scenario-only || exit 1; \
 	done
 	@echo "✅ All scenarios completed"
 
