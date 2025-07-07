@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1](https://github.com/nu0ma/spanwright/compare/v1.0.0...v1.0.1) (2025-07-07)
+
+
+### Bug Fixes
+
+* resolve Docker container conflict in run-all-scenarios ([#18](https://github.com/nu0ma/spanwright/issues/18)) ([5c2f78a](https://github.com/nu0ma/spanwright/commit/5c2f78a56e755994b92a0d5ac671fb6e32dd2ee9))
+
 # [1.0.0](https://github.com/nu0ma/spanwright/compare/v0.0.9...v1.0.0) (2025-07-07)
 
 
