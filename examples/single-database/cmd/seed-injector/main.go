@@ -2,26 +2,29 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"flag"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
-	"single-table/internal/config"
-	"single-table/internal/data"
-	"single-table/internal/db"
+	"single-database/internal/config"
+	"single-database/internal/retry"
+	"github.com/go-testfixtures/testfixtures/v3"
+	_ "github.com/googleapis/go-sql-spanner"
 )
 
 func main() {
 	// Parse command-line flags for seed injection
 	var databaseID = flag.String("database-id", "", "Database ID to inject seed data")
-	var seedFile = flag.String("seed-file", "", "Path to seed data file")
+	var fixtureDir = flag.String("fixture-dir", "", "Path to fixture directory containing YAML files")
 	flag.Parse()
 
-	if *databaseID == "" || *seedFile == "" {
-		log.Fatal("Both --database-id and --seed-file are required")
+	if *databaseID == "" || *fixtureDir == "" {
+		log.Fatal("Both --database-id and --fixture-dir are required")
 	}
 
 	// Validate database ID format to prevent injection attacks
@@ -29,9 +32,9 @@ func main() {
 		log.Fatalf("Invalid database ID: %v", err)
 	}
 
-	// Validate seed file path to ensure it's safe to read
-	if err := validateSeedFilePath(*seedFile); err != nil {
-		log.Fatalf("Invalid seed file path: %v", err)
+	// Validate fixture directory path to ensure it's safe to read
+	if err := validateFixtureDir(*fixtureDir); err != nil {
+		log.Fatalf("Invalid fixture directory path: %v", err)
 	}
 
 	// Load .env file and validate required environment variables
@@ -39,100 +42,248 @@ func main() {
 		log.Fatalf("Environment configuration error: %v", err)
 	}
 
-	ctx := context.Background()
-	dbConfig, err := config.NewDatabaseConfig(*databaseID)
-	if err != nil {
-		log.Fatalf("Failed to create database config: %v", err)
-	}
-
-	// Create pooled Spanner manager for better performance
-	spannerManager, err := db.NewPooledSpannerManager(ctx, dbConfig)
-	if err != nil {
-		log.Fatalf("Failed to create pooled Spanner manager: %v", err)
-	}
-	defer spannerManager.Close()
+	// Get environment variables
+	projectID := os.Getenv("PROJECT_ID")
+	instanceID := os.Getenv("INSTANCE_ID")
 	
-	// Print pool statistics
-	stats := spannerManager.GetPoolStats()
-	log.Printf("📊 Connection Pool: %d/%d active, %d idle", 
-		stats.ActiveConnections, stats.MaxConnections, stats.IdleConnections)
-
-	// List all tables to get schema information
-	log.Println("Getting table schema information...")
-	tables, err := db.ListTables(ctx, spannerManager.Client())
-	if err != nil {
-		log.Fatalf("Failed to list tables: %v", err)
+	if projectID == "" || instanceID == "" {
+		log.Fatal("PROJECT_ID and INSTANCE_ID environment variables are required")
 	}
 
-	if len(tables) == 0 {
-		log.Fatal("No tables found. Please apply schema first using 'make schema'")
-	}
+	// Execute seed injection with retry logic
+	log.Printf("🌱 Injecting seed data using testfixtures...")
+	log.Printf("📁 Fixture directory: %s", *fixtureDir)
+	log.Printf("🎯 Target: %s/%s/%s", projectID, instanceID, *databaseID)
 
-	log.Printf("Found %d tables in database", len(tables))
-
-	// Get schema path from environment variable
-	schemaPath := os.Getenv("SCHEMA_PATH")
-	if schemaPath == "" {
-		log.Fatal("SCHEMA_PATH environment variable is required for schema parsing")
-	}
-
-	// Read DDL files from schema path
-	log.Printf("Reading schema files from: %s", schemaPath)
-	ddlStatements, err := db.ReadSchemaFiles(schemaPath)
-	if err != nil {
-		log.Fatalf("Failed to read schema files from %s: %v", schemaPath, err)
-	}
-
-	// Parse schema information from DDL statements using existing function
-	schemaMap := db.ParseSchemaFromDDL(ddlStatements)
-
-	// Create seed data processor
-	processor := data.NewSeedDataProcessor(schemaMap)
-
-	// Process seed data
-	log.Printf("Processing seed data from: %s", *seedFile)
-	if err := processor.ProcessSeedData(ctx, spannerManager.Client(), *seedFile, tables); err != nil {
-		log.Fatalf("Failed to process seed data: %v", err)
+	if err := injectSeedData(projectID, instanceID, *databaseID, *fixtureDir); err != nil {
+		log.Fatalf("Seed injection failed: %v", err)
 	}
 
 	log.Println("✅ Seed data injection completed successfully")
 }
 
-// validateSeedFilePath validates that a seed file path is safe to read
-func validateSeedFilePath(path string) error {
+// injectSeedData performs the actual seed injection using testfixtures
+func injectSeedData(projectID, instanceID, databaseID, fixtureDir string) error {
+	ctx := context.Background()
+	
+	// Create database connection string for Spanner
+	dsn := fmt.Sprintf("projects/%s/instances/%s/databases/%s", projectID, instanceID, databaseID)
+	
+	// Open database connection using Spanner SQL driver
+	var db *sql.DB
+	var err error
+	
+	err = retry.DatabaseOperation(ctx, "Open database connection", func(ctx context.Context, attempt int) error {
+		var openErr error
+		db, openErr = sql.Open("spanner", dsn)
+		if openErr != nil {
+			return openErr
+		}
+		
+		// Test connection
+		return db.PingContext(ctx)
+	})
+	
+	if err != nil {
+		return fmt.Errorf("failed to open database connection: %v", err)
+	}
+	defer db.Close()
+
+	// Create testfixtures loader with retry logic
+	var fixtures *testfixtures.Loader
+	
+	// Get available tables in the database
+	availableTables, err := getAvailableTables(ctx, db)
+	if err != nil {
+		return fmt.Errorf("failed to get available tables: %v", err)
+	}
+
+	// Get fixture files that match available tables
+	fixtureFiles, err := getFixtureFilesInOrder(fixtureDir, availableTables)
+	if err != nil {
+		return fmt.Errorf("failed to get fixture files: %v", err)
+	}
+
+	err = retry.DatabaseOperation(ctx, "Create testfixtures loader", func(ctx context.Context, attempt int) error {
+		var loadErr error
+		fixtures, loadErr = testfixtures.New(
+			testfixtures.Database(db),
+			testfixtures.Dialect("spanner"),
+			testfixtures.Files(fixtureFiles...),
+			testfixtures.DangerousSkipTestDatabaseCheck(),
+		)
+		return loadErr
+	})
+	
+	if err != nil {
+		return fmt.Errorf("failed to create testfixtures loader: %v", err)
+	}
+
+	// Load fixtures with retry logic
+	err = retry.DatabaseOperation(ctx, "Load fixtures", func(ctx context.Context, attempt int) error {
+		return fixtures.Load()
+	})
+	
+	if err != nil {
+		return fmt.Errorf("failed to load fixtures: %v", err)
+	}
+
+	return nil
+}
+
+// getAvailableTables gets the list of tables available in the database
+func getAvailableTables(ctx context.Context, db *sql.DB) (map[string]bool, error) {
+	rows, err := db.QueryContext(ctx, "SELECT table_name FROM information_schema.tables WHERE table_schema = '' ORDER BY table_name")
+	if err != nil {
+		return nil, fmt.Errorf("failed to query tables: %v", err)
+	}
+	defer rows.Close()
+
+	availableTables := make(map[string]bool)
+	for rows.Next() {
+		var tableName string
+		if err := rows.Scan(&tableName); err != nil {
+			return nil, fmt.Errorf("failed to scan table name: %v", err)
+		}
+		availableTables[tableName] = true
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating over tables: %v", err)
+	}
+
+	return availableTables, nil
+}
+
+// getFixtureFilesInOrder returns fixture files in the correct order for Spanner
+// considering foreign key dependencies and interleaved table constraints
+// Only returns files for tables that exist in the database
+func getFixtureFilesInOrder(fixtureDir string, availableTables map[string]bool) ([]string, error) {
+	entries, err := os.ReadDir(fixtureDir)
+	if err != nil {
+		return nil, fmt.Errorf("cannot read fixture directory: %v", err)
+	}
+	
+	var fixtureFiles []string
+	
+	// Define dependency order for common table patterns
+	// Parent tables should come before child tables
+	preferredOrder := []string{
+		"Users", "Products", "Orders", "OrderItems",
+		"Analytics", "UserLogs",
+	}
+	
+	// Create a map for quick lookup
+	orderMap := make(map[string]int)
+	for i, name := range preferredOrder {
+		orderMap[name] = i
+	}
+	
+	// Collect YAML/YML files for tables that exist in the database
+	var yamlFiles []string
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			name := entry.Name()
+			if strings.HasSuffix(strings.ToLower(name), ".yml") || strings.HasSuffix(strings.ToLower(name), ".yaml") {
+				tableName := getTableNameFromFile(name)
+				if availableTables[tableName] {
+					yamlFiles = append(yamlFiles, name)
+					log.Printf("📄 Found fixture for table: %s", tableName)
+				} else {
+					log.Printf("⚠️ Skipping fixture for non-existent table: %s", tableName)
+				}
+			}
+		}
+	}
+	
+	// Sort files based on dependency order
+	sort.Slice(yamlFiles, func(i, j int) bool {
+		nameI := getTableNameFromFile(yamlFiles[i])
+		nameJ := getTableNameFromFile(yamlFiles[j])
+		
+		orderI, existsI := orderMap[nameI]
+		orderJ, existsJ := orderMap[nameJ]
+		
+		if existsI && existsJ {
+			return orderI < orderJ
+		} else if existsI {
+			return true
+		} else if existsJ {
+			return false
+		}
+		
+		// If neither is in the preferred order, sort alphabetically
+		return strings.Compare(nameI, nameJ) < 0
+	})
+	
+	// Convert to full paths
+	for _, file := range yamlFiles {
+		fixtureFiles = append(fixtureFiles, filepath.Join(fixtureDir, file))
+	}
+	
+	if len(fixtureFiles) == 0 {
+		return nil, fmt.Errorf("no YAML fixture files found in directory: %s", fixtureDir)
+	}
+	
+	return fixtureFiles, nil
+}
+
+// getTableNameFromFile extracts the table name from a fixture file name
+func getTableNameFromFile(filename string) string {
+	// Remove extension
+	name := filename
+	if strings.HasSuffix(strings.ToLower(name), ".yml") {
+		name = name[:len(name)-4]
+	} else if strings.HasSuffix(strings.ToLower(name), ".yaml") {
+		name = name[:len(name)-5]
+	}
+	
+	// Return the exact name (should match table name exactly)
+	return name
+}
+
+// validateFixtureDir validates that a fixture directory path is safe to read
+func validateFixtureDir(path string) error {
 	if path == "" {
-		return fmt.Errorf("seed file path cannot be empty")
+		return fmt.Errorf("fixture directory path cannot be empty")
 	}
 	
 	// Check for directory traversal attempts
 	cleanPath := filepath.Clean(path)
 	if strings.Contains(cleanPath, "..") {
-		return fmt.Errorf("path traversal not allowed in seed file path")
+		return fmt.Errorf("path traversal not allowed in fixture directory path")
 	}
 	
-	// Ensure file exists and is readable
+	// Ensure directory exists and is readable
 	info, err := os.Stat(cleanPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("seed file does not exist: %s", cleanPath)
+			return fmt.Errorf("fixture directory does not exist: %s", cleanPath)
 		}
-		return fmt.Errorf("cannot access seed file: %v", err)
+		return fmt.Errorf("cannot access fixture directory: %v", err)
 	}
 	
-	// Ensure it's a regular file, not a directory or special file
-	if !info.Mode().IsRegular() {
-		return fmt.Errorf("seed file must be a regular file, not directory or special file")
+	// Ensure it's a directory
+	if !info.IsDir() {
+		return fmt.Errorf("fixture path must be a directory, not a file")
 	}
 	
-	// Check file extension (should be .json)
-	if !strings.HasSuffix(strings.ToLower(cleanPath), ".json") {
-		return fmt.Errorf("seed file must have .json extension")
+	// Check if directory contains YAML files
+	entries, err := os.ReadDir(cleanPath)
+	if err != nil {
+		return fmt.Errorf("cannot read fixture directory: %v", err)
 	}
 	
-	// Check file size (prevent extremely large files)
-	const maxFileSize = 100 * 1024 * 1024 // 100MB
-	if info.Size() > maxFileSize {
-		return fmt.Errorf("seed file too large (max %d bytes, got %d bytes)", maxFileSize, info.Size())
+	hasYAMLFiles := false
+	for _, entry := range entries {
+		if !entry.IsDir() && (strings.HasSuffix(strings.ToLower(entry.Name()), ".yml") || strings.HasSuffix(strings.ToLower(entry.Name()), ".yaml")) {
+			hasYAMLFiles = true
+			break
+		}
+	}
+	
+	if !hasYAMLFiles {
+		return fmt.Errorf("fixture directory must contain at least one YAML file (.yml or .yaml)")
 	}
 	
 	return nil

@@ -1,0 +1,15 @@
+- ProductID: prod-001
+  Name: Sample Product
+  Price: 1000
+  CategoryID: cat-001
+  IsActive: true
+- ProductID: prod-002
+  Name: Test Product
+  Price: 1500
+  CategoryID: cat-001
+  IsActive: true
+- ProductID: prod-003
+  Name: Demo Product
+  Price: 500
+  CategoryID: cat-002
+  IsActive: false

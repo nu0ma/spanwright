@@ -1,5 +1,5 @@
 import { FullConfig } from '@playwright/test';
-import { safeMakeRun, safeGoRun } from './utils/command-utils';
+import { safeMakeRun } from './utils/command-utils';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -50,17 +50,7 @@ async function globalTeardown(config: FullConfig) {
       console.log('🔄 Leaving Spanner emulator running (set STOP_EMULATOR_AFTER_TESTS=true to stop)');
     }
     
-    // Clean up Go connection pools by calling a cleanup script
-    console.log('🔌 Cleaning up database connection pools...');
-    try {
-      safeGoRun('./scripts/cleanup-pools.go', [], {
-        stdio: 'inherit',
-        cwd: process.cwd()
-      });
-      console.log('✅ Connection pools cleaned up');
-    } catch (error: any) {
-      console.warn('⚠️ Failed to clean up connection pools:', error.message);
-    }
+    // Database connections are automatically cleaned up by seed-injector
     
     console.log('✅ Global teardown completed successfully');
     

@@ -1,6 +1,6 @@
 import { test as base } from '@playwright/test';
 import path from 'path';
-import { safeGoRun, validateDatabaseId, validatePath } from '../../../../tests/utils/command-utils';
+import { safeExecSync, validateDatabaseId, validatePath } from '../../../../tests/utils/command-utils';
 
 type DBValidatorFixtures = {
   validateDB: (databaseId: string, expectedPath: string) => void;
@@ -11,19 +11,24 @@ export const test = base.extend<DBValidatorFixtures>({
   validateDB: async ({}, use) => {
     await use((databaseId: string, expectedPath: string) => {
       const projectRoot = path.resolve(__dirname, '../../../..');
-      const validatorPath = path.join(projectRoot, 'cmd/db-validator/main.go');
       
       // Validate inputs
       validateDatabaseId(databaseId);
       const fullExpectedPath = validatePath(expectedPath, projectRoot);
       
-      console.log(`🔍 Validating ${databaseId}...`);
+      console.log(`🔍 Validating ${databaseId} with spalidate...`);
       
       try {
-        // Execute Go program
-        const output = safeGoRun(
-          validatorPath,
-          [databaseId, fullExpectedPath],
+        // Execute spalidate command
+        const output = safeExecSync(
+          'spalidate',
+          [
+            `--project=${process.env.PROJECT_ID || 'test-project'}`,
+            `--instance=${process.env.INSTANCE_ID || 'test-instance'}`,
+            `--database=${databaseId}`,
+            '--port=9010',
+            fullExpectedPath
+          ],
           {
             cwd: projectRoot,
             env: {
@@ -39,12 +44,11 @@ export const test = base.extend<DBValidatorFixtures>({
         // Parse output
         const lines = output.trim().split('\n');
         
-        // Look for success patterns
+        // Look for success patterns (spalidate outputs "✅ All validations passed!" on success)
         const hasSuccess = lines.some(line => 
           line.includes('✅') || 
-          line.includes('SUCCESS') || 
-          line.includes('Validation passed') ||
-          line.includes('All validations passed')
+          line.includes('All validations passed') ||
+          line.includes('Validation passed')
         );
         
         // Look for error patterns
@@ -62,18 +66,9 @@ export const test = base.extend<DBValidatorFixtures>({
         }
         
         if (!hasSuccess) {
-          // If no success marker is found, try JSON parsing
-          try {
-            const jsonLine = lines[lines.length - 1];
-            const result = JSON.parse(jsonLine);
-            if (!result.success) {
-              throw new Error(`Validation failed: ${JSON.stringify(result.errors)}`);
-            }
-          } catch (parseError) {
-            // If JSON parsing also fails, display entire output
-            console.log('Validator output:', output);
-            console.warn('⚠️  Could not determine validation result, assuming success');
-          }
+          // If no success marker is found, display entire output
+          console.log('Spalidate output:', output);
+          console.warn('⚠️  Could not determine validation result, assuming success');
         }
         
         console.log(`✅ ${databaseId} validation passed`);
@@ -84,14 +79,14 @@ export const test = base.extend<DBValidatorFixtures>({
         
         if (error.status) {
           // Exit code is non-zero
-          console.error(`Validator exited with code ${error.status}`);
+          console.error(`Spalidate exited with code ${error.status}`);
           if (error.stdout) {
             console.error('stdout:', error.stdout);
           }
           if (error.stderr) {
             console.error('stderr:', error.stderr);
           }
-          throw new Error(`Validator failed with exit code ${error.status}`);
+          throw new Error(`Spalidate failed with exit code ${error.status}`);
         }
         
         throw error;

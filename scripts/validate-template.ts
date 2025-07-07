@@ -202,6 +202,11 @@ export const validatePath = (path: string, root: string) => {
   console.log('Mock validatePath:', path, root);
   return path;
 };
+
+export const safeExecSync = (command: string, args: string[], options?: Record<string, unknown>) => {
+  console.log('Mock safeExecSync:', command, args);
+  return '✅ All validations passed!';
+};
 `,
         },
         {
@@ -257,6 +262,11 @@ export const validatePath = (path: string, root: string) => {
   console.log('Mock validatePath:', path, root);
   return path;
 };
+
+export const safeExecSync = (command: string, args: string[], options?: Record<string, unknown>) => {
+  console.log('Mock safeExecSync:', command, args);
+  return '✅ All validations passed!';
+};
 `,
         },
         {
@@ -286,6 +296,11 @@ export const validatePath = (path: string, root: string) => {
   console.log('Mock validatePath:', path, root);
   return path;
 };
+
+export const safeExecSync = (command: string, args: string[], options?: Record<string, unknown>) => {
+  console.log('Mock safeExecSync:', command, args);
+  return '✅ All validations passed!';
+};
 `,
         },
         {
@@ -314,6 +329,11 @@ export const validateDatabaseId = (id: string) => {
 export const validatePath = (path: string, root: string) => {
   console.log('Mock validatePath:', path, root);
   return path;
+};
+
+export const safeExecSync = (command: string, args: string[], options?: Record<string, unknown>) => {
+  console.log('Mock safeExecSync:', command, args);
+  return '✅ All validations passed!';
 };
 `,
         },
@@ -346,6 +366,11 @@ export const validateDatabaseId = (id: string) => {
 export const validatePath = (path: string, root: string) => {
   console.log('Mock validatePath:', path, root);
   return path;
+};
+
+export const safeExecSync = (command: string, args: string[], options?: Record<string, unknown>) => {
+  console.log('Mock safeExecSync:', command, args);
+  return '✅ All validations passed!';
 };
 `,
         },
