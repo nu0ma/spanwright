@@ -25,9 +25,9 @@ export const ENV_VARS = {
 export const DEFAULTS = {
   DB_COUNT: '1' as const,
   PRIMARY_DB_NAME: 'primary-db',
-  PRIMARY_SCHEMA_PATH: '/tmp/schema',
+  PRIMARY_SCHEMA_PATH: './schema',
   SECONDARY_DB_NAME: 'secondary-db',
-  SECONDARY_SCHEMA_PATH: '/tmp/schema2',
+  SECONDARY_SCHEMA_PATH: './schema2',
   PROJECT_ID: 'test-project',
   INSTANCE_ID: 'test-instance',
   DOCKER_IMAGE: 'gcr.io/cloud-spanner-emulator/emulator',

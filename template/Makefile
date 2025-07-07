@@ -72,12 +72,13 @@ endif
 
 setup-primary: ## Setup primary database
 	@echo "🔶 Setting up primary database..."
-	@wrench create --project-id $(PROJECT_ID) --instance-id $(INSTANCE_ID) --database-id $(PRIMARY_DB_ID) --directory $(PRIMARY_SCHEMA_PATH)
+	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_PORT) wrench instance create --project $(PROJECT_ID) --instance $(INSTANCE_ID) >/dev/null 2>&1 || true
+	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_PORT) wrench create --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(PRIMARY_DB_ID) --directory "$$(pwd)/$(PRIMARY_DB_SCHEMA_PATH)" || true
 	@go run cmd/seed-injector/main.go --database-id $(PRIMARY_DB_ID) --fixture-dir scenarios/$(SCENARIO)/fixtures
 
 setup-secondary: ## Setup secondary database
 	@echo "☁️ Setting up secondary database..."
-	@wrench create --project-id $(PROJECT_ID) --instance-id $(INSTANCE_ID) --database-id $(SECONDARY_DB_ID) --directory $(SECONDARY_SCHEMA_PATH)
+	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_PORT) wrench create --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(SECONDARY_DB_ID) --directory "$$(pwd)/$(SECONDARY_DB_SCHEMA_PATH)" || true
 	@go run cmd/seed-injector/main.go --database-id $(SECONDARY_DB_ID) --fixture-dir scenarios/$(SCENARIO)/fixtures
 
 test-scenario: ## Run specific scenario test
