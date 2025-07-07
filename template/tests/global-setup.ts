@@ -1,4 +1,4 @@
-import { safeMakeRun } from './utils/command-utils';
+import { runMake } from './test-utils';
 
 /**
  * Simplified global setup for Playwright tests
@@ -10,10 +10,7 @@ async function globalSetup() {
   try {
     // Ensure Spanner emulator is running
     console.log('📡 Starting Spanner emulator...');
-    safeMakeRun('start', [], {
-      stdio: 'inherit',
-      cwd: process.cwd()
-    });
+    runMake('start');
     
     // Give emulator time to fully start
     console.log('⏳ Waiting for emulator to stabilize...');
