@@ -165,8 +165,7 @@ npm run update-go-version 1.24.3
 
 # Validate and test changes
 npm run template:validate
-npm run dev:create-testbed
-npm run dev:test-e2e
+npm test
 ```
 
 ### Automated Version Updates
@@ -204,10 +203,9 @@ The automation updates Go version references in:
    npm run template:validate
    ```
 
-3. **Test with testbed**:
+3. **Run E2E tests**:
    ```bash
-   npm run dev:create-testbed
-   npm run dev:test-e2e
+   npm test
    ```
 
 4. **Commit changes** after validation passes

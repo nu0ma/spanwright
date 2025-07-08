@@ -41,7 +41,6 @@ npm test
 - `src/` - CLI generator source code
 - `template/` - Project template files
 - `scripts/` - Development and validation scripts
-- `dev-testbed/` - Generated test project (auto-created)
 
 ## Contributing Guidelines
 
