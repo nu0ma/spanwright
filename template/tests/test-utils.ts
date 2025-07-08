@@ -95,18 +95,18 @@ export function validateWithSpalidate(scenario: string, database: 'primary' | 's
       maxBuffer: 1024 * 1024 // 1MB buffer for long output
     });
     
-    console.log(`✅ Spalidate validation passed for ${database} database`);
+    console.log(`✅ Validation passed for ${database} database`);
     console.log(`📋 Validation output:\n${result}`);
     return true;
   } catch (error: any) {
     // Build detailed error message with all spalidate output
     const errorDetails = [
-      `❌ Spalidate validation failed for ${database} database`,
+      `❌ Validation failed for ${database} database`,
       `📋 Command: ${spalidateCmd}`,
       `🌐 Emulator host: ${emulatorHost}`,
       `📄 Validation file: ${validationFile}`,
       ``,
-      `🔍 SPALIDATE DETAILED OUTPUT:
+      `🔍 VALIDATION DETAILED OUTPUT:
 ${error.stdout || 'No stdout'}`,
       ``,
       `⚠️ ERROR OUTPUT:
