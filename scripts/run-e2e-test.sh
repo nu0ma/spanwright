@@ -162,9 +162,13 @@ run_full_e2e_tests() {
     # Run all scenarios - this includes emulator setup, schema creation, seeding, and Playwright tests
     if ! make run-all-scenarios; then
         log_error "E2E pipeline failed"
-        # Try to generate report even if tests fail
-        log_warn "E2E tests failed, attempting to generate report..."
-        make test-report || true
+        # Skip interactive report generation in CI environment
+        if [ -z "$CI" ]; then
+            log_warn "E2E tests failed, attempting to generate report..."
+            make test-report || true
+        else
+            log_warn "E2E tests failed (skipping interactive report in CI environment)"
+        fi
         exit 1
     fi
     
