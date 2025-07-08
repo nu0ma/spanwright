@@ -46,6 +46,12 @@ jobs:
     - name: Build project
       run: npm run build
       
+    - name: Run unit tests
+      run: npm run test:unit
+      
+    - name: Run unit tests with coverage
+      run: npm run test:unit:coverage
+      
     - name: Install Playwright with system dependencies
       run: npx playwright install --with-deps
       
