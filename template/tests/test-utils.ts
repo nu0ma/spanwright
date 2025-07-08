@@ -75,34 +75,46 @@ export function validateWithSpalidate(scenario: string, database: 'primary' | 's
     validationFile
   });
 
+  const spalidateArgs = [
+    '--project', projectId,
+    '--instance', instanceId,
+    '--database', targetDatabaseId,
+    '--verbose',
+    validationFile
+  ];
+  
+  const spalidateCmd = `spalidate ${spalidateArgs.join(' ')}`;
+  console.log(`🔍 Executing: ${spalidateCmd}`);
+  console.log(`🌐 SPANNER_EMULATOR_HOST: ${emulatorHost}`);
+
   try {
-    const result = execFileSync('spalidate', [
-      '--project', projectId,
-      '--instance', instanceId,
-      '--database', targetDatabaseId,
-      '--verbose',
-      validationFile
-    ], { 
+    const result = execFileSync('spalidate', spalidateArgs, { 
       encoding: 'utf-8',
       env: { ...process.env, SPANNER_EMULATOR_HOST: emulatorHost },
-      timeout: 30000 // 30 second timeout
+      timeout: 30000, // 30 second timeout
+      maxBuffer: 1024 * 1024 // 1MB buffer for long output
     });
     
     console.log(`✅ Spalidate validation passed for ${database} database`);
+    console.log(`📋 Validation output:\n${result}`);
     return true;
   } catch (error: any) {
-    console.error(`❌ Spalidate validation failed for ${database} database`);
-    console.error(`📋 Command: spalidate --project ${projectId} --instance ${instanceId} --database ${targetDatabaseId} ${validationFile}`);
-    console.error(`🌐 Emulator host: ${emulatorHost}`);
-    console.error(`📄 Error details:`, error.message);
+    // Build detailed error message with all spalidate output
+    const errorDetails = [
+      `❌ Spalidate validation failed for ${database} database`,
+      `📋 Command: ${spalidateCmd}`,
+      `🌐 Emulator host: ${emulatorHost}`,
+      `📄 Validation file: ${validationFile}`,
+      ``,
+      `🔍 SPALIDATE DETAILED OUTPUT:
+${error.stdout || 'No stdout'}`,
+      ``,
+      `⚠️ ERROR OUTPUT:
+${error.stderr || 'No stderr'}`,
+      ``,
+      `💥 Error message: ${error.message}`
+    ].join('\n');
     
-    if (error.stderr) {
-      console.error(`📝 stderr:`, error.stderr);
-    }
-    if (error.stdout) {
-      console.error(`📝 stdout:`, error.stdout);
-    }
-    
-    return false;
+    throw new Error(errorDetails);
   }
 }
