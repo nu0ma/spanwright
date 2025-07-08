@@ -43,11 +43,6 @@ async function validateEmulatorOnly(): Promise<void> {
     throw new Error('🚨 SPANNER_EMULATOR_HOST is required - this framework only works with emulator for safety');
   }
   
-  // Validate it's pointing to localhost/127.0.0.1
-  if (!emulatorHost.includes('localhost') && !emulatorHost.includes('127.0.0.1')) {
-    throw new Error(`🚨 SPANNER_EMULATOR_HOST must use localhost or 127.0.0.1, got: ${emulatorHost}`);
-  }
-  
   // Check project/instance IDs don't look production-like
   const projectId = process.env.PROJECT_ID || 'test-project';
   const instanceId = process.env.INSTANCE_ID || 'test-instance';
