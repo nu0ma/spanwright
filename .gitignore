@@ -165,9 +165,6 @@ go.work.sum
 # Template validation temporary files
 .temp-validation/
 
-dev-testbed/
-# Extra safety for dev-testbed env files
-dev-testbed/**/.env*
 
 # Test CLI directories (temporary project generations)
 test-cli/
