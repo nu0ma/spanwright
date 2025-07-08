@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { getDatabaseConfig } from '../../../tests/database-isolation';
-import { runMake, mockValidateDatabase } from '../../../tests/test-utils';
+import {  mockValidateDatabase } from '../../../tests/test-utils';
 
 test.describe('Simple Basic Test', () => {
   test.beforeAll(async () => {
