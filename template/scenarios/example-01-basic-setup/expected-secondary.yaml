@@ -7,9 +7,9 @@ tables:
     columns:
       AnalyticsID: "analytics-001"
       UserID: "user-001"
-      Event: "page_view"
+      EventType: "page_view"
       Timestamp: "2024-01-01T00:00:00Z"
-      Properties: '{"page": "/home"}'
+      PageURL: "/test-page"
 
   UserLogs:
     count: 1
@@ -17,5 +17,5 @@ tables:
       LogID: "log-001"
       UserID: "user-001"
       Action: "login"
-      Timestamp: "2024-01-01T00:00:00Z"
-      IPAddress: "192.168.1.1"
+      CreatedAt: "2024-01-01T00:00:00Z"
+      IpAddress: "127.0.0.1"
