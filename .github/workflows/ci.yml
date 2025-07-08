@@ -36,6 +36,9 @@ jobs:
         
     - name: Install wrench
       run: go install github.com/cloudspannerecosystem/wrench@latest
+      
+    - name: Install spalidate
+      run: go install github.com/nu0ma/spalidate@latest
         
     - name: Install dependencies
       run: npm ci
@@ -167,6 +170,12 @@ jobs:
       with:
         go-version: ${{ steps.go-version-2.outputs.version }}
         cache: true
+        
+    - name: Install wrench
+      run: go install github.com/cloudspannerecosystem/wrench@latest
+      
+    - name: Install spalidate
+      run: go install github.com/nu0ma/spalidate@latest
         
     - name: Install dependencies
       run: npm ci
