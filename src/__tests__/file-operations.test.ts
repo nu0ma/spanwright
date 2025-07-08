@@ -16,7 +16,7 @@ import {
   removeSecondaryDbFiles
 } from '../file-operations'
 import { FileSystemError } from '../errors'
-import { FILE_PATTERNS, TEMPLATE_VARS } from '../constants'
+import { FILE_PATTERNS } from '../constants'
 
 // Mock the fs module
 vi.mock('fs')
@@ -26,19 +26,16 @@ describe('File Operations Module', () => {
 
   beforeEach(() => {
     mockFs = {
-      existsSync: vi.fn(),
-      mkdirSync: vi.fn(),
-      readdirSync: vi.fn(),
-      statSync: vi.fn(),
-      copyFileSync: vi.fn(),
-      unlinkSync: vi.fn(),
-      renameSync: vi.fn(),
-      readFileSync: vi.fn(),
-      writeFileSync: vi.fn()
+      existsSync: vi.mocked(fs.existsSync),
+      mkdirSync: vi.mocked(fs.mkdirSync),
+      readdirSync: vi.mocked(fs.readdirSync),
+      statSync: vi.mocked(fs.statSync),
+      copyFileSync: vi.mocked(fs.copyFileSync),
+      unlinkSync: vi.mocked(fs.unlinkSync),
+      renameSync: vi.mocked(fs.renameSync),
+      readFileSync: vi.mocked(fs.readFileSync),
+      writeFileSync: vi.mocked(fs.writeFileSync)
     }
-
-    // Replace all fs methods with mocks
-    Object.assign(fs, mockFs)
   })
 
   afterEach(() => {

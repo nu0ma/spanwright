@@ -1,7 +1,6 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { validateProjectName, validateDatabaseCount, validateSchemaPath, isFlag, sanitizeInput } from '../validation'
 import { ValidationError } from '../errors'
-import { VALIDATION } from '../constants'
 
 describe('Validation Module', () => {
   describe('validateProjectName', () => {
