@@ -58,7 +58,6 @@ We take security seriously. If you discover a security vulnerability, please rep
 - **Dependency Management**: Dependencies are pinned to specific versions where possible
 
 ### Development Environment
-- **Testbed Isolation**: Development testbed creates temporary files that are automatically cleaned up
 - **Environment Variables**: Sensitive development configuration is kept in `.env` files that are gitignored
 - **Docker Isolation**: Emulator containers are isolated from the host system
 
