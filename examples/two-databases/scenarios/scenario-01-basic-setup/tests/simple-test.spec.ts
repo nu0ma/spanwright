@@ -9,12 +9,9 @@ test.describe('Simple Basic Test', () => {
     const dbConfig = getDatabaseConfig();
     console.log(`🔧 Process ${dbConfig.processId}: Using databases ${dbConfig.primaryDbId}, ${dbConfig.secondaryDbId}`);
     
-    try {
-      runMake('setup');
-      console.log('✅ Database setup complete');
-    } catch (error) {
-      console.log('⚠️ Database setup failed, continuing with test...');
-    }
+    // Database setup is already handled by Makefile
+    // No need to run setup here - it would cause container conflicts
+    console.log('✅ Using existing database setup from Makefile');
   });
 
   test('Basic Page Test', async ({ page }) => {
