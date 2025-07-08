@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { getDatabaseConfig } from '../../../tests/database-isolation';
-import { runMake, validateWithSpalidate } from '../../../tests/test-utils';
+import { validateWithSpalidate } from '../../../tests/test-utils';
 
 test.describe('Simple Basic Test', () => {
   test.beforeAll(async () => {
@@ -9,12 +9,9 @@ test.describe('Simple Basic Test', () => {
     const dbConfig = getDatabaseConfig();
     console.log(`🔧 Process ${dbConfig.processId}: Using databases ${dbConfig.primaryDbId}, ${dbConfig.secondaryDbId}`);
     
-    try {
-      runMake('setup');
-      console.log('✅ Database setup complete');
-    } catch {
-      console.log('⚠️ Database setup failed, continuing with test...');
-    }
+    // Database setup is already handled by Makefile
+    // No need to run setup here - it would cause container conflicts
+    console.log('✅ Using existing database setup from Makefile');
   });
 
   test('Basic Page Test', async ({ page }) => {

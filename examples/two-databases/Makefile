@@ -43,13 +43,14 @@ setup-playwright: ## Setup Playwright
 	@npx playwright install
 	@echo "✅ Playwright setup complete"
 
-start: ## Start Spanner emulator
-	@echo "🐳 Starting Spanner emulator..."
-	@docker run -d --name $(DOCKER_CONTAINER_NAME) -p $(DOCKER_PORT):9010 $(DOCKER_IMAGE) || \
-		(docker start $(DOCKER_CONTAINER_NAME) && echo "✅ Emulator already running")
+start: ## Start Spanner emulator (with fresh state)
+	@echo "🐳 Starting fresh Spanner emulator..."
+	@docker stop $(DOCKER_CONTAINER_NAME) 2>/dev/null || true
+	@docker rm $(DOCKER_CONTAINER_NAME) 2>/dev/null || true
+	@docker run -d --name $(DOCKER_CONTAINER_NAME) -p $(DOCKER_PORT):9010 $(DOCKER_IMAGE)
 	@echo "⏳ Waiting for emulator..."
 	@sleep 10
-	@echo "✅ Spanner emulator ready on localhost:$(DOCKER_PORT)"
+	@echo "✅ Fresh Spanner emulator ready on localhost:$(DOCKER_PORT)"
 
 stop: ## Stop Spanner emulator
 	@echo "🛑 Stopping Spanner emulator..."
@@ -64,21 +65,30 @@ clean: ## Clean up containers and artifacts
 setup: ## Setup databases and schemas
 	@echo "🏗️ Setting up databases..."
 	@$(MAKE) start
+	@$(MAKE) clean-databases
 	@$(MAKE) setup-primary
 ifeq ($(DB_COUNT),2)
 	@$(MAKE) setup-secondary
 endif
 	@echo "✅ Database setup complete"
 
+clean-databases: ## Clean existing databases
+	@echo "🧹 Cleaning existing databases..."
+	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_PORT) wrench instance create --project $(PROJECT_ID) --instance $(INSTANCE_ID) >/dev/null 2>&1 || true
+	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_PORT) wrench drop --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(PRIMARY_DB_ID) >/dev/null 2>&1 || true
+ifeq ($(DB_COUNT),2)
+	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_PORT) wrench drop --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(SECONDARY_DB_ID) >/dev/null 2>&1 || true
+endif
+
 setup-primary: ## Setup primary database
 	@echo "🔶 Setting up primary database..."
 	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_PORT) wrench instance create --project $(PROJECT_ID) --instance $(INSTANCE_ID) >/dev/null 2>&1 || true
-	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_PORT) wrench create --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(PRIMARY_DB_ID) --directory "$$(pwd)/$(PRIMARY_DB_SCHEMA_PATH)" || true
+	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_PORT) wrench create --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(PRIMARY_DB_ID) --directory "$$(pwd)/$(PRIMARY_DB_SCHEMA_PATH)" >/dev/null 2>&1 || true
 	@go run cmd/seed-injector/main.go --database-id $(PRIMARY_DB_ID) --fixture-dir scenarios/$(SCENARIO)/fixtures/primary
 
 setup-secondary: ## Setup secondary database
 	@echo "☁️ Setting up secondary database..."
-	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_PORT) wrench create --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(SECONDARY_DB_ID) --directory "$$(pwd)/$(SECONDARY_DB_SCHEMA_PATH)" || true
+	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_PORT) wrench create --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(SECONDARY_DB_ID) --directory "$$(pwd)/$(SECONDARY_DB_SCHEMA_PATH)" >/dev/null 2>&1 || true
 	@go run cmd/seed-injector/main.go --database-id $(SECONDARY_DB_ID) --fixture-dir scenarios/$(SCENARIO)/fixtures/secondary
 
 test-scenario: ## Run specific scenario test
@@ -93,9 +103,13 @@ run-all-scenarios: ## Run all scenarios
 	@$(MAKE) setup
 	@for scenario in $$(ls scenarios/ | grep -E '^(scenario|example)-'); do \
 		echo "▶️ Running $$scenario"; \
-		SCENARIO=$$scenario $(MAKE) test-scenario || exit 1; \
+		SCENARIO=$$scenario $(MAKE) test-scenario-only || exit 1; \
 	done
 	@echo "✅ All scenarios completed"
+
+test-scenario-only: ## Run specific scenario test without setup
+	@echo "🧪 Running scenario: $(SCENARIO)"
+	@npx playwright test --grep $(SCENARIO)
 
 test-e2e: ## Run Playwright E2E tests
 	@npx playwright test
