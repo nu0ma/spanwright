@@ -127,6 +127,20 @@ export function processTemplateFiles(projectPath: string, projectName: string): 
       [TEMPLATE_VARS.PROJECT_NAME]: projectName
     });
   }
+  
+  // Copy spalidate validation templates
+  const validationTemplateFiles = [
+    'expected-primary.yaml.template',
+    'expected-secondary.yaml.template'
+  ];
+  
+  for (const templateFile of validationTemplateFiles) {
+    const srcPath = path.join(projectPath, templateFile);
+    if (safeFileExists(srcPath)) {
+      // Keep template files for new-scenario command
+      continue;
+    }
+  }
 }
 
 export function replaceProjectNameInGoFiles(projectPath: string, projectName: string): void {
@@ -159,7 +173,8 @@ export function removeSecondaryDbFiles(projectPath: string): void {
   
   const filesToRemove = [
     path.join(exampleDir, 'expected-secondary.yaml'),
-    path.join(exampleDir, 'seed-data', 'secondary-seed.json')
+    path.join(exampleDir, 'seed-data', 'secondary-seed.json'),
+    path.join(projectPath, 'expected-secondary.yaml.template')
   ];
   
   for (const file of filesToRemove) {

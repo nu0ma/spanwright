@@ -101,9 +101,10 @@ Go tools use pooled connections for performance:
 - Connection pool statistics and monitoring
 
 ### Validation System
-- **SQL-based Validation**: Direct SQL queries for database state validation
-- **Inline Configuration**: Test expectations defined directly in test files
-- **Simple Integration**: No external dependencies for validation logic
+- **Spalidate Integration**: Uses spalidate CLI tool for comprehensive database validation
+- **YAML Configuration**: Expected database state defined in `expected-*.yaml` files
+- **Automated Validation**: Integrated into `run-all-scenarios` workflow
+- **Template-based**: Validation files auto-generated from templates
 
 ## Testing Strategy
 
@@ -123,7 +124,7 @@ Each scenario contains:
 2. Apply schema migrations (wrench)
 3. Inject minimal seed data (testfixtures with YAML files)
 4. Run browser tests (Playwright)
-5. Validate database state (SQL queries)
+5. Validate database state (spalidate with YAML expectations)
 
 ## Development Notes
 
@@ -147,6 +148,7 @@ Each scenario contains:
 ### Environment Requirements
 - **wrench**: Spanner schema migration tool
 - **Docker**: Spanner emulator hosting
+- **spalidate**: Database validation tool (https://github.com/nu0ma/spalidate)
 - **Node.js**: >=22.0.0 for CLI, >=16.0.0 for generated projects
 - **Go**: Version managed via `.tool-versions` and `.mise.toml` for consistency
 - **mise** (optional): For local development version management

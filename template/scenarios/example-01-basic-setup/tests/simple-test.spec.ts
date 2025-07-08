@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { getDatabaseConfig } from '../../../tests/database-isolation';
-import { runMake, mockValidateDatabase } from '../../../tests/test-utils';
+import { runMake, mockValidateDatabase, validateWithSpalidate } from '../../../tests/test-utils';
 
 test.describe('example-01-basic-setup', () => {
   test.beforeAll(async () => {
@@ -20,9 +20,16 @@ test.describe('example-01-basic-setup', () => {
   test('Database Validation', async () => {
     const dbConfig = getDatabaseConfig();
     
-    // Simple mock validation
-    const validation = mockValidateDatabase(dbConfig.primaryDbId);
-    expect(validation.every(r => r.valid)).toBe(true);
+    // Real spalidate validation
+    const primaryValid = validateWithSpalidate('example-01-basic-setup', 'primary', dbConfig.primaryDbId);
+    expect(primaryValid).toBe(true);
+    
+    // Secondary database validation (if DB_COUNT=2)
+    const dbCount = parseInt(process.env.DB_COUNT || '2');
+    if (dbCount === 2) {
+      const secondaryValid = validateWithSpalidate('example-01-basic-setup', 'secondary', dbConfig.secondaryDbId);
+      expect(secondaryValid).toBe(true);
+    }
     
     console.log(`✅ Database validation passed for process ${dbConfig.processId}`);
   });
