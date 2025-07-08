@@ -21,13 +21,13 @@ test.describe('example-01-basic-setup', () => {
     const dbConfig = getDatabaseConfig();
     
     // Real spalidate validation
-    const primaryValid = validateWithSpalidate('example-01-basic-setup', 'primary');
+    const primaryValid = validateWithSpalidate('example-01-basic-setup', 'primary', dbConfig.primaryDbId);
     expect(primaryValid).toBe(true);
     
     // Secondary database validation (if DB_COUNT=2)
     const dbCount = parseInt(process.env.DB_COUNT || '2');
     if (dbCount === 2) {
-      const secondaryValid = validateWithSpalidate('example-01-basic-setup', 'secondary');
+      const secondaryValid = validateWithSpalidate('example-01-basic-setup', 'secondary', dbConfig.secondaryDbId);
       expect(secondaryValid).toBe(true);
     }
     

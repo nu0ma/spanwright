@@ -51,7 +51,7 @@ export function mockValidateDatabase(databaseId: string): ValidationResult[] {
 }
 
 // Real spalidate validation
-export function validateWithSpalidate(scenario: string, database: 'primary' | 'secondary'): boolean {
+export function validateWithSpalidate(scenario: string, database: 'primary' | 'secondary', databaseId?: string): boolean {
   const validationFile = path.join(process.cwd(), 'scenarios', scenario, `expected-${database}.yaml`);
   
   if (!existsSync(validationFile)) {
@@ -61,15 +61,15 @@ export function validateWithSpalidate(scenario: string, database: 'primary' | 's
 
   const projectId = process.env.PROJECT_ID || 'test-project';
   const instanceId = process.env.INSTANCE_ID || 'test-instance';
-  const databaseId = database === 'primary' 
+  const targetDatabaseId = databaseId || (database === 'primary' 
     ? process.env.PRIMARY_DB_ID || 'primary-db'
-    : process.env.SECONDARY_DB_ID || 'secondary-db';
+    : process.env.SECONDARY_DB_ID || 'secondary-db');
 
   try {
     const result = execFileSync('spalidate', [
       '--project', projectId,
       '--instance', instanceId,
-      '--database', databaseId,
+      '--database', targetDatabaseId,
       validationFile
     ], { 
       encoding: 'utf-8',
