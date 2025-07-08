@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { getDatabaseConfig } from '../../../tests/database-isolation';
-import { runMake, mockValidateDatabase } from '../../../tests/test-utils';
+import { runMake, validateWithSpalidate } from '../../../tests/test-utils';
 
 test.describe('Simple Basic Test', () => {
   test.beforeAll(async () => {
@@ -12,7 +12,7 @@ test.describe('Simple Basic Test', () => {
     try {
       runMake('setup');
       console.log('✅ Database setup complete');
-    } catch (error) {
+    } catch {
       console.log('⚠️ Database setup failed, continuing with test...');
     }
   });
@@ -27,9 +27,12 @@ test.describe('Simple Basic Test', () => {
   test('Database Validation', async () => {
     const dbConfig = getDatabaseConfig();
     
-    // Simple mock validation
-    const validation = mockValidateDatabase(dbConfig.primaryDbId);
-    expect(validation.every(r => r.valid)).toBe(true);
+    // Use the environment variable database IDs instead of process-specific ones
+    const validation1 = validateWithSpalidate('scenario-01-basic-setup', 'primary');
+    expect(validation1).toBe(true);
+
+    const validation2 = validateWithSpalidate('scenario-01-basic-setup', 'secondary');
+    expect(validation2).toBe(true);
     
     console.log(`✅ Database validation passed for process ${dbConfig.processId}`);
   });
