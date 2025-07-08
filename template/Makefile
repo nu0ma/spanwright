@@ -35,7 +35,12 @@ check-tools: ## Check required tools
 	@command -v wrench >/dev/null 2>&1 || { echo "❌ wrench not found"; exit 1; }
 	@command -v docker >/dev/null 2>&1 || { echo "❌ docker not found"; exit 1; }
 	@command -v node >/dev/null 2>&1 || { echo "❌ node not found"; exit 1; }
+	@$(MAKE) check-spalidate
 	@echo "✅ All tools available"
+
+check-spalidate: ## Check spalidate availability
+	@command -v spalidate >/dev/null 2>&1 || { echo "❌ spalidate not found - install from https://github.com/nu0ma/spalidate"; exit 1; }
+	@echo "✅ spalidate available"
 
 setup-playwright: ## Setup Playwright
 	@echo "🎭 Setting up Playwright..."
@@ -103,6 +108,8 @@ run-all-scenarios: ## Run all scenarios
 	@for scenario in $$(ls scenarios/ | grep -E '^(scenario|example)-'); do \
 		echo "▶️ Running $$scenario"; \
 		SCENARIO=$$scenario $(MAKE) test-scenario || exit 1; \
+		echo "🔍 Validating $$scenario database state..."; \
+		SCENARIO=$$scenario $(MAKE) validate-scenario || exit 1; \
 	done
 	@echo "✅ All scenarios completed"
 
@@ -113,10 +120,31 @@ test-report: ## Open test report
 	@echo "📊 Opening test report..."
 	@npx playwright show-report
 
+validate-scenario: ## Validate scenario database state
+	@if [ -z "$(SCENARIO)" ]; then echo "❌ SCENARIO required"; exit 1; fi
+	@if [ -f "scenarios/$(SCENARIO)/expected-primary.yaml" ]; then \
+		echo "🔍 Validating primary database for $(SCENARIO)..."; \
+		SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) spalidate --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(PRIMARY_DB_ID) scenarios/$(SCENARIO)/expected-primary.yaml || exit 1; \
+	fi
+ifeq ($(DB_COUNT),2)
+	@if [ -f "scenarios/$(SCENARIO)/expected-secondary.yaml" ]; then \
+		echo "🔍 Validating secondary database for $(SCENARIO)..."; \
+		SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) spalidate --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(SECONDARY_DB_ID) scenarios/$(SCENARIO)/expected-secondary.yaml || exit 1; \
+	fi
+endif
+	@echo "✅ Database validation completed for $(SCENARIO)"
+
+validate-db: ## Validate all databases for current scenario
+	@$(MAKE) validate-scenario
+
 new-scenario: ## Create new scenario (SCENARIO=name required)
 	@if [ -z "$(SCENARIO)" ]; then echo "❌ SCENARIO required"; exit 1; fi
 	@echo "📝 Creating scenario: $(SCENARIO)"
 	@mkdir -p scenarios/$(SCENARIO)/fixtures scenarios/$(SCENARIO)/tests
+	@cp expected-primary.yaml.template scenarios/$(SCENARIO)/expected-primary.yaml 2>/dev/null || echo "⚠️ No primary template found"
+ifeq ($(DB_COUNT),2)
+	@cp expected-secondary.yaml.template scenarios/$(SCENARIO)/expected-secondary.yaml 2>/dev/null || echo "⚠️ No secondary template found"
+endif
 	@echo "✅ Scenario $(SCENARIO) created"
 
 validate: ## Validate configuration and schemas
