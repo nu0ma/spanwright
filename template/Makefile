@@ -153,14 +153,14 @@ validate-scenario: ## Validate scenario database state
 	@if ! docker ps | grep -q $(DOCKER_CONTAINER_NAME); then echo "❌ Emulator not running for validation"; exit 1; fi
 	@if [ -f "scenarios/$(SCENARIO)/expected-primary.yaml" ]; then \
 		echo "🔍 Validating primary database for $(SCENARIO)..."; \
-		SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) spalidate --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(PRIMARY_DB_ID) scenarios/$(SCENARIO)/expected-primary.yaml || { echo "❌ Primary database validation failed for $(SCENARIO)"; exit 1; }; \
+		SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) spalidate --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(PRIMARY_DB_ID) --verbose scenarios/$(SCENARIO)/expected-primary.yaml || { echo "❌ Primary database validation failed for $(SCENARIO)"; exit 1; }; \
 	else \
 		echo "⚠️ No primary validation file found for $(SCENARIO)"; \
 	fi
 ifeq ($(DB_COUNT),2)
 	@if [ -f "scenarios/$(SCENARIO)/expected-secondary.yaml" ]; then \
 		echo "🔍 Validating secondary database for $(SCENARIO)..."; \
-		SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) spalidate --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(SECONDARY_DB_ID) scenarios/$(SCENARIO)/expected-secondary.yaml || { echo "❌ Secondary database validation failed for $(SCENARIO)"; exit 1; }; \
+		SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) spalidate --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(SECONDARY_DB_ID) --verbose scenarios/$(SCENARIO)/expected-secondary.yaml || { echo "❌ Secondary database validation failed for $(SCENARIO)"; exit 1; }; \
 	else \
 		echo "⚠️ No secondary validation file found for $(SCENARIO)"; \
 	fi

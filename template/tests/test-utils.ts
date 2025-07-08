@@ -80,6 +80,7 @@ export function validateWithSpalidate(scenario: string, database: 'primary' | 's
       '--project', projectId,
       '--instance', instanceId,
       '--database', targetDatabaseId,
+      '--verbose',
       validationFile
     ], { 
       encoding: 'utf-8',
