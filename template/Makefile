@@ -98,7 +98,13 @@ setup-secondary: ## Setup secondary database
 
 test-scenario: ## Run specific scenario test  
 	@echo "🧪 Running scenario: $(SCENARIO)"
-	@npx playwright test --grep $(SCENARIO)
+	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) \
+	PROJECT_ID=$(PROJECT_ID) \
+	INSTANCE_ID=$(INSTANCE_ID) \
+	PRIMARY_DB_ID=$(PRIMARY_DB_ID) \
+	SECONDARY_DB_ID=$(SECONDARY_DB_ID) \
+	DB_COUNT=$(DB_COUNT) \
+	npx playwright test --grep $(SCENARIO)
 
 run-all: run-all-scenarios ## Alias for run-all-scenarios
 

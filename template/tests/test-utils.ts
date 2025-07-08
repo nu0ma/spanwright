@@ -66,6 +66,7 @@ export function validateWithSpalidate(scenario: string, database: 'primary' | 's
     : process.env.SECONDARY_DB_ID || 'secondary-db');
 
   try {
+    const emulatorHost = process.env.SPANNER_EMULATOR_HOST || 'localhost:9010';
     const result = execFileSync('spalidate', [
       '--project', projectId,
       '--instance', instanceId,
@@ -73,7 +74,7 @@ export function validateWithSpalidate(scenario: string, database: 'primary' | 's
       validationFile
     ], { 
       encoding: 'utf-8',
-      env: { ...process.env, SPANNER_EMULATOR_HOST: 'localhost:9010' }
+      env: { ...process.env, SPANNER_EMULATOR_HOST: emulatorHost }
     });
     
     console.log(`✅ Spalidate validation passed for ${database} database`);
