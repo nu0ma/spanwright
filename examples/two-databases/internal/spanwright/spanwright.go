@@ -13,9 +13,9 @@ import (
 	"time"
 
 	"cloud.google.com/go/spanner"
+	"github.com/joho/godotenv"
 	"google.golang.org/api/iterator"
 	"google.golang.org/grpc/codes"
-	"github.com/joho/godotenv"
 )
 
 // Config represents the complete application configuration
@@ -80,6 +80,45 @@ func (c *Config) Validate() error {
 	if c.PrimarySchema == "" {
 		return fmt.Errorf("PRIMARY_SCHEMA_PATH is required")
 	}
+
+	// EMULATOR ONLY: Enforce emulator connection for safety
+	if c.EmulatorHost == "" {
+		return fmt.Errorf("SPANNER_EMULATOR_HOST is required - this tool only works with emulator to prevent accidental production access")
+	}
+
+	// Prevent production-like configurations
+	if err := c.validateAgainstProductionPatterns(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// validateAgainstProductionPatterns checks for production-like configuration patterns
+func (c *Config) validateAgainstProductionPatterns() error {
+	// Common production project ID patterns to reject
+	productionPatterns := []string{
+		"prod", "production", "live", "main", "master",
+		"real", "actual", "staging", "stage",
+	}
+
+	projectLower := strings.ToLower(c.ProjectID)
+	instanceLower := strings.ToLower(c.InstanceID)
+
+	for _, pattern := range productionPatterns {
+		if strings.Contains(projectLower, pattern) {
+			return fmt.Errorf("PROJECT_ID '%s' appears to be production-like (contains '%s') - only test/dev configurations allowed", c.ProjectID, pattern)
+		}
+		if strings.Contains(instanceLower, pattern) {
+			return fmt.Errorf("INSTANCE_ID '%s' appears to be production-like (contains '%s') - only test/dev configurations allowed", c.InstanceID, pattern)
+		}
+	}
+
+	// Reject if it looks like a real GCP project ID format
+	if matched, _ := regexp.MatchString(`^[a-z][a-z0-9-]{4,28}[a-z0-9]$`, c.ProjectID); matched && !strings.Contains(projectLower, "test") && !strings.Contains(projectLower, "dev") && !strings.Contains(projectLower, "local") {
+		return fmt.Errorf("PROJECT_ID '%s' looks like a real GCP project - only test/dev/local projects allowed", c.ProjectID)
+	}
+
 	return nil
 }
 

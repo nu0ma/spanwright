@@ -180,6 +180,9 @@ SECONDARY_SCHEMA_PATH=${config.secondarySchemaPath}
 PROJECT_ID=${DEFAULTS.PROJECT_ID}
 INSTANCE_ID=${DEFAULTS.INSTANCE_ID}
 
+# 🚨 EMULATOR ONLY - Prevents accidental production connections
+SPANNER_EMULATOR_HOST=localhost:${DEFAULTS.SPANNER_PORT}
+
 # 🐳 Docker Settings (usually no need to change)
 DOCKER_IMAGE=${DEFAULTS.DOCKER_IMAGE}
 DOCKER_CONTAINER_NAME=${DEFAULTS.CONTAINER_NAME}
