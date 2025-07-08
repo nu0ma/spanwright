@@ -1,4 +1,6 @@
 import { execFileSync } from 'child_process';
+import { existsSync } from 'fs';
+import path from 'path';
 
 /**
  * Simple test utilities
@@ -46,4 +48,60 @@ export function mockValidateDatabase(databaseId: string): ValidationResult[] {
     count,
     valid: count > 0
   }));
+}
+
+// Real spalidate validation
+export function validateWithSpalidate(scenario: string, database: 'primary' | 'secondary', databaseId?: string): boolean {
+  const validationFile = path.join(process.cwd(), 'scenarios', scenario, `expected-${database}.yaml`);
+  
+  if (!existsSync(validationFile)) {
+    console.log(`⚠️ No validation file found: ${validationFile}`);
+    return true; // Skip validation if file doesn't exist
+  }
+
+  const projectId = process.env.PROJECT_ID || 'test-project';
+  const instanceId = process.env.INSTANCE_ID || 'test-instance';
+  const targetDatabaseId = databaseId || (database === 'primary' 
+    ? process.env.PRIMARY_DB_ID || 'primary-db'
+    : process.env.SECONDARY_DB_ID || 'secondary-db');
+
+  const emulatorHost = process.env.SPANNER_EMULATOR_HOST || 'localhost:9010';
+  
+  console.log(`🔍 Validating ${database} database:`, {
+    project: projectId,
+    instance: instanceId,
+    database: targetDatabaseId,
+    emulatorHost,
+    validationFile
+  });
+
+  try {
+    const result = execFileSync('spalidate', [
+      '--project', projectId,
+      '--instance', instanceId,
+      '--database', targetDatabaseId,
+      validationFile
+    ], { 
+      encoding: 'utf-8',
+      env: { ...process.env, SPANNER_EMULATOR_HOST: emulatorHost },
+      timeout: 30000 // 30 second timeout
+    });
+    
+    console.log(`✅ Spalidate validation passed for ${database} database`);
+    return true;
+  } catch (error: any) {
+    console.error(`❌ Spalidate validation failed for ${database} database`);
+    console.error(`📋 Command: spalidate --project ${projectId} --instance ${instanceId} --database ${targetDatabaseId} ${validationFile}`);
+    console.error(`🌐 Emulator host: ${emulatorHost}`);
+    console.error(`📄 Error details:`, error.message);
+    
+    if (error.stderr) {
+      console.error(`📝 stderr:`, error.stderr);
+    }
+    if (error.stdout) {
+      console.error(`📝 stdout:`, error.stdout);
+    }
+    
+    return false;
+  }
 }
