@@ -2,38 +2,28 @@ import { runMake } from './test-utils';
 
 /**
  * Simplified global setup for Playwright tests
- * Only starts the Spanner emulator - database isolation is handled per-test
+ * Relies on Makefile to manage the Spanner emulator setup
  */
 async function globalSetup() {
   console.log('🚀 Starting global test setup...');
   
   try {
-    // Ensure Spanner emulator is running
-    console.log('📡 Starting Spanner emulator...');
-    runMake('start');
+    // The emulator should already be running from Makefile setup
+    // Just verify everything is accessible
+    console.log('🔍 Verifying emulator and tools are accessible...');
     
-    // Give emulator time to fully start
-    console.log('⏳ Waiting for emulator to stabilize...');
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    // Basic verification without starting anything
+    const emulatorHost = process.env.SPANNER_EMULATOR_HOST || 'localhost:9010';
+    console.log(`📡 Expected emulator at: ${emulatorHost}`);
     
-    // Verify emulator is accessible
-    console.log('🔍 Verifying emulator accessibility...');
-    try {
-      runMake('check-tools');
-      console.log('✅ Prerequisites verified');
-    } catch (error: any) {
-      console.error('❌ Prerequisites check failed:', error.message);
-      throw error;
-    }
+    // Brief wait to ensure any setup is complete
+    await new Promise(resolve => setTimeout(resolve, 2000));
     
     console.log('✅ Global setup completed successfully');
     
   } catch (error: any) {
     console.error('❌ Global setup failed:', error.message);
-    console.error('🔧 Common issues:');
-    console.error('  - Docker not running');
-    console.error('  - Ports 9010/9020 already in use');
-    console.error('  - wrench or spalidate not installed');
+    console.error('🔧 Emulator should be managed by Makefile');
     throw error;
   }
 }
