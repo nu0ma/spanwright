@@ -65,8 +65,17 @@ export function validateWithSpalidate(scenario: string, database: 'primary' | 's
     ? process.env.PRIMARY_DB_ID || 'primary-db'
     : process.env.SECONDARY_DB_ID || 'secondary-db');
 
+  const emulatorHost = process.env.SPANNER_EMULATOR_HOST || 'localhost:9010';
+  
+  console.log(`🔍 Validating ${database} database:`, {
+    project: projectId,
+    instance: instanceId,
+    database: targetDatabaseId,
+    emulatorHost,
+    validationFile
+  });
+
   try {
-    const emulatorHost = process.env.SPANNER_EMULATOR_HOST || 'localhost:9010';
     const result = execFileSync('spalidate', [
       '--project', projectId,
       '--instance', instanceId,
@@ -74,13 +83,25 @@ export function validateWithSpalidate(scenario: string, database: 'primary' | 's
       validationFile
     ], { 
       encoding: 'utf-8',
-      env: { ...process.env, SPANNER_EMULATOR_HOST: emulatorHost }
+      env: { ...process.env, SPANNER_EMULATOR_HOST: emulatorHost },
+      timeout: 30000 // 30 second timeout
     });
     
     console.log(`✅ Spalidate validation passed for ${database} database`);
     return true;
   } catch (error: any) {
-    console.error(`❌ Spalidate validation failed for ${database} database:`, error.message);
+    console.error(`❌ Spalidate validation failed for ${database} database`);
+    console.error(`📋 Command: spalidate --project ${projectId} --instance ${instanceId} --database ${targetDatabaseId} ${validationFile}`);
+    console.error(`🌐 Emulator host: ${emulatorHost}`);
+    console.error(`📄 Error details:`, error.message);
+    
+    if (error.stderr) {
+      console.error(`📝 stderr:`, error.stderr);
+    }
+    if (error.stdout) {
+      console.error(`📝 stdout:`, error.stdout);
+    }
+    
     return false;
   }
 }
