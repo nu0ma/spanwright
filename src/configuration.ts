@@ -1,6 +1,6 @@
 import * as readline from 'readline';
 import { ENV_VARS, DEFAULTS, MESSAGES } from './constants';
-import { ConfigurationError } from './errors';
+import { ConfigurationError, ValidationError } from './errors';
 import { validateDatabaseCount, validateSchemaPath, sanitizeInput } from './validation';
 
 export interface DatabaseConfig {
@@ -92,10 +92,25 @@ async function getInteractiveConfiguration(): Promise<DatabaseConfig> {
     const primaryDbNameInput = await prompt.question('Primary DB name (default: primary-db): ');
     const primaryDbName = sanitizeInput(primaryDbNameInput) || DEFAULTS.PRIMARY_DB_NAME;
     
-    const primarySchemaPathInput = await prompt.question('Primary DB schema path: ');
-    const primarySchemaPath = sanitizeInput(primarySchemaPathInput);
-    
-    validateSchemaPath(primarySchemaPath, 'Primary schema path');
+    // Get primary schema path with retry on validation failure
+    let primarySchemaPath: string;
+    while (true) {
+      const primarySchemaPathInput = await prompt.question('Primary DB schema path: ');
+      const inputPath = sanitizeInput(primarySchemaPathInput);
+      
+      try {
+        validateSchemaPath(inputPath, 'Primary schema path');
+        primarySchemaPath = inputPath;
+        break;
+      } catch (error) {
+        if (error instanceof ValidationError) {
+          console.error(`❌ ${error.message}`);
+          console.log('Please try again.');
+        } else {
+          throw error;
+        }
+      }
+    }
     
     const config: DatabaseConfig = {
       count: dbCount as '1' | '2',
@@ -108,10 +123,25 @@ async function getInteractiveConfiguration(): Promise<DatabaseConfig> {
       const secondaryDbNameInput = await prompt.question('Secondary DB name (default: secondary-db): ');
       const secondaryDbName = sanitizeInput(secondaryDbNameInput) || DEFAULTS.SECONDARY_DB_NAME;
       
-      const secondarySchemaPathInput = await prompt.question('Secondary DB schema path: ');
-      const secondarySchemaPath = sanitizeInput(secondarySchemaPathInput);
-      
-      validateSchemaPath(secondarySchemaPath, 'Secondary schema path');
+      // Get secondary schema path with retry on validation failure
+      let secondarySchemaPath: string;
+      while (true) {
+        const secondarySchemaPathInput = await prompt.question('Secondary DB schema path: ');
+        const inputPath = sanitizeInput(secondarySchemaPathInput);
+        
+        try {
+          validateSchemaPath(inputPath, 'Secondary schema path');
+          secondarySchemaPath = inputPath;
+          break;
+        } catch (error) {
+          if (error instanceof ValidationError) {
+            console.error(`❌ ${error.message}`);
+            console.log('Please try again.');
+          } else {
+            throw error;
+          }
+        }
+      }
       
       config.secondaryDbName = secondaryDbName;
       config.secondarySchemaPath = secondarySchemaPath;
