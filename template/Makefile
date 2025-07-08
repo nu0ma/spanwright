@@ -57,9 +57,9 @@ start: ## Start Spanner emulator
 	fi
 	@docker run -d --name $(DOCKER_CONTAINER_NAME) -p $(DOCKER_SPANNER_PORT):9010 $(DOCKER_IMAGE) >/dev/null
 	@echo "⏳ Waiting for emulator to be ready..."
-	@sleep 30
-	@echo "🔍 Verifying emulator connectivity..."
-	@timeout 60 bash -c 'until docker exec $(DOCKER_CONTAINER_NAME) echo "emulator ready" >/dev/null 2>&1; do sleep 2; done' || { echo "❌ Emulator failed to start properly"; exit 1; }
+	@sleep 15
+	@echo "🔍 Verifying emulator status..."
+	@if ! docker ps | grep -q $(DOCKER_CONTAINER_NAME); then echo "❌ Emulator container not running"; exit 1; fi
 	@echo "✅ Spanner emulator ready on localhost:$(DOCKER_SPANNER_PORT)"
 
 stop: ## Stop Spanner emulator
@@ -107,8 +107,8 @@ setup-secondary: ## Setup secondary database
 
 test-scenario: ## Run specific scenario test  
 	@echo "🧪 Running scenario: $(SCENARIO)"
-	@echo "🔍 Verifying emulator connectivity before tests..."
-	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) timeout 30 bash -c 'until docker exec $(DOCKER_CONTAINER_NAME) echo "ready" >/dev/null 2>&1; do sleep 1; done' || { echo "❌ Emulator not accessible"; exit 1; }
+	@echo "🔍 Verifying emulator status before tests..."
+	@if ! docker ps | grep -q $(DOCKER_CONTAINER_NAME); then echo "❌ Emulator not running"; exit 1; fi
 	@echo "🎭 Starting Playwright tests..."
 	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) \
 	PROJECT_ID=$(PROJECT_ID) \
@@ -149,8 +149,8 @@ test-report: ## Open test report
 validate-scenario: ## Validate scenario database state
 	@if [ -z "$(SCENARIO)" ]; then echo "❌ SCENARIO required"; exit 1; fi
 	@echo "🔍 Validating scenario databases for $(SCENARIO)..."
-	@echo "📡 Checking emulator connectivity..."
-	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) timeout 30 bash -c 'until docker exec $(DOCKER_CONTAINER_NAME) echo "ready" >/dev/null 2>&1; do sleep 1; done' || { echo "❌ Emulator not accessible for validation"; exit 1; }
+	@echo "📡 Checking emulator status..."
+	@if ! docker ps | grep -q $(DOCKER_CONTAINER_NAME); then echo "❌ Emulator not running for validation"; exit 1; fi
 	@if [ -f "scenarios/$(SCENARIO)/expected-primary.yaml" ]; then \
 		echo "🔍 Validating primary database for $(SCENARIO)..."; \
 		SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) spalidate --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(PRIMARY_DB_ID) scenarios/$(SCENARIO)/expected-primary.yaml || { echo "❌ Primary database validation failed for $(SCENARIO)"; exit 1; }; \
