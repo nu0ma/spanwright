@@ -1,0 +1,21 @@
+# Spalidate validation configuration for primary database
+# This file defines expected database state after data seeding for scenario-01-basic-setup
+
+tables:
+  Companies:
+    count: 1
+    columns:
+      CompanyID: "company-001"
+      Name: "Test Company Ltd."
+      Status: 1
+      # CreatedAt: "2024-01-01T00:00:00Z"  # Commented out for flexible timestamp validation
+  
+  Users:
+    count: 1
+    columns:
+      UserID: "user-001"
+      Name: "E2E Test User"
+      Email: "e2e-test-user@example.com"
+      CompanyID: "company-001"
+      Status: 1
+      # CreatedAt: "2024-01-01T00:00:00Z"  # Commented out for flexible timestamp validation
