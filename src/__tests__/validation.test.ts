@@ -41,6 +41,39 @@ describe('Validation Module', () => {
       expect(() => validateProjectName('.hidden-project')).toThrow('Project name cannot start with a dot')
     })
 
+    it('should throw ValidationError for project name containing path traversal', () => {
+      expect(() => validateProjectName('project..')).toThrow(ValidationError)
+      expect(() => validateProjectName('project..')).toThrow('Project name cannot contain ".." (path traversal)')
+      
+      expect(() => validateProjectName('..project')).toThrow(ValidationError)
+      expect(() => validateProjectName('..project')).toThrow('Project name cannot contain ".." (path traversal)')
+      
+      expect(() => validateProjectName('proj..ect')).toThrow(ValidationError)
+      expect(() => validateProjectName('proj..ect')).toThrow('Project name cannot contain ".." (path traversal)')
+    })
+
+    it('should throw ValidationError for project name containing null bytes', () => {
+      expect(() => validateProjectName('project\0')).toThrow(ValidationError)
+      expect(() => validateProjectName('project\0')).toThrow('Project name cannot contain null bytes')
+      
+      expect(() => validateProjectName('pro\0ject')).toThrow(ValidationError)
+      expect(() => validateProjectName('pro\0ject')).toThrow('Project name cannot contain null bytes')
+    })
+
+    it('should throw ValidationError for Windows absolute paths', () => {
+      expect(() => validateProjectName('C:project')).toThrow(ValidationError)
+      expect(() => validateProjectName('C:project')).toThrow('Project name cannot be an absolute path')
+      
+      expect(() => validateProjectName('D:test')).toThrow(ValidationError)
+      expect(() => validateProjectName('D:test')).toThrow('Project name cannot be an absolute path')
+    })
+
+    it('should allow valid project names with dots in middle', () => {
+      expect(() => validateProjectName('project.name')).not.toThrow()
+      expect(() => validateProjectName('my.project.test')).not.toThrow()
+      expect(() => validateProjectName('file.txt')).not.toThrow()
+    })
+
     it('should throw ValidationError with correct field name', () => {
       try {
         validateProjectName('')
