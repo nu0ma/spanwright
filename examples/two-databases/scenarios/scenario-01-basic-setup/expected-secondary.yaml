@@ -1,0 +1,11 @@
+# Spalidate validation configuration for secondary database
+# This file defines expected database state after data seeding for scenario-01-basic-setup
+
+tables:
+  SystemConfig:
+    count: 1
+    columns:
+      ConfigKey: "test_mode"
+      ConfigValue: "enabled"
+      Description: "Enable test mode for E2E testing"
+      # UpdatedAt: "2024-01-01T00:00:00Z"  # Commented out for flexible timestamp validation
