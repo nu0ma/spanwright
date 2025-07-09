@@ -10,6 +10,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run clean` - Remove build artifacts
 - `npm test` - Show E2E testing information
 
+### Docker Security
+- `make start` - Start Spanner emulator with security hardening
+- `make compose-up` - Start emulator using Docker Compose
+- `make compose-down` - Stop emulator using Docker Compose
+- See `template/DOCKER_SECURITY.md` for security implementation details
 
 ### Version Management
 - `npm run update-go-version <version>` - Update Go version across all configuration files and templates

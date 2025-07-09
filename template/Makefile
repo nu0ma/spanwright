@@ -16,7 +16,11 @@ DOCKER_IMAGE ?= gcr.io/cloud-spanner-emulator/emulator
 DOCKER_CONTAINER_NAME ?= spanner-emulator
 DOCKER_SPANNER_PORT ?= 9010
 
-.PHONY: help init clean start stop setup run-all test-e2e
+# Security settings
+DOCKER_SECURITY_OPTS ?= --user 1000:1000 --cap-drop=ALL --cap-add=NET_BIND_SERVICE --security-opt=no-new-privileges:true
+DOCKER_RESOURCE_LIMITS ?= --memory=2g --cpus=2
+
+.PHONY: help init clean start stop setup run-all test-e2e compose-up compose-down
 
 help: ## Show this help
 	@echo "Spanwright E2E Testing Framework"
@@ -55,7 +59,11 @@ start: ## Start Spanner emulator
 		docker stop $(DOCKER_CONTAINER_NAME) >/dev/null 2>&1 || true; \
 		docker rm $(DOCKER_CONTAINER_NAME) >/dev/null 2>&1 || true; \
 	fi
-	@docker run -d --name $(DOCKER_CONTAINER_NAME) -p $(DOCKER_SPANNER_PORT):9010 $(DOCKER_IMAGE) >/dev/null
+	@docker run -d --name $(DOCKER_CONTAINER_NAME) \
+		$(DOCKER_SECURITY_OPTS) \
+		$(DOCKER_RESOURCE_LIMITS) \
+		-p 127.0.0.1:$(DOCKER_SPANNER_PORT):9010 \
+		$(DOCKER_IMAGE) >/dev/null
 	@echo "⏳ Waiting for emulator to be ready..."
 	@sleep 15
 	@echo "🔍 Verifying emulator status..."
@@ -200,3 +208,14 @@ build: ## Build Go tools
 dev: ## Development mode - setup and watch
 	@$(MAKE) setup
 	@echo "👀 Development mode - run 'make test-e2e' to test"
+
+compose-up: ## Start Spanner emulator using Docker Compose
+	@echo "🐳 Starting Spanner emulator with Docker Compose..."
+	@docker-compose up -d
+	@echo "⏳ Waiting for emulator to be ready..."
+	@sleep 15
+	@echo "✅ Spanner emulator ready on localhost:9010"
+
+compose-down: ## Stop Spanner emulator using Docker Compose
+	@echo "🛑 Stopping Spanner emulator with Docker Compose..."
+	@docker-compose down
