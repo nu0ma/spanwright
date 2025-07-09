@@ -698,11 +698,6 @@ func validateSchemaPath(schemaPath string) error {
 		return fmt.Errorf("path traversal not allowed in schema path")
 	}
 
-	// Ensure path is not absolute or contains suspicious patterns
-	if filepath.IsAbs(cleanPath) {
-		return fmt.Errorf("absolute paths not allowed for schema files")
-	}
-
 	// Check for suspicious characters that could be used in injection
 	if strings.Contains(cleanPath, ";") || strings.Contains(cleanPath, "&") || strings.Contains(cleanPath, "|") {
 		return fmt.Errorf("schema path contains suspicious characters")
