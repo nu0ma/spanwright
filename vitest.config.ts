@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config'
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
@@ -15,16 +15,16 @@ export default defineConfig({
         'src/__tests__/',
         'src/__mocks__/',
         '*.config.ts',
-        '*.config.js'
+        '*.config.js',
       ],
       thresholds: {
         statements: 85,
         branches: 90,
         functions: 95,
-        lines: 85
-      }
+        lines: 85,
+      },
     },
     include: ['src/**/*.{test,spec}.{js,ts}'],
-    exclude: ['node_modules', 'dist', 'template']
-  }
-})
+    exclude: ['node_modules', 'dist', 'template'],
+  },
+});

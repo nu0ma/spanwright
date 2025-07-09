@@ -13,16 +13,16 @@ export function isSafePath(basePath: string, targetPath: string): boolean {
     const normalizedBase = resolve(basePath);
     const normalizedTarget = resolve(targetPath);
     const relativePath = relative(normalizedBase, normalizedTarget);
-    
+
     // If the absolute path doesn't start with the base path, it's unsafe
     return !relativePath.startsWith('..') && !isAbsolute(relativePath);
   }
-  
+
   // For relative paths, resolve them against the base and check
   const normalizedBase = resolve(basePath);
   const normalizedTarget = resolve(basePath, targetPath);
   const relativePath = relative(normalizedBase, normalizedTarget);
-  
+
   // Check if the relative path starts with '..' or is an absolute path
   return !relativePath.startsWith('..') && !isAbsolute(relativePath);
 }
@@ -42,7 +42,7 @@ export function validatePath(basePath: string, targetPath: string, operationName
       targetPath
     );
   }
-  
+
   // Check for path traversal
   if (!isSafePath(basePath, targetPath)) {
     throw new SecurityError(
@@ -71,7 +71,5 @@ export function getSafePath(basePath: string, targetPath: string): string {
  */
 export function sanitizePath(inputPath: string): string {
   // Remove null bytes and trim whitespace
-  return inputPath
-    .replace(/\0/g, '')
-    .trim();
+  return inputPath.replace(/\0/g, '').trim();
 }
