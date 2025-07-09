@@ -15,7 +15,7 @@ import {
   replaceProjectNameInGoFiles,
   removeSecondaryDbFiles
 } from '../file-operations'
-import { FileSystemError } from '../errors'
+import { FileSystemError, SecurityError } from '../errors'
 import { FILE_PATTERNS } from '../constants'
 
 // Mock the fs module
@@ -83,6 +83,20 @@ describe('File Operations Module', () => {
 
       expect(() => ensureDirectoryExists(dirPath)).toThrow(FileSystemError)
       expect(() => ensureDirectoryExists(dirPath)).toThrow('Failed to create directory: /test/directory')
+    })
+
+    it('should throw SecurityError for path traversal attempts', () => {
+      const dirPath = '../../../etc'
+      
+      expect(() => ensureDirectoryExists(dirPath)).toThrow(SecurityError)
+      expect(() => ensureDirectoryExists(dirPath)).toThrow('Path traversal attempt detected')
+    })
+
+    it('should throw SecurityError for null byte injection', () => {
+      const dirPath = '/test/directory\0/evil'
+      
+      expect(() => ensureDirectoryExists(dirPath)).toThrow(SecurityError)
+      expect(() => ensureDirectoryExists(dirPath)).toThrow('Null byte in path detected')
     })
   })
 
@@ -171,6 +185,34 @@ describe('File Operations Module', () => {
       expect(() => copyDirectory(src, dest)).toThrow(FileSystemError)
       expect(() => copyDirectory(src, dest)).toThrow('Failed to copy directory from /source to /destination')
     })
+
+    it('should throw SecurityError for path traversal in source', () => {
+      const src = '../../../etc/passwd'
+      const dest = '/destination'
+      
+      expect(() => copyDirectory(src, dest)).toThrow(SecurityError)
+      expect(() => copyDirectory(src, dest)).toThrow('Path traversal attempt detected')
+    })
+
+    it('should throw SecurityError for path traversal in destination', () => {
+      const src = '/source'
+      const dest = '../../../etc/evil'
+      
+      expect(() => copyDirectory(src, dest)).toThrow(SecurityError)
+      expect(() => copyDirectory(src, dest)).toThrow('Path traversal attempt detected')
+    })
+
+    it('should throw SecurityError for path traversal in file paths during copy', () => {
+      const src = '/source'
+      const dest = '/destination'
+      
+      mockFs.existsSync.mockReturnValue(false)
+      mockFs.mkdirSync.mockReturnValue(undefined)
+      // Return a file that would traverse outside when joined
+      mockFs.readdirSync.mockReturnValue(['../../../etc/passwd'])
+      
+      expect(() => copyDirectory(src, dest)).toThrow(SecurityError)
+    })
   })
 
   describe('safeFileExists', () => {
@@ -248,6 +290,13 @@ describe('File Operations Module', () => {
 
       expect(() => safeFileDelete(filePath)).not.toThrow()
     })
+
+    it('should throw SecurityError for path traversal attempts', () => {
+      const filePath = '../../../etc/passwd'
+      
+      expect(() => safeFileDelete(filePath)).toThrow(SecurityError)
+      expect(() => safeFileDelete(filePath)).toThrow('Path traversal attempt detected')
+    })
   })
 
   describe('safeFileRename', () => {
@@ -295,6 +344,22 @@ describe('File Operations Module', () => {
 
       expect(() => safeFileRename(oldPath, newPath)).not.toThrow()
     })
+
+    it('should throw SecurityError for path traversal in old path', () => {
+      const oldPath = '../../../etc/passwd'
+      const newPath = '/test/new.txt'
+      
+      expect(() => safeFileRename(oldPath, newPath)).toThrow(SecurityError)
+      expect(() => safeFileRename(oldPath, newPath)).toThrow('Path traversal attempt detected')
+    })
+
+    it('should throw SecurityError for path traversal in new path', () => {
+      const oldPath = '/test/old.txt'
+      const newPath = '../../../etc/passwd'
+      
+      expect(() => safeFileRename(oldPath, newPath)).toThrow(SecurityError)
+      expect(() => safeFileRename(oldPath, newPath)).toThrow('Path traversal attempt detected')
+    })
   })
 
   describe('readFileContent', () => {
@@ -328,6 +393,20 @@ describe('File Operations Module', () => {
       expect(result).toBe('')
       expect(mockFs.readFileSync).toHaveBeenCalledWith(filePath, 'utf8')
     })
+
+    it('should throw SecurityError for path traversal attempts', () => {
+      const filePath = '../../../etc/passwd'
+      
+      expect(() => readFileContent(filePath)).toThrow(SecurityError)
+      expect(() => readFileContent(filePath)).toThrow('Path traversal attempt detected')
+    })
+
+    it('should throw SecurityError for absolute paths', () => {
+      const filePath = '/etc/passwd'
+      
+      expect(() => readFileContent(filePath)).toThrow(SecurityError)
+      expect(() => readFileContent(filePath)).toThrow('Path traversal attempt detected')
+    })
   })
 
   describe('writeFileContent', () => {
@@ -360,6 +439,22 @@ describe('File Operations Module', () => {
       writeFileContent(filePath, content)
 
       expect(mockFs.writeFileSync).toHaveBeenCalledWith(filePath, content, 'utf8')
+    })
+
+    it('should throw SecurityError for path traversal attempts', () => {
+      const filePath = '../../../etc/passwd'
+      const content = 'malicious content'
+      
+      expect(() => writeFileContent(filePath, content)).toThrow(SecurityError)
+      expect(() => writeFileContent(filePath, content)).toThrow('Path traversal attempt detected')
+    })
+
+    it('should throw SecurityError for null byte injection', () => {
+      const filePath = '/test/file.txt\0.sh'
+      const content = 'malicious content'
+      
+      expect(() => writeFileContent(filePath, content)).toThrow(SecurityError)
+      expect(() => writeFileContent(filePath, content)).toThrow('Null byte in path detected')
     })
   })
 

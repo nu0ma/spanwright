@@ -28,6 +28,13 @@ export class ConfigurationError extends SpanwrightError {
   }
 }
 
+export class SecurityError extends SpanwrightError {
+  constructor(message: string, public readonly path: string) {
+    super(message, 'SECURITY_ERROR');
+    this.name = 'SecurityError';
+  }
+}
+
 // Error handling utility
 export function handleError(error: unknown): never {
   if (error instanceof SpanwrightError) {
