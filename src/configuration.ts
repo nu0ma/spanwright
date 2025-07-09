@@ -1,6 +1,6 @@
 import * as readline from 'readline';
 import { ENV_VARS, DEFAULTS, MESSAGES } from './constants';
-import { ConfigurationError, ValidationError } from './errors';
+import { ConfigurationError, ValidationError, logErrorSecurely } from './errors';
 import { validateDatabaseCount, validateSchemaPath, sanitizeInput } from './validation';
 
 export interface DatabaseConfig {
@@ -109,6 +109,7 @@ async function getInteractiveConfiguration(): Promise<DatabaseConfig> {
           console.error(`❌ ${error.message}`);
           console.log('Please try again.');
         } else {
+          logErrorSecurely(error, 'primarySchemaPath validation');
           throw error;
         }
       }
@@ -142,6 +143,7 @@ async function getInteractiveConfiguration(): Promise<DatabaseConfig> {
             console.error(`❌ ${error.message}`);
             console.log('Please try again.');
           } else {
+            logErrorSecurely(error, 'secondarySchemaPath validation');
             throw error;
           }
         }

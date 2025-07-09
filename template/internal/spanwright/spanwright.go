@@ -178,7 +178,7 @@ type DatabaseConfig struct {
 func (dc *DatabaseConfig) DatabasePath() string {
 	dsn, err := BuildSecureDSN(dc.ProjectID, dc.InstanceID, dc.DatabaseID)
 	if err != nil {
-		log.Printf("ERROR: DatabasePath validation failed: %v", err)
+		SafeErrorLog(err, "DatabasePath.BuildSecureDSN")
 		// Return empty string to prevent using invalid DSN
 		return ""
 	}
@@ -202,7 +202,7 @@ func LoadConfig() (*Config, error) {
 	}
 
 	if err := config.Validate(); err != nil {
-		return nil, fmt.Errorf("configuration validation failed: %w", err)
+		return nil, WrapConfigError(err, "config.Validate")
 	}
 
 	return config, nil
@@ -225,7 +225,7 @@ func LoadSecureConfig() (*SecureConfig, error) {
 	}
 
 	if err := config.ValidateSecure(); err != nil {
-		return nil, fmt.Errorf("secure configuration validation failed: %w", err)
+		return nil, WrapConfigError(err, "config.ValidateSecure")
 	}
 
 	return config, nil
@@ -497,7 +497,7 @@ type DatabaseManager struct {
 func NewDatabaseManager(ctx context.Context, dbConfig *DatabaseConfig) (*DatabaseManager, error) {
 	client, err := spanner.NewClient(ctx, dbConfig.DatabasePath())
 	if err != nil {
-		return nil, fmt.Errorf("failed to create Spanner client: %w", err)
+		return nil, WrapDatabaseError(err, "NewDatabaseManager.NewClient")
 	}
 
 	return &DatabaseManager{
@@ -527,12 +527,12 @@ func (dm *DatabaseManager) ListTables(ctx context.Context) ([]string, error) {
 			if err == iterator.Done {
 				break
 			}
-			return nil, fmt.Errorf("error listing tables: %w", err)
+			return nil, WrapDatabaseError(err, "ListTables.Query")
 		}
 
 		var tableName string
 		if err := row.Columns(&tableName); err != nil {
-			log.Printf("Warning: error reading table name: %v", err)
+			SafeErrorLog(err, "ListTables.ScanTableName")
 			continue
 		}
 		tables = append(tables, tableName)
@@ -549,7 +549,7 @@ func (dm *DatabaseManager) GetTableRowCount(ctx context.Context, tableName strin
 	}
 
 	if err := ValidateTableName(tableName); err != nil {
-		return 0, fmt.Errorf("invalid table name: %w", err)
+		return 0, WrapValidationError(err, "GetTableRowCount.ValidateTableName")
 	}
 
 	// Use parameterized query to prevent SQL injection
@@ -561,12 +561,12 @@ func (dm *DatabaseManager) GetTableRowCount(ctx context.Context, tableName strin
 
 	row, err := iter.Next()
 	if err != nil {
-		return 0, fmt.Errorf("failed to execute count query for table %s: %w", tableName, err)
+		return 0, WrapDatabaseError(err, "GetTableRowCount.ExecuteQuery")
 	}
 
 	var count int64
 	if err := row.Columns(&count); err != nil {
-		return 0, fmt.Errorf("failed to read count result for table %s: %w", tableName, err)
+		return 0, WrapDatabaseError(err, "GetTableRowCount.ReadResult")
 	}
 
 	return count, nil
@@ -624,7 +624,7 @@ func WithRetry(ctx context.Context, operation string, fn func(context.Context, i
 		}
 
 		delay := time.Duration(attempt) * initialDelay
-		log.Printf("⚠️ %s failed on attempt %d/%d, retrying in %v: %v", operation, attempt, maxAttempts, delay, err)
+		SafeLogf("⚠️ %s failed on attempt %d/%d, retrying in %v", operation, attempt, maxAttempts, delay)
 
 		select {
 		case <-ctx.Done():
@@ -633,7 +633,7 @@ func WithRetry(ctx context.Context, operation string, fn func(context.Context, i
 		}
 	}
 
-	return fmt.Errorf("max retry attempts (%d) exceeded: %w", maxAttempts, lastErr)
+	return WrapGenericError(lastErr, "WithRetry.MaxAttemptsExceeded")
 }
 
 // isRetryableError determines if an error should be retried
@@ -706,9 +706,9 @@ func validateSchemaPath(schemaPath string) error {
 	// Validate that path exists and is readable
 	if _, err := os.Stat(cleanPath); err != nil {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("schema path does not exist: %s", cleanPath)
+			return fmt.Errorf("schema path does not exist")
 		}
-		return fmt.Errorf("cannot access schema path: %v", err)
+		return fmt.Errorf("cannot access schema path")
 	}
 
 	return nil
@@ -727,19 +727,19 @@ func ReadSchemaFiles(schemaPath string) ([]string, error) {
 
 	absPath, err := filepath.Abs(schemaPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to resolve absolute path: %w", err)
+		return nil, WrapFileSystemError(err, "ReadSchemaFiles.ResolveAbsolutePath")
 	}
 
 	files, err := filepath.Glob(filepath.Join(absPath, "*.sql"))
 	if err != nil {
-		return nil, fmt.Errorf("failed to list schema files: %w", err)
+		return nil, WrapFileSystemError(err, "ReadSchemaFiles.ListFiles")
 	}
 
 	var ddlStatements []string
 	for _, file := range files {
 		content, err := os.ReadFile(file)
 		if err != nil {
-			return nil, fmt.Errorf("failed to read schema file %s: %w", file, err)
+			return nil, WrapFileSystemError(err, "ReadSchemaFiles.ReadFile")
 		}
 		ddlStatements = append(ddlStatements, string(content))
 	}

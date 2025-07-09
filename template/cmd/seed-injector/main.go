@@ -28,18 +28,21 @@ func main() {
 
 	// Validate database ID format to prevent injection attacks
 	if err := validateDatabaseID(*databaseID); err != nil {
-		log.Fatalf("Invalid database ID: %v", err)
+		spanwright.SafeErrorLog(err, "validateDatabaseID")
+		log.Fatal("Invalid database ID. Please check your input.")
 	}
 
 	// Validate fixture directory path to ensure it's safe to read
 	if err := validateFixtureDir(*fixtureDir); err != nil {
-		log.Fatalf("Invalid fixture directory path: %v", err)
+		spanwright.SafeErrorLog(err, "validateFixtureDir")
+		log.Fatal("Invalid fixture directory path. Please check your input.")
 	}
 
 	// Load configuration
 	config, err := spanwright.LoadConfig()
 	if err != nil {
-		log.Fatalf("Configuration error: %v", err)
+		spanwright.SafeErrorLog(err, "LoadConfig")
+		log.Fatal("Configuration loading failed. Please check your settings.")
 	}
 
 	// Execute seed injection with retry logic
@@ -48,7 +51,8 @@ func main() {
 	log.Printf("🎯 Target: %s/%s/%s", config.ProjectID, config.InstanceID, *databaseID)
 
 	if err := injectSeedData(config.ProjectID, config.InstanceID, *databaseID, *fixtureDir); err != nil {
-		log.Fatalf("Seed injection failed: %v", err)
+		spanwright.SafeErrorLog(err, "injectSeedData")
+		log.Fatal("Seed injection failed. Please check your configuration and try again.")
 	}
 
 	log.Println("✅ Seed data injection completed successfully")
@@ -61,7 +65,7 @@ func injectSeedData(projectID, instanceID, databaseID, fixtureDir string) error 
 	// Create secure database connection string for Spanner with validation
 	dsn, err := spanwright.BuildSecureDSN(projectID, instanceID, databaseID)
 	if err != nil {
-		return fmt.Errorf("failed to build secure DSN: %v", err)
+		return spanwright.WrapDatabaseError(err, "BuildSecureDSN")
 	}
 	
 	// Open database connection using Spanner SQL driver
@@ -79,7 +83,7 @@ func injectSeedData(projectID, instanceID, databaseID, fixtureDir string) error 
 	})
 	
 	if err != nil {
-		return fmt.Errorf("failed to open database connection: %v", err)
+		return spanwright.WrapDatabaseError(err, "OpenDatabaseConnection")
 	}
 	defer db.Close()
 
@@ -89,13 +93,13 @@ func injectSeedData(projectID, instanceID, databaseID, fixtureDir string) error 
 	// Get available tables in the database
 	availableTables, err := getAvailableTables(ctx, db)
 	if err != nil {
-		return fmt.Errorf("failed to get available tables: %v", err)
+		return spanwright.WrapDatabaseError(err, "GetAvailableTables")
 	}
 
 	// Get fixture files that match available tables
 	fixtureFiles, err := getFixtureFilesInOrder(fixtureDir, availableTables)
 	if err != nil {
-		return fmt.Errorf("failed to get fixture files: %v", err)
+		return spanwright.WrapFileSystemError(err, "GetFixtureFiles")
 	}
 
 	err = spanwright.WithRetry(ctx, "Create testfixtures loader", func(ctx context.Context, attempt int) error {
@@ -110,7 +114,7 @@ func injectSeedData(projectID, instanceID, databaseID, fixtureDir string) error 
 	})
 	
 	if err != nil {
-		return fmt.Errorf("failed to create testfixtures loader: %v", err)
+		return spanwright.WrapGenericError(err, "CreateTestfixturesLoader")
 	}
 
 	// Load fixtures with retry logic
@@ -119,7 +123,7 @@ func injectSeedData(projectID, instanceID, databaseID, fixtureDir string) error 
 	})
 	
 	if err != nil {
-		return fmt.Errorf("failed to load fixtures: %v", err)
+		return spanwright.WrapGenericError(err, "LoadFixtures")
 	}
 
 	return nil
@@ -130,7 +134,7 @@ func getAvailableTables(ctx context.Context, db *sql.DB) (map[string]bool, error
 	// Use parameterized query to prevent SQL injection
 	rows, err := db.QueryContext(ctx, "SELECT table_name FROM information_schema.tables WHERE table_schema = '' ORDER BY table_name")
 	if err != nil {
-		return nil, fmt.Errorf("failed to query tables: %v", err)
+		return nil, spanwright.WrapDatabaseError(err, "QueryTables")
 	}
 	defer rows.Close()
 
@@ -138,7 +142,7 @@ func getAvailableTables(ctx context.Context, db *sql.DB) (map[string]bool, error
 	for rows.Next() {
 		var tableName string
 		if err := rows.Scan(&tableName); err != nil {
-			return nil, fmt.Errorf("failed to scan table name: %v", err)
+			return nil, spanwright.WrapDatabaseError(err, "ScanTableName")
 		}
 		
 		// Validate table name for security before adding to map
@@ -151,7 +155,7 @@ func getAvailableTables(ctx context.Context, db *sql.DB) (map[string]bool, error
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating over tables: %v", err)
+		return nil, spanwright.WrapDatabaseError(err, "IterateTableRows")
 	}
 
 	return availableTables, nil
@@ -163,7 +167,7 @@ func getAvailableTables(ctx context.Context, db *sql.DB) (map[string]bool, error
 func getFixtureFilesInOrder(fixtureDir string, availableTables map[string]bool) ([]string, error) {
 	entries, err := os.ReadDir(fixtureDir)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read fixture directory: %v", err)
+		return nil, spanwright.WrapFileSystemError(err, "ReadFixtureDirectory")
 	}
 	
 	var fixtureFiles []string
@@ -231,7 +235,7 @@ func getFixtureFilesInOrder(fixtureDir string, availableTables map[string]bool) 
 	}
 	
 	if len(fixtureFiles) == 0 {
-		return nil, fmt.Errorf("no YAML fixture files found in directory: %s", fixtureDir)
+		return nil, spanwright.WrapFileSystemError(fmt.Errorf("no YAML fixture files found"), "GetFixtureFiles")
 	}
 	
 	return fixtureFiles, nil
@@ -267,9 +271,9 @@ func validateFixtureDir(path string) error {
 	info, err := os.Stat(cleanPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("fixture directory does not exist: %s", cleanPath)
+			return fmt.Errorf("fixture directory does not exist")
 		}
-		return fmt.Errorf("cannot access fixture directory: %v", err)
+		return fmt.Errorf("cannot access fixture directory")
 	}
 	
 	// Ensure it's a directory
@@ -280,7 +284,7 @@ func validateFixtureDir(path string) error {
 	// Check if directory contains YAML files
 	entries, err := os.ReadDir(cleanPath)
 	if err != nil {
-		return fmt.Errorf("cannot read fixture directory: %v", err)
+		return fmt.Errorf("cannot read fixture directory")
 	}
 	
 	hasYAMLFiles := false

@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { FileSystemError, SecurityError } from './errors';
+import { FileSystemError, SecurityError, sanitizeErrorMessage, logErrorSecurely } from './errors';
 import { FILE_PATTERNS, TEMPLATE_VARS } from './constants';
 import { validatePath } from './security';
 import { secureTemplateReplace } from './template-security';
@@ -30,7 +30,8 @@ export function ensureDirectoryExists(dirPath: string): void {
     if (error instanceof Error && error.name === 'SecurityError') {
       throw error;
     }
-    throw new FileSystemError(`Failed to create directory: ${dirPath}`, dirPath);
+    logErrorSecurely(error, 'ensureDirectoryExists');
+    throw new FileSystemError('Failed to create directory', '');
   }
 }
 
@@ -70,7 +71,8 @@ export function copyDirectory(src: string, dest: string): void {
     if (error instanceof Error && error.name === 'SecurityError') {
       throw error;
     }
-    throw new FileSystemError(`Failed to copy directory from ${src} to ${dest}`, src);
+    logErrorSecurely(error, 'copyDirectory');
+    throw new FileSystemError('Failed to copy directory', '');
   }
 }
 
@@ -96,7 +98,8 @@ export function safeFileDelete(filePath: string): void {
     if (error instanceof Error && error.name === 'SecurityError') {
       throw error;
     }
-    throw new FileSystemError(`Failed to delete file: ${filePath}`, filePath);
+    logErrorSecurely(error, 'safeFileDelete');
+    throw new FileSystemError('Failed to delete file', '');
   }
 }
 
@@ -117,7 +120,8 @@ export function safeFileRename(oldPath: string, newPath: string): void {
     if (error instanceof Error && error.name === 'SecurityError') {
       throw error;
     }
-    throw new FileSystemError(`Failed to rename file from ${oldPath} to ${newPath}`, oldPath);
+    logErrorSecurely(error, 'safeFileRename');
+    throw new FileSystemError('Failed to rename file', '');
   }
 }
 
@@ -138,7 +142,8 @@ export function readFileContent(filePath: string): string {
     if (error instanceof Error && error.name === 'SecurityError') {
       throw error;
     }
-    throw new FileSystemError(`Failed to read file: ${filePath}`, filePath);
+    logErrorSecurely(error, 'readFileContent');
+    throw new FileSystemError('Failed to read file', '');
   }
 }
 
@@ -162,7 +167,8 @@ export function writeFileContent(filePath: string, content: string): void {
     if (error instanceof Error && error.name === 'SecurityError') {
       throw error;
     }
-    throw new FileSystemError(`Failed to write file: ${filePath}`, filePath);
+    logErrorSecurely(error, 'writeFileContent');
+    throw new FileSystemError('Failed to write file', '');
   }
 }
 
@@ -271,8 +277,9 @@ export function replaceProjectNameInGoFiles(projectPath: string, projectName: st
           });
         }
       }
-    } catch {
-      throw new FileSystemError(`Failed to process directory: ${dir}`, dir);
+    } catch (error) {
+      logErrorSecurely(error, 'processDirectory');
+      throw new FileSystemError('Failed to process directory', '');
     }
   }
 
