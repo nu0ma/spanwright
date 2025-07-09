@@ -1,4 +1,4 @@
-import { normalize, resolve, relative, isAbsolute } from 'path';
+import { resolve, relative, isAbsolute } from 'path';
 import { SecurityError } from './errors';
 
 /**

@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { FileSystemError } from './errors';
 import { FILE_PATTERNS, TEMPLATE_VARS } from './constants';
-import { validatePath, getSafePath } from './security';
+import { validatePath } from './security';
 
 // File and directory operation utilities
 
