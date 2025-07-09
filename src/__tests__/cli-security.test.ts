@@ -20,7 +20,7 @@ describe('CLI Security Tests', () => {
         '../project',
         'project..',
         '..project..',
-        'safe/../unsafe'
+        'safe/../unsafe',
       ];
 
       maliciousNames.forEach(name => {
@@ -34,7 +34,7 @@ describe('CLI Security Tests', () => {
         'project\0/../../../etc/passwd',
         'safe\0unsafe',
         '\0project',
-        'project\0'
+        'project\0',
       ];
 
       maliciousNames.forEach(name => {
@@ -49,7 +49,7 @@ describe('CLI Security Tests', () => {
         'C:Windows\\System32',
         'D:temp\\evil',
         '/tmp/evil',
-        '\\\\server\\share\\evil'
+        '\\\\server\\share\\evil',
       ];
 
       maliciousNames.forEach(name => {
@@ -58,12 +58,7 @@ describe('CLI Security Tests', () => {
     });
 
     it('should prevent hidden file/directory creation', () => {
-      const hiddenNames = [
-        '.hidden-project',
-        '.secret',
-        '.ssh',
-        '.config'
-      ];
+      const hiddenNames = ['.hidden-project', '.secret', '.ssh', '.config'];
 
       hiddenNames.forEach(name => {
         expect(() => validateProjectName(name)).toThrow(ValidationError);
@@ -77,7 +72,7 @@ describe('CLI Security Tests', () => {
         'Project_Name',
         'test-project-name',
         'myproject',
-        'test_project'
+        'test_project',
       ];
 
       safeNames.forEach(name => {
@@ -88,13 +83,7 @@ describe('CLI Security Tests', () => {
 
   describe('Input Sanitization', () => {
     it('should reject Unicode characters for security', () => {
-      const unicodeNames = [
-        '项目名称',
-        'プロジェクト',
-        'проект',
-        'مشروع',
-        '📁project📄'
-      ];
+      const unicodeNames = ['项目名称', 'プロジェクト', 'проект', 'مشروع', '📁project📄'];
 
       unicodeNames.forEach(name => {
         expect(() => validateProjectName(name)).toThrow(ValidationError);
@@ -107,11 +96,7 @@ describe('CLI Security Tests', () => {
     });
 
     it('should handle empty and whitespace-only names', () => {
-      const invalidNames = [
-        '',
-        '   ',
-        '\t\n\r'
-      ];
+      const invalidNames = ['', '   ', '\t\n\r'];
 
       invalidNames.forEach(name => {
         expect(() => validateProjectName(name)).toThrow(ValidationError);
@@ -122,15 +107,15 @@ describe('CLI Security Tests', () => {
   describe('Edge Cases and Attack Vectors', () => {
     it('should handle mixed encoding attacks', () => {
       const encodedNames = [
-        '%2e%2e%2f',     // URL encoded ../ - contains % which is not allowed
-        'unicode.encoded',  // Contains dot which is not allowed
+        '%2e%2e%2f', // URL encoded ../ - contains % which is not allowed
+        'unicode.encoded', // Contains dot which is not allowed
       ];
 
       encodedNames.forEach(name => {
         // These should be rejected due to special characters
         expect(() => validateProjectName(name)).toThrow(ValidationError);
       });
-      
+
       // These contain actual dangerous characters that should be detected
       expect(() => validateProjectName('..%2f')).toThrow(ValidationError);
       expect(() => validateProjectName('%2e%2e\\\\')).toThrow(ValidationError); // Contains \\
@@ -143,7 +128,7 @@ describe('CLI Security Tests', () => {
         'project',
         'PrOjEcT',
         'MY-PROJECT',
-        'my-project'
+        'my-project',
       ];
 
       caseVariations.forEach(name => {
@@ -155,28 +140,23 @@ describe('CLI Security Tests', () => {
       const specialNames = [
         'project@company.com',
         'project+version',
-        'project-v1.0',  // Contains dot which is not allowed
+        'project-v1.0', // Contains dot which is not allowed
         'project(1)',
         'project[test]',
-        'project{dev}'
+        'project{dev}',
       ];
 
       specialNames.forEach(name => {
         expect(() => validateProjectName(name)).toThrow(ValidationError);
       });
-      
+
       // These should be allowed (only letters, numbers, hyphens, underscores)
       expect(() => validateProjectName('project_final')).not.toThrow();
       expect(() => validateProjectName('project-v1')).not.toThrow();
     });
 
     it('should reject dangerous pattern combinations', () => {
-      const dangerousNames = [
-        'project..evil',
-        'test/../hack',
-        'normal\0inject',
-        '.hidden/../etc'
-      ];
+      const dangerousNames = ['project..evil', 'test/../hack', 'normal\0inject', '.hidden/../etc'];
 
       dangerousNames.forEach(name => {
         expect(() => validateProjectName(name)).toThrow(ValidationError);

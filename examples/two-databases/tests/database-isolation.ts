@@ -16,7 +16,7 @@ export function getDatabaseConfig(): DatabaseConfig {
   return {
     processId,
     primaryDbId: `primary-db-${processId}`,
-    secondaryDbId: `secondary-db-${processId}`
+    secondaryDbId: `secondary-db-${processId}`,
   };
 }
 

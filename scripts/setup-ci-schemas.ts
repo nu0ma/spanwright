@@ -27,7 +27,7 @@ class CISchemaSetup {
    */
   createSchemaDirectories(): void {
     this.log('Creating schema directories...');
-    
+
     // Clean up existing directories
     if (fs.existsSync(TEMP_SCHEMA_BASE)) {
       fs.rmSync(TEMP_SCHEMA_BASE, { recursive: true, force: true });
@@ -158,7 +158,7 @@ CREATE TABLE UserLogs (
       this.createPrimarySchema();
       this.createSecondarySchema();
       this.displayEnvironmentVariables();
-      
+
       this.log('='.repeat(60));
       this.log('CI schema setup completed successfully!');
       this.log('='.repeat(60));
@@ -167,7 +167,7 @@ CREATE TABLE UserLogs (
       this.log('1. Export the environment variables above');
       this.log('2. Run: npx spanwright ci-test-project');
       this.log('3. cd ci-test-project && make init && make run-all-scenarios');
-      
+
       return true;
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);

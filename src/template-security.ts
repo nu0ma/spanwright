@@ -21,8 +21,8 @@ const FILE_CONTEXT_MAP: Record<string, TemplateContext> = {
   '.bash': 'shell',
   '.zsh': 'shell',
   '.fish': 'shell',
-  'Makefile': 'shell',
-  'makefile': 'shell',
+  Makefile: 'shell',
+  makefile: 'shell',
   '.mk': 'shell',
   '.mak': 'shell',
   '.sql': 'sql',
@@ -34,7 +34,7 @@ const FILE_CONTEXT_MAP: Record<string, TemplateContext> = {
   '.md': 'generic',
   '.txt': 'generic',
   '.go': 'generic',
-  '.mod': 'generic'
+  '.mod': 'generic',
 };
 
 /**
@@ -44,7 +44,7 @@ const SAFE_PATTERNS = {
   PROJECT_NAME: /^[a-zA-Z][a-zA-Z0-9_-]*$/,
   DATABASE_NAME: /^[a-zA-Z][a-zA-Z0-9_-]*$/,
   SCHEMA_PATH: /^[a-zA-Z0-9_./\\-]+$/,
-  GENERIC_IDENTIFIER: /^[a-zA-Z0-9_-]+$/
+  GENERIC_IDENTIFIER: /^[a-zA-Z0-9_-]+$/,
 };
 
 /**
@@ -53,23 +53,20 @@ const SAFE_PATTERNS = {
 export function escapeForJavaScript(input: string): string {
   // Validate input is safe for JavaScript context
   if (!SAFE_PATTERNS.GENERIC_IDENTIFIER.test(input)) {
-    throw new SecurityError(
-      `Invalid characters in JavaScript context: ${input}`,
-      input
-    );
+    throw new SecurityError(`Invalid characters in JavaScript context: ${input}`, input);
   }
-  
+
   // Additional escaping for JavaScript strings and identifiers
   return input
-    .replace(/\\/g, '\\\\')  // Escape backslashes
-    .replace(/'/g, "\\'")    // Escape single quotes
-    .replace(/"/g, '\\"')    // Escape double quotes
-    .replace(/\n/g, '\\n')   // Escape newlines
-    .replace(/\r/g, '\\r')   // Escape carriage returns
-    .replace(/\t/g, '\\t')   // Escape tabs
-    .replace(/\//g, '\\/')   // Escape forward slashes
-    .replace(/\$/g, '\\$')   // Escape dollar signs (template literals)
-    .replace(/`/g, '\\`');   // Escape backticks (template literals)
+    .replace(/\\/g, '\\\\') // Escape backslashes
+    .replace(/'/g, "\\'") // Escape single quotes
+    .replace(/"/g, '\\"') // Escape double quotes
+    .replace(/\n/g, '\\n') // Escape newlines
+    .replace(/\r/g, '\\r') // Escape carriage returns
+    .replace(/\t/g, '\\t') // Escape tabs
+    .replace(/\//g, '\\/') // Escape forward slashes
+    .replace(/\$/g, '\\$') // Escape dollar signs (template literals)
+    .replace(/`/g, '\\`'); // Escape backticks (template literals)
 }
 
 /**
@@ -78,36 +75,32 @@ export function escapeForJavaScript(input: string): string {
 export function escapeForShell(input: string): string {
   // Validate input is safe for shell context
   if (!SAFE_PATTERNS.GENERIC_IDENTIFIER.test(input)) {
-    throw new SecurityError(
-      `Invalid characters in shell context: ${input}`,
-      input
-    );
+    throw new SecurityError(`Invalid characters in shell context: ${input}`, input);
   }
-  
+
   // Shell metacharacters that need escaping
   return input
-    .replace(/\\/g, '\\\\')  // Escape backslashes
-    .replace(/\$/g, '\\$')   // Escape dollar signs (variable expansion)
-    .replace(/`/g, '\\`')    // Escape backticks (command substitution)
-    .replace(/"/g, '\\"')    // Escape double quotes
-    .replace(/'/g, "\\'")    // Escape single quotes
-    .replace(/\(/g, '\\(')   // Escape parentheses
+    .replace(/\\/g, '\\\\') // Escape backslashes
+    .replace(/\$/g, '\\$') // Escape dollar signs (variable expansion)
+    .replace(/`/g, '\\`') // Escape backticks (command substitution)
+    .replace(/"/g, '\\"') // Escape double quotes
+    .replace(/'/g, "\\'") // Escape single quotes
+    .replace(/\(/g, '\\(') // Escape parentheses
     .replace(/\)/g, '\\)')
-    .replace(/\[/g, '\\[')   // Escape brackets
+    .replace(/\[/g, '\\[') // Escape brackets
     .replace(/\]/g, '\\]')
-    .replace(/\{/g, '\\{')   // Escape braces
+    .replace(/\{/g, '\\{') // Escape braces
     .replace(/\}/g, '\\}')
-    .replace(/\|/g, '\\|')   // Escape pipe
-    .replace(/&/g, '\\&')    // Escape ampersand
-    .replace(/;/g, '\\;')    // Escape semicolon
-    .replace(/</g, '\\<')    // Escape redirection
+    .replace(/\|/g, '\\|') // Escape pipe
+    .replace(/&/g, '\\&') // Escape ampersand
+    .replace(/;/g, '\\;') // Escape semicolon
+    .replace(/</g, '\\<') // Escape redirection
     .replace(/>/g, '\\>')
-    .replace(/\*/g, '\\*')   // Escape wildcards
+    .replace(/\*/g, '\\*') // Escape wildcards
     .replace(/\?/g, '\\?')
-    .replace(/\!/g, '\\!')   // Escape exclamation mark
-    .replace(/\^/g, '\\^')   // Escape caret
-    .replace(/~/g, '\\~')    // Escape tilde
-    .replace(/ /g, '\\ ');   // Escape spaces
+    .replace(/\^/g, '\\^') // Escape caret
+    .replace(/~/g, '\\~') // Escape tilde
+    .replace(/ /g, '\\ '); // Escape spaces
 }
 
 /**
@@ -116,22 +109,18 @@ export function escapeForShell(input: string): string {
 export function escapeForSQL(input: string): string {
   // Validate input is safe for SQL context
   if (!SAFE_PATTERNS.GENERIC_IDENTIFIER.test(input)) {
-    throw new SecurityError(
-      `Invalid characters in SQL context: ${input}`,
-      input
-    );
+    throw new SecurityError(`Invalid characters in SQL context: ${input}`, input);
   }
-  
+
   // SQL injection prevention
   return input
-    .replace(/'/g, "''")     // Escape single quotes (SQL standard)
-    .replace(/"/g, '""')     // Escape double quotes
-    .replace(/\\/g, '\\\\')  // Escape backslashes
-    .replace(/\0/g, '\\0')   // Escape null bytes
-    .replace(/\n/g, '\\n')   // Escape newlines
-    .replace(/\r/g, '\\r')   // Escape carriage returns
-    .replace(/\x1a/g, '\\Z') // Escape EOF character
-    .replace(/;/g, '\\;')    // Escape semicolons to prevent statement injection
+    .replace(/'/g, "''") // Escape single quotes (SQL standard)
+    .replace(/"/g, '""') // Escape double quotes
+    .replace(/\\/g, '\\\\') // Escape backslashes
+    .replace(/\0/g, '\\0') // Escape null bytes
+    .replace(/\n/g, '\\n') // Escape newlines
+    .replace(/\r/g, '\\r') // Escape carriage returns
+    .replace(/;/g, '\\;') // Escape semicolons to prevent statement injection
     .replace(/--/g, '\\-\\-') // Escape comment markers
     .replace(/\/\*/g, '\\/*') // Escape block comment start
     .replace(/\*\//g, '\\*/'); // Escape block comment end
@@ -143,22 +132,19 @@ export function escapeForSQL(input: string): string {
 export function escapeForGeneric(input: string): string {
   // Use the most restrictive validation
   if (!SAFE_PATTERNS.GENERIC_IDENTIFIER.test(input)) {
-    throw new SecurityError(
-      `Invalid characters in generic context: ${input}`,
-      input
-    );
+    throw new SecurityError(`Invalid characters in generic context: ${input}`, input);
   }
-  
+
   // Basic escaping for generic contexts
   return input
-    .replace(/\\/g, '\\\\')  // Escape backslashes
-    .replace(/\$/g, '\\$')   // Escape dollar signs
-    .replace(/`/g, '\\`')    // Escape backticks
-    .replace(/"/g, '\\"')    // Escape double quotes
-    .replace(/'/g, "\\'")    // Escape single quotes
-    .replace(/\n/g, '\\n')   // Escape newlines
-    .replace(/\r/g, '\\r')   // Escape carriage returns
-    .replace(/\t/g, '\\t');  // Escape tabs
+    .replace(/\\/g, '\\\\') // Escape backslashes
+    .replace(/\$/g, '\\$') // Escape dollar signs
+    .replace(/`/g, '\\`') // Escape backticks
+    .replace(/"/g, '\\"') // Escape double quotes
+    .replace(/'/g, "\\'") // Escape single quotes
+    .replace(/\n/g, '\\n') // Escape newlines
+    .replace(/\r/g, '\\r') // Escape carriage returns
+    .replace(/\t/g, '\\t'); // Escape tabs
 }
 
 /**
@@ -167,18 +153,18 @@ export function escapeForGeneric(input: string): string {
 export function getFileContext(filePath: string): TemplateContext {
   const basename = path.basename(filePath).toLowerCase();
   const ext = path.extname(filePath).toLowerCase();
-  
+
   // Check for special filenames first
   if (basename === 'makefile' || basename.startsWith('makefile.')) {
     return 'shell';
   }
-  
+
   // Check file extension
   const context = FILE_CONTEXT_MAP[ext];
   if (context) {
     return context;
   }
-  
+
   // Default to generic if unknown
   return 'generic';
 }
@@ -186,35 +172,26 @@ export function getFileContext(filePath: string): TemplateContext {
 /**
  * Validate template input against security patterns
  */
-export function validateTemplateInput(input: string, inputType: keyof typeof SAFE_PATTERNS = 'GENERIC_IDENTIFIER'): void {
+export function validateTemplateInput(
+  input: string,
+  inputType: keyof typeof SAFE_PATTERNS = 'GENERIC_IDENTIFIER'
+): void {
   const pattern = SAFE_PATTERNS[inputType];
   if (!pattern.test(input)) {
-    throw new SecurityError(
-      `Input validation failed for ${inputType}: ${input}`,
-      input
-    );
+    throw new SecurityError(`Input validation failed for ${inputType}: ${input}`, input);
   }
-  
+
   // Additional security checks
   if (input.includes('\0')) {
-    throw new SecurityError(
-      `Null byte detected in template input: ${input}`,
-      input
-    );
+    throw new SecurityError(`Null byte detected in template input: ${input}`, input);
   }
-  
+
   if (input.includes('..')) {
-    throw new SecurityError(
-      `Path traversal sequence detected in template input: ${input}`,
-      input
-    );
+    throw new SecurityError(`Path traversal sequence detected in template input: ${input}`, input);
   }
-  
+
   if (input.length > 100) {
-    throw new SecurityError(
-      `Template input too long (max 100 characters): ${input}`,
-      input
-    );
+    throw new SecurityError(`Template input too long (max 100 characters): ${input}`, input);
   }
 }
 
@@ -224,7 +201,7 @@ export function validateTemplateInput(input: string, inputType: keyof typeof SAF
 export function escapeForContext(input: string, context: TemplateContext): string {
   // Validate input first
   validateTemplateInput(input);
-  
+
   switch (context) {
     case 'javascript':
       return escapeForJavaScript(input);
@@ -235,10 +212,7 @@ export function escapeForContext(input: string, context: TemplateContext): strin
     case 'generic':
       return escapeForGeneric(input);
     default:
-      throw new SecurityError(
-        `Unknown template context: ${context}`,
-        context
-      );
+      throw new SecurityError(`Unknown template context: ${context}`, context);
   }
 }
 
@@ -251,20 +225,20 @@ export function secureTemplateReplace(
   filePath: string
 ): string {
   const context = getFileContext(filePath);
-  
+
   let result = content;
-  
+
   for (const [search, replace] of Object.entries(replacements)) {
     // Escape the search pattern for regex
     const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    
+
     // Escape the replacement value for the target context
     const escapedReplace = escapeForContext(replace, context);
-    
+
     // Perform the replacement
     result = result.replace(new RegExp(escapedSearch, 'g'), escapedReplace);
   }
-  
+
   return result;
 }
 

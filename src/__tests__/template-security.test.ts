@@ -8,7 +8,7 @@ import {
   validateTemplateInput,
   escapeForContext,
   secureTemplateReplace,
-  SAFE_PATTERNS
+  SAFE_PATTERNS,
 } from '../template-security';
 import { SecurityError } from '../errors';
 
@@ -50,7 +50,7 @@ describe('Template Security Module', () => {
       expect(SAFE_PATTERNS.PROJECT_NAME.test('my-project')).toBe(true);
       expect(SAFE_PATTERNS.PROJECT_NAME.test('my_project')).toBe(true);
       expect(SAFE_PATTERNS.PROJECT_NAME.test('MyProject123')).toBe(true);
-      
+
       // Invalid patterns
       expect(SAFE_PATTERNS.PROJECT_NAME.test('123project')).toBe(false); // starts with number
       expect(SAFE_PATTERNS.PROJECT_NAME.test('my project')).toBe(false); // contains space
@@ -64,7 +64,7 @@ describe('Template Security Module', () => {
       expect(SAFE_PATTERNS.DATABASE_NAME.test('my-db')).toBe(true);
       expect(SAFE_PATTERNS.DATABASE_NAME.test('my_db')).toBe(true);
       expect(SAFE_PATTERNS.DATABASE_NAME.test('MyDB123')).toBe(true);
-      
+
       // Invalid patterns
       expect(SAFE_PATTERNS.DATABASE_NAME.test('123db')).toBe(false); // starts with number
       expect(SAFE_PATTERNS.DATABASE_NAME.test('my db')).toBe(false); // contains space
@@ -191,7 +191,7 @@ describe('Template Security Module', () => {
   describe('Context-Aware Escaping', () => {
     it('should route to correct escaping function based on context', () => {
       const input = 'testproject';
-      
+
       expect(escapeForContext(input, 'javascript')).toBe(input);
       expect(escapeForContext(input, 'shell')).toBe(input);
       expect(escapeForContext(input, 'sql')).toBe(input);
@@ -214,7 +214,7 @@ describe('Template Security Module', () => {
       const content = 'export const name = "PROJECT_NAME";';
       const replacements = { PROJECT_NAME: 'myproject' };
       const result = secureTemplateReplace(content, replacements, 'test.js');
-      
+
       expect(result).toBe('export const name = "myproject";');
     });
 
@@ -222,7 +222,7 @@ describe('Template Security Module', () => {
       const content = 'PROJECT_NAME = PROJECT_NAME';
       const replacements = { PROJECT_NAME: 'myproject' };
       const result = secureTemplateReplace(content, replacements, 'Makefile');
-      
+
       expect(result).toBe('myproject = myproject');
     });
 
@@ -230,7 +230,7 @@ describe('Template Security Module', () => {
       const content = 'CREATE DATABASE PROJECT_NAME;';
       const replacements = { PROJECT_NAME: 'myproject' };
       const result = secureTemplateReplace(content, replacements, 'schema.sql');
-      
+
       expect(result).toBe('CREATE DATABASE myproject;');
     });
 
@@ -238,25 +238,27 @@ describe('Template Security Module', () => {
       const content = 'name: PROJECT_NAME';
       const replacements = { PROJECT_NAME: 'myproject' };
       const result = secureTemplateReplace(content, replacements, 'config.yaml');
-      
+
       expect(result).toBe('name: myproject');
     });
 
     it('should reject injection attempts in template replacement', () => {
       const content = 'export const name = "PROJECT_NAME";';
       const maliciousReplacements = { PROJECT_NAME: "test'; process.exit(1); //" };
-      
-      expect(() => secureTemplateReplace(content, maliciousReplacements, 'test.js')).toThrow(SecurityError);
+
+      expect(() => secureTemplateReplace(content, maliciousReplacements, 'test.js')).toThrow(
+        SecurityError
+      );
     });
 
     it('should handle multiple replacements safely', () => {
       const content = 'PROJECT_NAME uses DATABASE_NAME';
-      const replacements = { 
+      const replacements = {
         PROJECT_NAME: 'myproject',
-        DATABASE_NAME: 'mydb'
+        DATABASE_NAME: 'mydb',
       };
       const result = secureTemplateReplace(content, replacements, 'config.txt');
-      
+
       expect(result).toBe('myproject uses mydb');
     });
 
@@ -264,7 +266,7 @@ describe('Template Security Module', () => {
       const content = 'static content';
       const replacements = { PROJECT_NAME: 'myproject' };
       const result = secureTemplateReplace(content, replacements, 'test.txt');
-      
+
       expect(result).toBe('static content');
     });
   });
@@ -286,7 +288,7 @@ describe('Template Security Module', () => {
     it('should handle special regex characters in search patterns', () => {
       const content = 'PROJECT_NAME.test = "value"';
       const replacements = { 'PROJECT_NAME.test': 'myproject' };
-      
+
       // Should match the literal string exactly (escaping is done internally)
       const result = secureTemplateReplace(content, replacements, 'test.js');
       expect(result).toBe('myproject = "value"');
@@ -296,7 +298,7 @@ describe('Template Security Module', () => {
       const content = 'PROJECT_NAME and project_name';
       const replacements = { PROJECT_NAME: 'myproject' };
       const result = secureTemplateReplace(content, replacements, 'test.txt');
-      
+
       expect(result).toBe('myproject and project_name');
     });
   });
@@ -308,7 +310,7 @@ describe('Template Security Module', () => {
         'test"; eval("malicious"); //',
         'test`${process.env.SECRET}`',
         'test + require("fs").readFileSync("/etc/passwd")',
-        'test</script><script>alert("xss")</script>'
+        'test</script><script>alert("xss")</script>',
       ];
 
       injectionPayloads.forEach(payload => {
@@ -324,7 +326,7 @@ describe('Template Security Module', () => {
         'test && rm -rf /',
         'test | cat /etc/passwd',
         'test > /dev/null; rm -rf /',
-        'test < /etc/passwd'
+        'test < /etc/passwd',
       ];
 
       injectionPayloads.forEach(payload => {
@@ -338,7 +340,7 @@ describe('Template Security Module', () => {
         'test"; DELETE FROM users; --',
         'test UNION SELECT * FROM users',
         'test/* comment */ SELECT * FROM users',
-        'test; INSERT INTO users VALUES'
+        'test; INSERT INTO users VALUES',
       ];
 
       injectionPayloads.forEach(payload => {
@@ -352,7 +354,7 @@ describe('Template Security Module', () => {
         'test/../../../etc/passwd',
         'test/../../secret',
         '..\\..\\windows\\system32',
-        'test\\..\\..\\secret'
+        'test\\..\\..\\secret',
       ];
 
       traversalPayloads.forEach(payload => {
@@ -361,12 +363,7 @@ describe('Template Security Module', () => {
     });
 
     it('should prevent null byte injection', () => {
-      const nullBytePayloads = [
-        'test\0.sh',
-        'test\x00',
-        'test\u0000',
-        'test.txt\0.sh'
-      ];
+      const nullBytePayloads = ['test\0.sh', 'test\x00', 'test\u0000', 'test.txt\0.sh'];
 
       nullBytePayloads.forEach(payload => {
         expect(() => validateTemplateInput(payload, 'PROJECT_NAME')).toThrow(SecurityError);
