@@ -13,9 +13,9 @@ import (
 	"time"
 
 	"cloud.google.com/go/spanner"
+	"github.com/joho/godotenv"
 	"google.golang.org/api/iterator"
 	"google.golang.org/grpc/codes"
-	"github.com/joho/godotenv"
 )
 
 // Security validation patterns for Google Cloud Spanner resource IDs
@@ -59,10 +59,6 @@ func ValidateSpannerIDs(projectID, instanceID, databaseID string) error {
 func ValidateProjectID(projectID string) error {
 	if projectID == "" {
 		return fmt.Errorf("project ID cannot be empty")
-	}
-	
-	if len(projectID) < 6 || len(projectID) > 30 {
-		return fmt.Errorf("project ID must be 6-30 characters long")
 	}
 	
 	if !projectIDRegex.MatchString(projectID) {

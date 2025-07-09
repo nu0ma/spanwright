@@ -21,16 +21,6 @@ func TestValidateProjectID(t *testing.T) {
 			wantErr:   true,
 		},
 		{
-			name:      "too short project ID",
-			projectID: "test",
-			wantErr:   true,
-		},
-		{
-			name:      "too long project ID",
-			projectID: "this-is-a-very-long-project-id-that-exceeds-the-maximum-length-allowed",
-			wantErr:   true,
-		},
-		{
 			name:      "invalid characters in project ID",
 			projectID: "test_project_123",
 			wantErr:   true,
