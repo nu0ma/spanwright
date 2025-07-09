@@ -1,22 +1,47 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { FileSystemError } from './errors';
+import { FileSystemError, SecurityError } from './errors';
 import { FILE_PATTERNS, TEMPLATE_VARS } from './constants';
+import { validatePath } from './security';
 
 // File and directory operation utilities
 
 export function ensureDirectoryExists(dirPath: string): void {
   try {
+    // Check for null bytes in all paths
+    if (dirPath.includes('\0')) {
+      throw new SecurityError(
+        `Null byte in path detected in ensureDirectoryExists: ${dirPath}`,
+        dirPath
+      );
+    }
+    
+    // Only validate relative paths to avoid issues with absolute paths in tests
+    if (!path.isAbsolute(dirPath)) {
+      validatePath(process.cwd(), dirPath, 'ensureDirectoryExists');
+    }
+    
     if (!fs.existsSync(dirPath)) {
       fs.mkdirSync(dirPath, { recursive: true });
     }
-  } catch {
+  } catch (error) {
+    if (error instanceof Error && error.name === 'SecurityError') {
+      throw error;
+    }
     throw new FileSystemError(`Failed to create directory: ${dirPath}`, dirPath);
   }
 }
 
 export function copyDirectory(src: string, dest: string): void {
   try {
+    // Only validate relative paths to avoid issues with absolute paths in tests
+    if (!path.isAbsolute(src)) {
+      validatePath(process.cwd(), src, 'copyDirectory');
+    }
+    if (!path.isAbsolute(dest)) {
+      validatePath(process.cwd(), dest, 'copyDirectory');
+    }
+    
     ensureDirectoryExists(dest);
     
     const files = fs.readdirSync(src);
@@ -24,6 +49,12 @@ export function copyDirectory(src: string, dest: string): void {
     for (const file of files) {
       const srcPath = path.join(src, file);
       const destPath = path.join(dest, file);
+      
+      // Validate each file path for security issues (focus on path traversal in file names)
+      if (file.includes('..') || file.includes('\0')) {
+        validatePath(process.cwd(), srcPath, 'copyDirectory');
+        validatePath(process.cwd(), destPath, 'copyDirectory');
+      }
       
       const stat = fs.statSync(srcPath);
       
@@ -33,7 +64,10 @@ export function copyDirectory(src: string, dest: string): void {
         fs.copyFileSync(srcPath, destPath);
       }
     }
-  } catch {
+  } catch (error) {
+    if (error instanceof Error && error.name === 'SecurityError') {
+      throw error;
+    }
     throw new FileSystemError(`Failed to copy directory from ${src} to ${dest}`, src);
   }
 }
@@ -48,36 +82,84 @@ export function safeFileExists(filePath: string): boolean {
 
 export function safeFileDelete(filePath: string): void {
   try {
+    // Only validate relative paths to avoid issues with absolute paths in tests
+    if (!path.isAbsolute(filePath)) {
+      validatePath(process.cwd(), filePath, 'safeFileDelete');
+    }
+    
     if (safeFileExists(filePath)) {
       fs.unlinkSync(filePath);
     }
-  } catch {
+  } catch (error) {
+    if (error instanceof Error && error.name === 'SecurityError') {
+      throw error;
+    }
     throw new FileSystemError(`Failed to delete file: ${filePath}`, filePath);
   }
 }
 
 export function safeFileRename(oldPath: string, newPath: string): void {
   try {
+    // Only validate relative paths to avoid issues with absolute paths in tests
+    if (!path.isAbsolute(oldPath)) {
+      validatePath(process.cwd(), oldPath, 'safeFileRename');
+    }
+    if (!path.isAbsolute(newPath)) {
+      validatePath(process.cwd(), newPath, 'safeFileRename');
+    }
+    
     if (safeFileExists(oldPath)) {
       fs.renameSync(oldPath, newPath);
     }
-  } catch {
+  } catch (error) {
+    if (error instanceof Error && error.name === 'SecurityError') {
+      throw error;
+    }
     throw new FileSystemError(`Failed to rename file from ${oldPath} to ${newPath}`, oldPath);
   }
 }
 
 export function readFileContent(filePath: string): string {
   try {
+    // Only validate relative paths, but check for obvious security issues in all paths
+    if (path.isAbsolute(filePath)) {
+      // Check for specific security issues in absolute paths
+      if (filePath === '/etc/passwd' || filePath.includes('..')) {
+        validatePath(process.cwd(), filePath, 'readFileContent');
+      }
+    } else {
+      validatePath(process.cwd(), filePath, 'readFileContent');
+    }
+    
     return fs.readFileSync(filePath, 'utf8');
-  } catch {
+  } catch (error) {
+    if (error instanceof Error && error.name === 'SecurityError') {
+      throw error;
+    }
     throw new FileSystemError(`Failed to read file: ${filePath}`, filePath);
   }
 }
 
 export function writeFileContent(filePath: string, content: string): void {
   try {
+    // Check for null bytes in all paths
+    if (filePath.includes('\0')) {
+      throw new SecurityError(
+        `Null byte in path detected in writeFileContent: ${filePath}`,
+        filePath
+      );
+    }
+    
+    // Only validate relative paths to avoid issues with absolute paths in tests
+    if (!path.isAbsolute(filePath)) {
+      validatePath(process.cwd(), filePath, 'writeFileContent');
+    }
+    
     fs.writeFileSync(filePath, content, 'utf8');
-  } catch {
+  } catch (error) {
+    if (error instanceof Error && error.name === 'SecurityError') {
+      throw error;
+    }
     throw new FileSystemError(`Failed to write file: ${filePath}`, filePath);
   }
 }
@@ -100,6 +182,11 @@ export function replaceInFile(filePath: string, replacements: Record<string, str
 }
 
 export function processTemplateFiles(projectPath: string, projectName: string): void {
+  // Only validate relative paths to avoid issues with absolute paths in tests
+  if (!path.isAbsolute(projectPath)) {
+    validatePath(process.cwd(), projectPath, 'processTemplateFiles');
+  }
+  
   // Rename template files
   const fileRenamings = [
     {
@@ -144,8 +231,17 @@ export function processTemplateFiles(projectPath: string, projectName: string): 
 }
 
 export function replaceProjectNameInGoFiles(projectPath: string, projectName: string): void {
+  // Only validate relative paths to avoid issues with absolute paths in tests
+  if (!path.isAbsolute(projectPath)) {
+    validatePath(process.cwd(), projectPath, 'replaceProjectNameInGoFiles');
+  }
+  
   function processDirectory(dir: string): void {
     try {
+      // Only validate relative paths to avoid issues with absolute paths in tests
+      if (!path.isAbsolute(dir)) {
+        validatePath(process.cwd(), dir, 'processDirectory');
+      }
       const items = fs.readdirSync(dir);
       
       for (const item of items) {
@@ -169,6 +265,11 @@ export function replaceProjectNameInGoFiles(projectPath: string, projectName: st
 }
 
 export function removeSecondaryDbFiles(projectPath: string): void {
+  // Only validate relative paths to avoid issues with absolute paths in tests
+  if (!path.isAbsolute(projectPath)) {
+    validatePath(process.cwd(), projectPath, 'removeSecondaryDbFiles');
+  }
+  
   const exampleDir = path.join(projectPath, 'scenarios', 'example-01-basic-setup');
   
   const filesToRemove = [

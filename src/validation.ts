@@ -12,8 +12,23 @@ export function validateProjectName(name: string | undefined): asserts name is s
     throw new ValidationError('Project name cannot contain path separators', 'projectName');
   }
   
+  // Security: Check for path traversal attempts (must come before dot check)
+  if (name.includes('..')) {
+    throw new ValidationError('Project name cannot contain ".." (path traversal)', 'projectName');
+  }
+  
   if (name.startsWith('.')) {
     throw new ValidationError('Project name cannot start with a dot', 'projectName');
+  }
+  
+  // Security: Check for null bytes
+  if (name.includes('\0')) {
+    throw new ValidationError('Project name cannot contain null bytes', 'projectName');
+  }
+  
+  // Security: Check for absolute paths on Windows
+  if (/^[a-zA-Z]:/.test(name)) {
+    throw new ValidationError('Project name cannot be an absolute path', 'projectName');
   }
 }
 
