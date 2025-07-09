@@ -20,11 +20,7 @@ export default defineConfig({
   /* Allow parallel execution with database isolation */
   workers: process.env.CI ? 2 : 4, // Limit workers in CI, more locally
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: [
-    ['html'],
-    ['list'],
-    ['json', { outputFile: 'test-results/results.json' }]
-  ],
+  reporter: [['html'], ['list'], ['json', { outputFile: 'test-results/results.json' }]],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */

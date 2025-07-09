@@ -33,10 +33,6 @@ export default [
     },
   },
   {
-    ignores: [
-      'dist/**/*',
-      'node_modules/**/*',
-      'template/**/*',
-    ],
+    ignores: ['dist/**/*', 'node_modules/**/*', 'template/**/*'],
   },
 ];

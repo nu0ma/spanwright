@@ -15,7 +15,7 @@ export function parseCommandLineArgs(): ParsedArgs {
   const args = process.argv.slice(2);
   const flags = args.filter(isFlag);
   const projectName = args.find(arg => !isFlag(arg));
-  
+
   return { projectName, flags };
 }
 
@@ -23,7 +23,7 @@ export function checkForHelpAndVersion(flags: string[]): void {
   if (flags.some(flag => (CLI_FLAGS.VERSION as readonly string[]).includes(flag))) {
     showVersion();
   }
-  
+
   if (flags.some(flag => (CLI_FLAGS.HELP as readonly string[]).includes(flag))) {
     showHelp();
   }
@@ -31,14 +31,14 @@ export function checkForHelpAndVersion(flags: string[]): void {
 
 export function showVersion(): never {
   const packageJsonPath = path.join(__dirname, '..', 'package.json');
-  
+
   try {
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
     console.log(packageJson.version);
   } catch {
     console.error('Error reading version from package.json');
   }
-  
+
   safeExit(0);
 }
 
@@ -67,7 +67,7 @@ Non-interactive mode environment variables:
 
 For more information, visit: ${GITHUB_URL}
 `;
-  
+
   console.log(helpText);
   safeExit(0);
 }

@@ -5,10 +5,12 @@ import { validateWithSpalidate } from '../../../tests/test-utils';
 test.describe('Simple Basic Test', () => {
   test.beforeAll(async () => {
     console.log('🚀 Setting up test environment...');
-    
+
     const dbConfig = getDatabaseConfig();
-    console.log(`🔧 Process ${dbConfig.processId}: Using databases ${dbConfig.primaryDbId}, ${dbConfig.secondaryDbId}`);
-    
+    console.log(
+      `🔧 Process ${dbConfig.processId}: Using databases ${dbConfig.primaryDbId}, ${dbConfig.secondaryDbId}`
+    );
+
     // Database setup is already handled by Makefile
     // No need to run setup here - it would cause container conflicts
     console.log('✅ Using existing database setup from Makefile');
@@ -23,14 +25,14 @@ test.describe('Simple Basic Test', () => {
 
   test('Database Validation', async () => {
     const dbConfig = getDatabaseConfig();
-    
+
     // Use the environment variable database IDs instead of process-specific ones
     const validation1 = validateWithSpalidate('scenario-01-basic-setup', 'primary');
     expect(validation1).toBe(true);
 
     const validation2 = validateWithSpalidate('scenario-01-basic-setup', 'secondary');
     expect(validation2).toBe(true);
-    
+
     console.log(`✅ Database validation passed for process ${dbConfig.processId}`);
   });
 });
