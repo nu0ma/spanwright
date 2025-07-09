@@ -13,10 +13,133 @@ import (
 	"time"
 
 	"cloud.google.com/go/spanner"
+	"github.com/joho/godotenv"
 	"google.golang.org/api/iterator"
 	"google.golang.org/grpc/codes"
-	"github.com/joho/godotenv"
 )
+
+// Security validation patterns for Google Cloud Spanner resource IDs
+var (
+	// Project ID: 6-30 characters, lowercase letters, digits, hyphens
+	// Must start with lowercase letter, cannot end with hyphen
+	projectIDRegex = regexp.MustCompile(`^[a-z][a-z0-9-]{4,28}[a-z0-9]$`)
+	
+	// Instance ID: 2-64 characters, lowercase letters, digits, hyphens
+	// Must start with lowercase letter
+	instanceIDRegex = regexp.MustCompile(`^[a-z][a-z0-9-]{1,63}$`)
+	
+	// Database ID: 2-30 characters, lowercase letters, digits, hyphens, underscores
+	// Must start with lowercase letter
+	databaseIDRegex = regexp.MustCompile(`^[a-z][a-z0-9-_]{1,29}$`)
+	
+	// Table name: 1-128 characters, letters, digits, underscores, hyphens
+	// Must start with letter
+	tableNameRegex = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_-]*$`)
+)
+
+// ValidateSpannerIDs validates Google Cloud Spanner resource identifiers
+// to prevent injection attacks and ensure they follow GCP naming conventions
+func ValidateSpannerIDs(projectID, instanceID, databaseID string) error {
+	if err := ValidateProjectID(projectID); err != nil {
+		return fmt.Errorf("invalid project ID: %w", err)
+	}
+	
+	if err := ValidateInstanceID(instanceID); err != nil {
+		return fmt.Errorf("invalid instance ID: %w", err)
+	}
+	
+	if err := ValidateDatabaseID(databaseID); err != nil {
+		return fmt.Errorf("invalid database ID: %w", err)
+	}
+	
+	return nil
+}
+
+// ValidateProjectID validates a Google Cloud Project ID
+func ValidateProjectID(projectID string) error {
+	if projectID == "" {
+		return fmt.Errorf("project ID cannot be empty")
+	}
+	
+	if !projectIDRegex.MatchString(projectID) {
+		return fmt.Errorf("project ID must start with lowercase letter, contain only lowercase letters, digits, and hyphens, and not end with hyphen")
+	}
+	
+	// Additional security check for path traversal
+	if strings.Contains(projectID, "..") || strings.Contains(projectID, "/") || strings.Contains(projectID, "\\") {
+		return fmt.Errorf("project ID contains invalid path characters")
+	}
+	
+	return nil
+}
+
+// ValidateInstanceID validates a Google Cloud Spanner Instance ID
+func ValidateInstanceID(instanceID string) error {
+	if instanceID == "" {
+		return fmt.Errorf("instance ID cannot be empty")
+	}
+	
+	if len(instanceID) < 2 || len(instanceID) > 64 {
+		return fmt.Errorf("instance ID must be 2-64 characters long")
+	}
+	
+	if !instanceIDRegex.MatchString(instanceID) {
+		return fmt.Errorf("instance ID must start with lowercase letter and contain only lowercase letters, digits, and hyphens")
+	}
+	
+	// Additional security check for path traversal
+	if strings.Contains(instanceID, "..") || strings.Contains(instanceID, "/") || strings.Contains(instanceID, "\\") {
+		return fmt.Errorf("instance ID contains invalid path characters")
+	}
+	
+	return nil
+}
+
+// ValidateDatabaseID validates a Google Cloud Spanner Database ID
+func ValidateDatabaseID(databaseID string) error {
+	if databaseID == "" {
+		return fmt.Errorf("database ID cannot be empty")
+	}
+	
+	if len(databaseID) < 2 || len(databaseID) > 30 {
+		return fmt.Errorf("database ID must be 2-30 characters long")
+	}
+	
+	if !databaseIDRegex.MatchString(databaseID) {
+		return fmt.Errorf("database ID must start with lowercase letter and contain only lowercase letters, digits, hyphens, and underscores")
+	}
+	
+	// Additional security check for path traversal
+	if strings.Contains(databaseID, "..") || strings.Contains(databaseID, "/") || strings.Contains(databaseID, "\\") {
+		return fmt.Errorf("database ID contains invalid path characters")
+	}
+	
+	return nil
+}
+
+// BuildSecureDSN constructs a secure Database Service Name (DSN) for Spanner
+// with full validation to prevent injection attacks
+func BuildSecureDSN(projectID, instanceID, databaseID string) (string, error) {
+	// Validate all inputs first
+	if err := ValidateSpannerIDs(projectID, instanceID, databaseID); err != nil {
+		return "", fmt.Errorf("DSN validation failed: %w", err)
+	}
+	
+	// Use string concatenation instead of fmt.Sprintf to avoid formatting issues
+	dsn := "projects/" + projectID + "/instances/" + instanceID + "/databases/" + databaseID
+	
+	// Additional validation of final DSN
+	if strings.Contains(dsn, "..") {
+		return "", fmt.Errorf("DSN contains path traversal sequences")
+	}
+	
+	// Check for suspicious patterns in the final DSN
+	if strings.Contains(dsn, ";") || strings.Contains(dsn, "&") || strings.Contains(dsn, "|") {
+		return "", fmt.Errorf("DSN contains suspicious characters")
+	}
+	
+	return dsn, nil
+}
 
 // Config represents the complete application configuration
 type Config struct {
@@ -31,6 +154,19 @@ type Config struct {
 	Timeout         int
 }
 
+// SecureConfig represents a configuration with enhanced security validation
+type SecureConfig struct {
+	ProjectID       string `json:"project_id" validate:"required,spanner-project-id"`
+	InstanceID      string `json:"instance_id" validate:"required,spanner-instance-id"`
+	EmulatorHost    string `json:"emulator_host" validate:"required,emulator-host"`
+	PrimaryDB       string `json:"primary_db" validate:"required,spanner-database-id"`
+	SecondaryDB     string `json:"secondary_db,omitempty" validate:"omitempty,spanner-database-id"`
+	PrimarySchema   string `json:"primary_schema" validate:"required,schema-path"`
+	SecondarySchema string `json:"secondary_schema,omitempty" validate:"omitempty,schema-path"`
+	Environment     string `json:"environment" validate:"required,oneof=development test staging"`
+	Timeout         int    `json:"timeout" validate:"required,min=1,max=3600"`
+}
+
 // DatabaseConfig represents database connection configuration
 type DatabaseConfig struct {
 	ProjectID  string
@@ -38,9 +174,15 @@ type DatabaseConfig struct {
 	DatabaseID string
 }
 
-// DatabasePath returns the full database path
+// DatabasePath returns the full database path with security validation
 func (dc *DatabaseConfig) DatabasePath() string {
-	return fmt.Sprintf("projects/%s/instances/%s/databases/%s", dc.ProjectID, dc.InstanceID, dc.DatabaseID)
+	dsn, err := BuildSecureDSN(dc.ProjectID, dc.InstanceID, dc.DatabaseID)
+	if err != nil {
+		log.Printf("ERROR: DatabasePath validation failed: %v", err)
+		// Return empty string to prevent using invalid DSN
+		return ""
+	}
+	return dsn
 }
 
 // LoadConfig loads configuration from environment variables
@@ -66,8 +208,125 @@ func LoadConfig() (*Config, error) {
 	return config, nil
 }
 
-// Validate performs basic configuration validation
+// LoadSecureConfig loads configuration with enhanced security validation
+func LoadSecureConfig() (*SecureConfig, error) {
+	_ = godotenv.Load()
+
+	config := &SecureConfig{
+		ProjectID:       os.Getenv("PROJECT_ID"),
+		InstanceID:      os.Getenv("INSTANCE_ID"),
+		EmulatorHost:    os.Getenv("SPANNER_EMULATOR_HOST"),
+		PrimaryDB:       os.Getenv("PRIMARY_DATABASE_ID"),
+		SecondaryDB:     os.Getenv("SECONDARY_DATABASE_ID"),
+		PrimarySchema:   os.Getenv("PRIMARY_SCHEMA_PATH"),
+		SecondarySchema: os.Getenv("SECONDARY_SCHEMA_PATH"),
+		Environment:     getEnvWithDefault("ENVIRONMENT", "development"),
+		Timeout:         getEnvIntWithDefault("TIMEOUT_SECONDS", 120),
+	}
+
+	if err := config.ValidateSecure(); err != nil {
+		return nil, fmt.Errorf("secure configuration validation failed: %w", err)
+	}
+
+	return config, nil
+}
+
+// ToConfig converts SecureConfig to regular Config
+func (sc *SecureConfig) ToConfig() *Config {
+	return &Config{
+		ProjectID:       sc.ProjectID,
+		InstanceID:      sc.InstanceID,
+		EmulatorHost:    sc.EmulatorHost,
+		PrimaryDB:       sc.PrimaryDB,
+		SecondaryDB:     sc.SecondaryDB,
+		PrimarySchema:   sc.PrimarySchema,
+		SecondarySchema: sc.SecondarySchema,
+		Environment:     sc.Environment,
+		Timeout:         sc.Timeout,
+	}
+}
+
+// ValidateSecure performs comprehensive security validation on SecureConfig
+func (sc *SecureConfig) ValidateSecure() error {
+	// Validate required fields
+	if sc.ProjectID == "" {
+		return fmt.Errorf("PROJECT_ID is required")
+	}
+	if sc.InstanceID == "" {
+		return fmt.Errorf("INSTANCE_ID is required")
+	}
+	if sc.PrimaryDB == "" {
+		return fmt.Errorf("PRIMARY_DATABASE_ID is required")
+	}
+	if sc.PrimarySchema == "" {
+		return fmt.Errorf("PRIMARY_SCHEMA_PATH is required")
+	}
+	if sc.Environment == "" {
+		return fmt.Errorf("ENVIRONMENT is required")
+	}
+	
+	// Security validation for Spanner IDs
+	if err := ValidateProjectID(sc.ProjectID); err != nil {
+		return fmt.Errorf("PROJECT_ID validation failed: %w", err)
+	}
+	
+	if err := ValidateInstanceID(sc.InstanceID); err != nil {
+		return fmt.Errorf("INSTANCE_ID validation failed: %w", err)
+	}
+	
+	if err := ValidateDatabaseID(sc.PrimaryDB); err != nil {
+		return fmt.Errorf("PRIMARY_DATABASE_ID validation failed: %w", err)
+	}
+	
+	// Validate secondary database if provided
+	if sc.SecondaryDB != "" {
+		if err := ValidateDatabaseID(sc.SecondaryDB); err != nil {
+			return fmt.Errorf("SECONDARY_DATABASE_ID validation failed: %w", err)
+		}
+	}
+	
+	// Validate schema paths for security
+	if err := validateSchemaPath(sc.PrimarySchema); err != nil {
+		return fmt.Errorf("PRIMARY_SCHEMA_PATH validation failed: %w", err)
+	}
+	
+	if sc.SecondarySchema != "" {
+		if err := validateSchemaPath(sc.SecondarySchema); err != nil {
+			return fmt.Errorf("SECONDARY_SCHEMA_PATH validation failed: %w", err)
+		}
+	}
+	
+	// Validate environment
+	if err := validateEnvironment(sc.Environment); err != nil {
+		return fmt.Errorf("ENVIRONMENT validation failed: %w", err)
+	}
+	
+	// Validate timeout
+	if sc.Timeout < 1 || sc.Timeout > 3600 {
+		return fmt.Errorf("TIMEOUT must be between 1 and 3600 seconds")
+	}
+	
+	// EMULATOR ONLY: Enforce emulator connection for safety
+	if sc.EmulatorHost == "" {
+		return fmt.Errorf("SPANNER_EMULATOR_HOST is required - this tool only works with emulator to prevent accidental production access")
+	}
+	
+	// Validate emulator host format
+	if err := validateEmulatorHost(sc.EmulatorHost); err != nil {
+		return fmt.Errorf("SPANNER_EMULATOR_HOST validation failed: %w", err)
+	}
+	
+	// Prevent production-like configurations
+	if err := sc.validateAgainstProductionPatterns(); err != nil {
+		return err
+	}
+	
+	return nil
+}
+
+// Validate performs comprehensive configuration validation with security checks
 func (c *Config) Validate() error {
+	// Validate required fields
 	if c.ProjectID == "" {
 		return fmt.Errorf("PROJECT_ID is required")
 	}
@@ -79,6 +338,37 @@ func (c *Config) Validate() error {
 	}
 	if c.PrimarySchema == "" {
 		return fmt.Errorf("PRIMARY_SCHEMA_PATH is required")
+	}
+	
+	// Security validation for Spanner IDs
+	if err := ValidateProjectID(c.ProjectID); err != nil {
+		return fmt.Errorf("PROJECT_ID validation failed: %w", err)
+	}
+	
+	if err := ValidateInstanceID(c.InstanceID); err != nil {
+		return fmt.Errorf("INSTANCE_ID validation failed: %w", err)
+	}
+	
+	if err := ValidateDatabaseID(c.PrimaryDB); err != nil {
+		return fmt.Errorf("PRIMARY_DATABASE_ID validation failed: %w", err)
+	}
+	
+	// Validate secondary database if provided
+	if c.SecondaryDB != "" {
+		if err := ValidateDatabaseID(c.SecondaryDB); err != nil {
+			return fmt.Errorf("SECONDARY_DATABASE_ID validation failed: %w", err)
+		}
+	}
+	
+	// Validate schema paths for security
+	if err := validateSchemaPath(c.PrimarySchema); err != nil {
+		return fmt.Errorf("PRIMARY_SCHEMA_PATH validation failed: %w", err)
+	}
+	
+	if c.SecondarySchema != "" {
+		if err := validateSchemaPath(c.SecondarySchema); err != nil {
+			return fmt.Errorf("SECONDARY_SCHEMA_PATH validation failed: %w", err)
+		}
 	}
 	
 	// EMULATOR ONLY: Enforce emulator connection for safety
@@ -94,6 +384,67 @@ func (c *Config) Validate() error {
 	// Prevent production-like configurations
 	if err := c.validateAgainstProductionPatterns(); err != nil {
 		return err
+	}
+	
+	return nil
+}
+
+// validateEnvironment validates the environment setting
+func validateEnvironment(environment string) error {
+	validEnvironments := []string{"development", "test", "staging"}
+	environment = strings.ToLower(environment)
+	
+	for _, validEnv := range validEnvironments {
+		if environment == validEnv {
+			return nil
+		}
+	}
+	
+	return fmt.Errorf("environment must be one of: %s", strings.Join(validEnvironments, ", "))
+}
+
+// validateEmulatorHost validates the emulator host setting
+func validateEmulatorHost(emulatorHost string) error {
+	if emulatorHost == "" {
+		return fmt.Errorf("emulator host cannot be empty")
+	}
+	
+	// Must contain localhost or 127.0.0.1
+	if !strings.Contains(emulatorHost, "localhost") && !strings.Contains(emulatorHost, "127.0.0.1") {
+		return fmt.Errorf("emulator host must use localhost or 127.0.0.1 - production hosts are not allowed")
+	}
+	
+	// Check for suspicious patterns
+	if strings.Contains(emulatorHost, "..") || strings.Contains(emulatorHost, ";") || strings.Contains(emulatorHost, "&") {
+		return fmt.Errorf("emulator host contains suspicious characters")
+	}
+	
+	return nil
+}
+
+// validateAgainstProductionPatterns checks for production-like configuration patterns for SecureConfig
+func (sc *SecureConfig) validateAgainstProductionPatterns() error {
+	// Common production project ID patterns to reject
+	productionPatterns := []string{
+		"prod", "production", "live", "main", "master",
+		"real", "actual", "staging", "stage",
+	}
+	
+	projectLower := strings.ToLower(sc.ProjectID)
+	instanceLower := strings.ToLower(sc.InstanceID)
+	
+	for _, pattern := range productionPatterns {
+		if strings.Contains(projectLower, pattern) {
+			return fmt.Errorf("PROJECT_ID '%s' appears to be production-like (contains '%s') - only test/dev configurations allowed", sc.ProjectID, pattern)
+		}
+		if strings.Contains(instanceLower, pattern) {
+			return fmt.Errorf("INSTANCE_ID '%s' appears to be production-like (contains '%s') - only test/dev configurations allowed", sc.InstanceID, pattern)
+		}
+	}
+	
+	// Reject if it looks like a real GCP project ID format
+	if matched, _ := regexp.MatchString(`^[a-z][a-z0-9-]{4,28}[a-z0-9]$`, sc.ProjectID); matched && !strings.Contains(projectLower, "test") && !strings.Contains(projectLower, "dev") && !strings.Contains(projectLower, "local") {
+		return fmt.Errorf("PROJECT_ID '%s' looks like a real GCP project - only test/dev/local projects allowed", sc.ProjectID)
 	}
 	
 	return nil
@@ -197,11 +548,14 @@ func (dm *DatabaseManager) GetTableRowCount(ctx context.Context, tableName strin
 		return 0, fmt.Errorf("table name cannot be empty")
 	}
 
-	if err := validateTableName(tableName); err != nil {
+	if err := ValidateTableName(tableName); err != nil {
 		return 0, fmt.Errorf("invalid table name: %w", err)
 	}
 
-	stmt := spanner.NewStatement(fmt.Sprintf("SELECT COUNT(*) FROM `%s`", escapeIdentifier(tableName)))
+	// Use parameterized query to prevent SQL injection
+	// Note: Spanner doesn't support parameterized table names, so we use validation + escaping
+	escapedTableName := escapeIdentifier(tableName)
+	stmt := spanner.NewStatement(fmt.Sprintf("SELECT COUNT(*) FROM `%s`", escapedTableName))
 	iter := dm.client.Single().Query(ctx, stmt)
 	defer iter.Stop()
 
@@ -301,8 +655,8 @@ func isRetryableError(err error) bool {
 	}
 }
 
-// validateTableName validates that a table name is safe
-func validateTableName(tableName string) error {
+// ValidateTableName validates that a table name is safe using enhanced security checks
+func ValidateTableName(tableName string) error {
 	if tableName == "" {
 		return fmt.Errorf("table name cannot be empty")
 	}
@@ -311,9 +665,50 @@ func validateTableName(tableName string) error {
 		return fmt.Errorf("table name exceeds maximum length of 128 characters")
 	}
 
-	validPattern := regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_-]*$`)
-	if !validPattern.MatchString(tableName) {
-		return fmt.Errorf("table name contains invalid characters")
+	if !tableNameRegex.MatchString(tableName) {
+		return fmt.Errorf("table name must start with letter and contain only letters, digits, underscores, and hyphens")
+	}
+
+	// Additional security checks for injection prevention
+	if strings.Contains(tableName, "..") || strings.Contains(tableName, "/") || strings.Contains(tableName, "\\") {
+		return fmt.Errorf("table name contains invalid path characters")
+	}
+
+	// Check for SQL injection attempts
+	lowerName := strings.ToLower(tableName)
+	dangerousPatterns := []string{"select", "insert", "update", "delete", "drop", "create", "alter", "exec", "union", "script", "javascript"}
+	for _, pattern := range dangerousPatterns {
+		if strings.Contains(lowerName, pattern) {
+			return fmt.Errorf("table name contains potentially dangerous SQL keywords")
+		}
+	}
+
+	return nil
+}
+
+// validateSchemaPath validates that a schema file path is safe
+func validateSchemaPath(schemaPath string) error {
+	if schemaPath == "" {
+		return fmt.Errorf("schema path cannot be empty")
+	}
+
+	// Check for path traversal attempts
+	cleanPath := filepath.Clean(schemaPath)
+	if strings.Contains(cleanPath, "..") {
+		return fmt.Errorf("path traversal not allowed in schema path")
+	}
+
+	// Check for suspicious characters that could be used in injection
+	if strings.Contains(cleanPath, ";") || strings.Contains(cleanPath, "&") || strings.Contains(cleanPath, "|") {
+		return fmt.Errorf("schema path contains suspicious characters")
+	}
+
+	// Validate that path exists and is readable
+	if _, err := os.Stat(cleanPath); err != nil {
+		if os.IsNotExist(err) {
+			return fmt.Errorf("schema path does not exist: %s", cleanPath)
+		}
+		return fmt.Errorf("cannot access schema path: %v", err)
 	}
 
 	return nil
