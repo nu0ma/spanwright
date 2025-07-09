@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [2.0.0](https://github.com/nu0ma/spanwright/compare/v1.4.0...v2.0.0) (2025-07-09)
+
+
+* 🔒 Fix critical path traversal vulnerability (Issue #56) (#63) ([49df3ee](https://github.com/nu0ma/spanwright/commit/49df3ee086de4b5232b2cc5f3cb95080722d25a1)), closes [#56](https://github.com/nu0ma/spanwright/issues/56) [#63](https://github.com/nu0ma/spanwright/issues/63) [#56](https://github.com/nu0ma/spanwright/issues/56) [#56](https://github.com/nu0ma/spanwright/issues/56)
+
+
+### BREAKING CHANGES
+
+* Project names containing `..`, null bytes, or starting
+with `.` are now rejected for security reasons.
+
+* fix
+
+* fix: resolve unit test failures in security validation
+
+- Reorder validation checks in validateProjectName to fix path traversal detection
+- Add null byte validation for ensureDirectoryExists and writeFileContent
+- Add targeted security checks for dangerous absolute paths in readFileContent
+- Fix copyDirectory to validate path traversal in file names during copy operations
+- Preserve SecurityError exceptions in error handling
+
+All 247 unit tests now pass.
+
 # [1.4.0](https://github.com/nu0ma/spanwright/compare/v1.3.0...v1.4.0) (2025-07-09)
 
 
