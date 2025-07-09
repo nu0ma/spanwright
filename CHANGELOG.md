@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [1.4.0](https://github.com/nu0ma/spanwright/compare/v1.3.0...v1.4.0) (2025-07-09)
+
+
+### Features
+
+* implement real spalidate validation in two-databases example ([#55](https://github.com/nu0ma/spanwright/issues/55)) ([12f52ae](https://github.com/nu0ma/spanwright/commit/12f52aead8e6d0139655902a6b78a857134ef147))
+
 # [1.3.0](https://github.com/nu0ma/spanwright/compare/v1.2.1...v1.3.0) (2025-07-08)
 
 
