@@ -76,8 +76,8 @@ describe('CLI Security Tests', () => {
         'project123',
         'Project_Name',
         'test-project-name',
-        'project.name',
-        'my.project.test'
+        'myproject',
+        'test_project'
       ];
 
       safeNames.forEach(name => {
@@ -87,24 +87,23 @@ describe('CLI Security Tests', () => {
   });
 
   describe('Input Sanitization', () => {
-    it('should handle Unicode characters safely', () => {
+    it('should reject Unicode characters for security', () => {
       const unicodeNames = [
         '项目名称',
         'プロジェクト',
         'проект',
-        'projekt',
         'مشروع',
         '📁project📄'
       ];
 
       unicodeNames.forEach(name => {
-        expect(() => validateProjectName(name)).not.toThrow();
+        expect(() => validateProjectName(name)).toThrow(ValidationError);
       });
     });
 
-    it('should handle very long project names', () => {
+    it('should reject very long project names', () => {
       const longName = 'a'.repeat(1000);
-      expect(() => validateProjectName(longName)).not.toThrow();
+      expect(() => validateProjectName(longName)).toThrow(ValidationError);
     });
 
     it('should handle empty and whitespace-only names', () => {
@@ -123,13 +122,13 @@ describe('CLI Security Tests', () => {
   describe('Edge Cases and Attack Vectors', () => {
     it('should handle mixed encoding attacks', () => {
       const encodedNames = [
-        '%2e%2e%2f',     // URL encoded ../
-        'unicode-encoded',  // Safe placeholder
+        '%2e%2e%2f',     // URL encoded ../ - contains % which is not allowed
+        'unicode.encoded',  // Contains dot which is not allowed
       ];
 
       encodedNames.forEach(name => {
-        // These should be treated as literal strings, not decoded
-        expect(() => validateProjectName(name)).not.toThrow();
+        // These should be rejected due to special characters
+        expect(() => validateProjectName(name)).toThrow(ValidationError);
       });
       
       // These contain actual dangerous characters that should be detected
@@ -152,20 +151,23 @@ describe('CLI Security Tests', () => {
       });
     });
 
-    it('should handle special characters safely', () => {
+    it('should reject special characters for security', () => {
       const specialNames = [
         'project@company.com',
         'project+version',
-        'project-v1.0',
-        'project_final',
+        'project-v1.0',  // Contains dot which is not allowed
         'project(1)',
         'project[test]',
         'project{dev}'
       ];
 
       specialNames.forEach(name => {
-        expect(() => validateProjectName(name)).not.toThrow();
+        expect(() => validateProjectName(name)).toThrow(ValidationError);
       });
+      
+      // These should be allowed (only letters, numbers, hyphens, underscores)
+      expect(() => validateProjectName('project_final')).not.toThrow();
+      expect(() => validateProjectName('project-v1')).not.toThrow();
     });
 
     it('should reject dangerous pattern combinations', () => {

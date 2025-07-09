@@ -3,6 +3,8 @@ import * as path from 'path';
 import { FileSystemError, SecurityError } from './errors';
 import { FILE_PATTERNS, TEMPLATE_VARS } from './constants';
 import { validatePath } from './security';
+import { secureTemplateReplace } from './template-security';
+import { validateAllTemplateInputs } from './validation';
 
 // File and directory operation utilities
 
@@ -171,14 +173,17 @@ export function escapeRegExp(string: string): string {
 }
 
 export function replaceInFile(filePath: string, replacements: Record<string, string>): void {
-  let content = readFileContent(filePath);
+  // Validate all template inputs for security
+  validateAllTemplateInputs(replacements);
   
-  for (const [search, replace] of Object.entries(replacements)) {
-    const escapedSearch = escapeRegExp(search);
-    content = content.replace(new RegExp(escapedSearch, 'g'), replace);
-  }
+  // Read the file content
+  const content = readFileContent(filePath);
   
-  writeFileContent(filePath, content);
+  // Use secure template replacement with context-aware escaping
+  const secureContent = secureTemplateReplace(content, replacements, filePath);
+  
+  // Write the secure content back to the file
+  writeFileContent(filePath, secureContent);
 }
 
 export function processTemplateFiles(projectPath: string, projectName: string): void {
@@ -186,6 +191,11 @@ export function processTemplateFiles(projectPath: string, projectName: string): 
   if (!path.isAbsolute(projectPath)) {
     validatePath(process.cwd(), projectPath, 'processTemplateFiles');
   }
+  
+  // Validate template inputs for security
+  validateAllTemplateInputs({
+    [TEMPLATE_VARS.PROJECT_NAME]: projectName
+  });
   
   // Rename template files
   const fileRenamings = [
@@ -235,6 +245,11 @@ export function replaceProjectNameInGoFiles(projectPath: string, projectName: st
   if (!path.isAbsolute(projectPath)) {
     validatePath(process.cwd(), projectPath, 'replaceProjectNameInGoFiles');
   }
+  
+  // Validate template inputs for security
+  validateAllTemplateInputs({
+    [TEMPLATE_VARS.PROJECT_NAME]: projectName
+  });
   
   function processDirectory(dir: string): void {
     try {

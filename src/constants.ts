@@ -60,13 +60,71 @@ export const VALIDATION = {
   FLAG_PREFIX: '-'
 } as const;
 
+// Security validation patterns
+export const SECURITY_PATTERNS = {
+  SAFE_PROJECT_NAME: /^[a-zA-Z][a-zA-Z0-9_-]*$/,
+  SAFE_DATABASE_NAME: /^[a-zA-Z][a-zA-Z0-9_-]*$/,
+  SAFE_SCHEMA_PATH: /^[a-zA-Z0-9_./\\-]+$/,
+  SAFE_GENERIC_IDENTIFIER: /^[a-zA-Z0-9_-]+$/,
+  DANGEROUS_KEYWORDS: /\b(exec|eval|process|require|import|delete|drop|insert|select|update|union|script|javascript|onload|onerror)\b/i,
+  SQL_RESERVED_WORDS: /\b(select|insert|update|delete|drop|create|alter|table|database|schema|union|where|having|group|order|join|inner|outer|left|right|full|exists|in|like|between|and|or|not|null|is|as|distinct|all|any|some|case|when|then|else|end)\b/i
+} as const;
+
+// Template context mappings
+export const TEMPLATE_CONTEXTS = {
+  JAVASCRIPT: 'javascript',
+  SHELL: 'shell',
+  SQL: 'sql',
+  GENERIC: 'generic'
+} as const;
+
+// File extension to context mapping
+export const FILE_CONTEXT_EXTENSIONS = {
+  '.js': TEMPLATE_CONTEXTS.JAVASCRIPT,
+  '.ts': TEMPLATE_CONTEXTS.JAVASCRIPT,
+  '.jsx': TEMPLATE_CONTEXTS.JAVASCRIPT,
+  '.tsx': TEMPLATE_CONTEXTS.JAVASCRIPT,
+  '.sh': TEMPLATE_CONTEXTS.SHELL,
+  '.bash': TEMPLATE_CONTEXTS.SHELL,
+  '.zsh': TEMPLATE_CONTEXTS.SHELL,
+  '.fish': TEMPLATE_CONTEXTS.SHELL,
+  '.mk': TEMPLATE_CONTEXTS.SHELL,
+  '.mak': TEMPLATE_CONTEXTS.SHELL,
+  '.sql': TEMPLATE_CONTEXTS.SQL,
+  '.ddl': TEMPLATE_CONTEXTS.SQL,
+  '.dml': TEMPLATE_CONTEXTS.SQL,
+  '.go': TEMPLATE_CONTEXTS.GENERIC,
+  '.mod': TEMPLATE_CONTEXTS.GENERIC,
+  '.json': TEMPLATE_CONTEXTS.GENERIC,
+  '.yaml': TEMPLATE_CONTEXTS.GENERIC,
+  '.yml': TEMPLATE_CONTEXTS.GENERIC,
+  '.toml': TEMPLATE_CONTEXTS.GENERIC,
+  '.md': TEMPLATE_CONTEXTS.GENERIC,
+  '.txt': TEMPLATE_CONTEXTS.GENERIC
+} as const;
+
+// Special filename mappings
+export const SPECIAL_FILENAMES = {
+  'makefile': TEMPLATE_CONTEXTS.SHELL,
+  'Makefile': TEMPLATE_CONTEXTS.SHELL,
+  'makefile.*': TEMPLATE_CONTEXTS.SHELL,
+  'Makefile.*': TEMPLATE_CONTEXTS.SHELL
+} as const;
+
 // Messages
 export const MESSAGES = {
   ERRORS: {
     NO_PROJECT_NAME: '❌ Please specify a project name',
     DIRECTORY_EXISTS: (name: string) => `❌ Directory "${name}" already exists`,
     INVALID_DB_COUNT: '❌ Please enter 1 or 2',
-    ENV_DB_COUNT_INVALID: '❌ SPANWRIGHT_DB_COUNT must be 1 or 2'
+    ENV_DB_COUNT_INVALID: '❌ SPANWRIGHT_DB_COUNT must be 1 or 2',
+    TEMPLATE_SECURITY: '❌ Template security validation failed',
+    INJECTION_ATTEMPT: '❌ Potential code injection detected',
+    INVALID_CHARACTERS: '❌ Invalid characters detected in input',
+    PATH_TRAVERSAL: '❌ Path traversal attempt detected',
+    NULL_BYTE: '❌ Null byte injection attempt detected',
+    INPUT_TOO_LONG: '❌ Input exceeds maximum length limit',
+    DANGEROUS_KEYWORDS: '❌ Dangerous keywords detected in input'
   },
   INFO: {
     STARTING_SETUP: '🚀 Starting Spanner E2E Test Framework setup',

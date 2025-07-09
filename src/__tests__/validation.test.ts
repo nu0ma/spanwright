@@ -28,50 +28,50 @@ describe('Validation Module', () => {
 
     it('should throw ValidationError for names containing forward slash', () => {
       expect(() => validateProjectName('my/project')).toThrow(ValidationError)
-      expect(() => validateProjectName('my/project')).toThrow('Project name cannot contain path separators')
+      expect(() => validateProjectName('my/project')).toThrow('Project name can only contain letters, numbers, hyphens, and underscores')
     })
 
     it('should throw ValidationError for names containing backslash', () => {
       expect(() => validateProjectName('my\\project')).toThrow(ValidationError)
-      expect(() => validateProjectName('my\\project')).toThrow('Project name cannot contain path separators')
+      expect(() => validateProjectName('my\\project')).toThrow('Project name can only contain letters, numbers, hyphens, and underscores')
     })
 
     it('should throw ValidationError for names starting with dot', () => {
       expect(() => validateProjectName('.hidden-project')).toThrow(ValidationError)
-      expect(() => validateProjectName('.hidden-project')).toThrow('Project name cannot start with a dot')
+      expect(() => validateProjectName('.hidden-project')).toThrow('Project name can only contain letters, numbers, hyphens, and underscores')
     })
 
     it('should throw ValidationError for project name containing path traversal', () => {
       expect(() => validateProjectName('project..')).toThrow(ValidationError)
-      expect(() => validateProjectName('project..')).toThrow('Project name cannot contain ".." (path traversal)')
+      expect(() => validateProjectName('project..')).toThrow('Project name can only contain letters, numbers, hyphens, and underscores')
       
       expect(() => validateProjectName('..project')).toThrow(ValidationError)
-      expect(() => validateProjectName('..project')).toThrow('Project name cannot contain ".." (path traversal)')
+      expect(() => validateProjectName('..project')).toThrow('Project name can only contain letters, numbers, hyphens, and underscores')
       
       expect(() => validateProjectName('proj..ect')).toThrow(ValidationError)
-      expect(() => validateProjectName('proj..ect')).toThrow('Project name cannot contain ".." (path traversal)')
+      expect(() => validateProjectName('proj..ect')).toThrow('Project name can only contain letters, numbers, hyphens, and underscores')
     })
 
     it('should throw ValidationError for project name containing null bytes', () => {
       expect(() => validateProjectName('project\0')).toThrow(ValidationError)
-      expect(() => validateProjectName('project\0')).toThrow('Project name cannot contain null bytes')
+      expect(() => validateProjectName('project\0')).toThrow('Project name can only contain letters, numbers, hyphens, and underscores')
       
       expect(() => validateProjectName('pro\0ject')).toThrow(ValidationError)
-      expect(() => validateProjectName('pro\0ject')).toThrow('Project name cannot contain null bytes')
+      expect(() => validateProjectName('pro\0ject')).toThrow('Project name can only contain letters, numbers, hyphens, and underscores')
     })
 
     it('should throw ValidationError for Windows absolute paths', () => {
       expect(() => validateProjectName('C:project')).toThrow(ValidationError)
-      expect(() => validateProjectName('C:project')).toThrow('Project name cannot be an absolute path')
+      expect(() => validateProjectName('C:project')).toThrow('Project name can only contain letters, numbers, hyphens, and underscores')
       
       expect(() => validateProjectName('D:test')).toThrow(ValidationError)
-      expect(() => validateProjectName('D:test')).toThrow('Project name cannot be an absolute path')
+      expect(() => validateProjectName('D:test')).toThrow('Project name can only contain letters, numbers, hyphens, and underscores')
     })
 
-    it('should allow valid project names with dots in middle', () => {
-      expect(() => validateProjectName('project.name')).not.toThrow()
-      expect(() => validateProjectName('my.project.test')).not.toThrow()
-      expect(() => validateProjectName('file.txt')).not.toThrow()
+    it('should reject project names with dots for security', () => {
+      expect(() => validateProjectName('project.name')).toThrow(ValidationError)
+      expect(() => validateProjectName('my.project.test')).toThrow(ValidationError)
+      expect(() => validateProjectName('file.txt')).toThrow(ValidationError)
     })
 
     it('should throw ValidationError with correct field name', () => {
@@ -118,10 +118,10 @@ describe('Validation Module', () => {
   })
 
   describe('validateSchemaPath', () => {
-    it('should pass for valid absolute paths', () => {
-      expect(() => validateSchemaPath('/path/to/schema', 'schemaPath')).not.toThrow()
-      expect(() => validateSchemaPath('/tmp/schema', 'schemaPath')).not.toThrow()
-      expect(() => validateSchemaPath('/home/user/schema', 'schemaPath')).not.toThrow()
+    it('should pass for valid relative paths', () => {
+      expect(() => validateSchemaPath('path/to/schema', 'schemaPath')).not.toThrow()
+      expect(() => validateSchemaPath('tmp/schema', 'schemaPath')).not.toThrow()
+      expect(() => validateSchemaPath('schema', 'schemaPath')).not.toThrow()
     })
 
     it('should throw ValidationError for empty path', () => {
@@ -134,19 +134,19 @@ describe('Validation Module', () => {
       expect(() => validateSchemaPath('   ', 'schemaPath')).toThrow('schemaPath cannot be empty')
     })
 
-    it('should throw ValidationError for relative paths', () => {
-      expect(() => validateSchemaPath('relative/path', 'schemaPath')).toThrow(ValidationError)
-      expect(() => validateSchemaPath('relative/path', 'schemaPath')).toThrow('schemaPath must be an absolute path')
+    it('should throw ValidationError for absolute paths', () => {
+      expect(() => validateSchemaPath('/absolute/path', 'schemaPath')).toThrow(ValidationError)
+      expect(() => validateSchemaPath('/absolute/path', 'schemaPath')).toThrow('schemaPath must be a relative path')
     })
 
-    it('should throw ValidationError for paths starting with dot', () => {
-      expect(() => validateSchemaPath('./relative/path', 'schemaPath')).toThrow(ValidationError)
-      expect(() => validateSchemaPath('./relative/path', 'schemaPath')).toThrow('schemaPath must be an absolute path')
-    })
-
-    it('should throw ValidationError for paths starting with double dot', () => {
+    it('should throw ValidationError for paths with path traversal', () => {
       expect(() => validateSchemaPath('../relative/path', 'schemaPath')).toThrow(ValidationError)
-      expect(() => validateSchemaPath('../relative/path', 'schemaPath')).toThrow('schemaPath must be an absolute path')
+      expect(() => validateSchemaPath('../relative/path', 'schemaPath')).toThrow('schemaPath security validation failed')
+    })
+
+    it('should allow paths starting with dot', () => {
+      expect(() => validateSchemaPath('./relative/path', 'schemaPath')).not.toThrow()
+      expect(() => validateSchemaPath('./other/path', 'schemaPath')).not.toThrow()
     })
 
     it('should use correct field name in error message', () => {
