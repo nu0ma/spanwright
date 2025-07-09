@@ -12,13 +12,13 @@ export function validateProjectName(name: string | undefined): asserts name is s
     throw new ValidationError('Project name cannot contain path separators', 'projectName');
   }
   
-  if (name.startsWith('.')) {
-    throw new ValidationError('Project name cannot start with a dot', 'projectName');
-  }
-  
-  // Security: Check for path traversal attempts
+  // Security: Check for path traversal attempts (must come before dot check)
   if (name.includes('..')) {
     throw new ValidationError('Project name cannot contain ".." (path traversal)', 'projectName');
+  }
+  
+  if (name.startsWith('.')) {
+    throw new ValidationError('Project name cannot start with a dot', 'projectName');
   }
   
   // Security: Check for null bytes

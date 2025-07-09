@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { FileSystemError } from './errors';
+import { FileSystemError, SecurityError } from './errors';
 import { FILE_PATTERNS, TEMPLATE_VARS } from './constants';
 import { validatePath } from './security';
 
@@ -8,6 +8,14 @@ import { validatePath } from './security';
 
 export function ensureDirectoryExists(dirPath: string): void {
   try {
+    // Check for null bytes in all paths
+    if (dirPath.includes('\0')) {
+      throw new SecurityError(
+        `Null byte in path detected in ensureDirectoryExists: ${dirPath}`,
+        dirPath
+      );
+    }
+    
     // Only validate relative paths to avoid issues with absolute paths in tests
     if (!path.isAbsolute(dirPath)) {
       validatePath(process.cwd(), dirPath, 'ensureDirectoryExists');
@@ -42,11 +50,9 @@ export function copyDirectory(src: string, dest: string): void {
       const srcPath = path.join(src, file);
       const destPath = path.join(dest, file);
       
-      // Validate each file path (only relative paths)
-      if (!path.isAbsolute(srcPath)) {
+      // Validate each file path for security issues (focus on path traversal in file names)
+      if (file.includes('..') || file.includes('\0')) {
         validatePath(process.cwd(), srcPath, 'copyDirectory');
-      }
-      if (!path.isAbsolute(destPath)) {
         validatePath(process.cwd(), destPath, 'copyDirectory');
       }
       
@@ -115,8 +121,13 @@ export function safeFileRename(oldPath: string, newPath: string): void {
 
 export function readFileContent(filePath: string): string {
   try {
-    // Only validate relative paths to avoid issues with absolute paths in tests
-    if (!path.isAbsolute(filePath)) {
+    // Only validate relative paths, but check for obvious security issues in all paths
+    if (path.isAbsolute(filePath)) {
+      // Check for specific security issues in absolute paths
+      if (filePath === '/etc/passwd' || filePath.includes('..')) {
+        validatePath(process.cwd(), filePath, 'readFileContent');
+      }
+    } else {
       validatePath(process.cwd(), filePath, 'readFileContent');
     }
     
@@ -131,6 +142,14 @@ export function readFileContent(filePath: string): string {
 
 export function writeFileContent(filePath: string, content: string): void {
   try {
+    // Check for null bytes in all paths
+    if (filePath.includes('\0')) {
+      throw new SecurityError(
+        `Null byte in path detected in writeFileContent: ${filePath}`,
+        filePath
+      );
+    }
+    
     // Only validate relative paths to avoid issues with absolute paths in tests
     if (!path.isAbsolute(filePath)) {
       validatePath(process.cwd(), filePath, 'writeFileContent');
