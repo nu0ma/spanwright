@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"regexp"
 	"sort"
 	"strings"
 
@@ -59,12 +58,14 @@ func main() {
 func injectSeedData(projectID, instanceID, databaseID, fixtureDir string) error {
 	ctx := context.Background()
 	
-	// Create database connection string for Spanner
-	dsn := fmt.Sprintf("projects/%s/instances/%s/databases/%s", projectID, instanceID, databaseID)
+	// Create secure database connection string for Spanner with validation
+	dsn, err := spanwright.BuildSecureDSN(projectID, instanceID, databaseID)
+	if err != nil {
+		return fmt.Errorf("failed to build secure DSN: %v", err)
+	}
 	
 	// Open database connection using Spanner SQL driver
 	var db *sql.DB
-	var err error
 	
 	err = spanwright.WithRetry(ctx, "Open database connection", func(ctx context.Context, attempt int) error {
 		var openErr error
@@ -124,8 +125,9 @@ func injectSeedData(projectID, instanceID, databaseID, fixtureDir string) error 
 	return nil
 }
 
-// getAvailableTables gets the list of tables available in the database
+// getAvailableTables gets the list of tables available in the database with security validation
 func getAvailableTables(ctx context.Context, db *sql.DB) (map[string]bool, error) {
+	// Use parameterized query to prevent SQL injection
 	rows, err := db.QueryContext(ctx, "SELECT table_name FROM information_schema.tables WHERE table_schema = '' ORDER BY table_name")
 	if err != nil {
 		return nil, fmt.Errorf("failed to query tables: %v", err)
@@ -138,6 +140,13 @@ func getAvailableTables(ctx context.Context, db *sql.DB) (map[string]bool, error
 		if err := rows.Scan(&tableName); err != nil {
 			return nil, fmt.Errorf("failed to scan table name: %v", err)
 		}
+		
+		// Validate table name for security before adding to map
+		if err := spanwright.ValidateTableName(tableName); err != nil {
+			log.Printf("Warning: Skipping invalid table name '%s': %v", tableName, err)
+			continue
+		}
+		
 		availableTables[tableName] = true
 	}
 
@@ -179,6 +188,13 @@ func getFixtureFilesInOrder(fixtureDir string, availableTables map[string]bool) 
 			name := entry.Name()
 			if strings.HasSuffix(strings.ToLower(name), ".yml") || strings.HasSuffix(strings.ToLower(name), ".yaml") {
 				tableName := getTableNameFromFile(name)
+				
+				// Validate table name for security
+				if err := spanwright.ValidateTableName(tableName); err != nil {
+					log.Printf("⚠️ Skipping fixture with invalid table name '%s': %v", tableName, err)
+					continue
+				}
+				
 				if availableTables[tableName] {
 					yamlFiles = append(yamlFiles, name)
 					log.Printf("📄 Found fixture for table: %s", tableName)
@@ -282,20 +298,8 @@ func validateFixtureDir(path string) error {
 	return nil
 }
 
-// validateDatabaseID validates that a database ID is safe
+// validateDatabaseID validates that a database ID is safe using enhanced security validation
 func validateDatabaseID(databaseID string) error {
-	if databaseID == "" {
-		return fmt.Errorf("database ID cannot be empty")
-	}
-
-	if len(databaseID) > 64 {
-		return fmt.Errorf("database ID exceeds maximum length of 64 characters")
-	}
-
-	validPattern := regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_-]*$`)
-	if !validPattern.MatchString(databaseID) {
-		return fmt.Errorf("database ID contains invalid characters")
-	}
-
-	return nil
+	// Use the enhanced validation from spanwright package
+	return spanwright.ValidateDatabaseID(databaseID)
 }
