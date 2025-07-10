@@ -23,9 +23,8 @@ export function ensureDirectoryExists(dirPath: string): void {
       validatePath(process.cwd(), dirPath, 'ensureDirectoryExists');
     }
 
-    if (!fs.existsSync(dirPath)) {
-      fs.mkdirSync(dirPath, { recursive: true });
-    }
+    // Use mkdirSync with recursive: true which is idempotent and avoids TOCTOU
+    fs.mkdirSync(dirPath, { recursive: true });
   } catch (error) {
     if (error instanceof Error && error.name === 'SecurityError') {
       throw error;
@@ -89,8 +88,14 @@ export function safeFileDelete(filePath: string): void {
       validatePath(process.cwd(), filePath, 'safeFileDelete');
     }
 
-    if (safeFileExists(filePath)) {
+    // Try to unlink the file - will fail silently if it doesn't exist
+    try {
       fs.unlinkSync(filePath);
+    } catch (error: any) {
+      // ENOENT is fine - file doesn't exist
+      if (error.code !== 'ENOENT') {
+        throw error;
+      }
     }
   } catch (error) {
     if (error instanceof Error && error.name === 'SecurityError') {
@@ -110,9 +115,8 @@ export function safeFileRename(oldPath: string, newPath: string): void {
       validatePath(process.cwd(), newPath, 'safeFileRename');
     }
 
-    if (safeFileExists(oldPath)) {
-      fs.renameSync(oldPath, newPath);
-    }
+    // Try to rename - will fail if oldPath doesn't exist
+    fs.renameSync(oldPath, newPath);
   } catch (error) {
     if (error instanceof Error && error.name === 'SecurityError') {
       throw error;

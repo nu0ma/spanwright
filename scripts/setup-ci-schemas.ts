@@ -2,17 +2,18 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { createSecureTempDir } from '../src/secure-temp';
 
 /**
  * CI Schema Setup Script
  * Creates temporary schema files for testing actual CLI in CI environment
  */
 
-const TEMP_SCHEMA_BASE = '/tmp/ci-schemas';
-const PRIMARY_SCHEMA_DIR = path.join(TEMP_SCHEMA_BASE, 'primary');
-const SECONDARY_SCHEMA_DIR = path.join(TEMP_SCHEMA_BASE, 'secondary');
-
 class CISchemaSetup {
+  private tempSchemaBase: string = '';
+  private primarySchemaDir: string = '';
+  private secondarySchemaDir: string = '';
+
   constructor() {
     this.log('Setting up temporary schemas for CI testing...');
   }
@@ -25,26 +26,27 @@ class CISchemaSetup {
   /**
    * Create temporary schema directories
    */
-  createSchemaDirectories(): void {
-    this.log('Creating schema directories...');
+  async createSchemaDirectories(): Promise<void> {
+    this.log('Creating secure temporary schema directories...');
 
-    // Clean up existing directories
-    if (fs.existsSync(TEMP_SCHEMA_BASE)) {
-      fs.rmSync(TEMP_SCHEMA_BASE, { recursive: true, force: true });
-    }
+    // Create secure temporary base directory
+    this.tempSchemaBase = await createSecureTempDir('ci-schemas-');
+    
+    // Create subdirectories
+    this.primarySchemaDir = path.join(this.tempSchemaBase, 'primary');
+    this.secondarySchemaDir = path.join(this.tempSchemaBase, 'secondary');
+    
+    await fs.promises.mkdir(this.primarySchemaDir, { recursive: true });
+    await fs.promises.mkdir(this.secondarySchemaDir, { recursive: true });
 
-    // Create new directories
-    fs.mkdirSync(PRIMARY_SCHEMA_DIR, { recursive: true });
-    fs.mkdirSync(SECONDARY_SCHEMA_DIR, { recursive: true });
-
-    this.log(`Primary schema directory: ${PRIMARY_SCHEMA_DIR}`);
-    this.log(`Secondary schema directory: ${SECONDARY_SCHEMA_DIR}`);
+    this.log(`Primary schema directory: ${this.primarySchemaDir}`);
+    this.log(`Secondary schema directory: ${this.secondarySchemaDir}`);
   }
 
   /**
    * Create primary database schema file
    */
-  createPrimarySchema(): void {
+  async createPrimarySchema(): Promise<void> {
     this.log('Creating primary database schema...');
 
     const primarySchema = `-- Primary Database Schema for CI Testing
@@ -90,15 +92,15 @@ CREATE TABLE OrderItems (
 ) PRIMARY KEY (OrderItemID);
 `;
 
-    const schemaPath = path.join(PRIMARY_SCHEMA_DIR, '001_initial_schema.sql');
-    fs.writeFileSync(schemaPath, primarySchema);
+    const schemaPath = path.join(this.primarySchemaDir, '001_initial_schema.sql');
+    await fs.promises.writeFile(schemaPath, primarySchema);
     this.log(`Primary schema file created: ${schemaPath}`);
   }
 
   /**
    * Create secondary database schema file
    */
-  createSecondarySchema(): void {
+  async createSecondarySchema(): Promise<void> {
     this.log('Creating secondary database schema...');
 
     const secondarySchema = `-- Secondary Database Schema for CI Testing
@@ -129,8 +131,8 @@ CREATE TABLE UserLogs (
 ) PRIMARY KEY (LogID);
 `;
 
-    const schemaPath = path.join(SECONDARY_SCHEMA_DIR, '001_initial_schema.sql');
-    fs.writeFileSync(schemaPath, secondarySchema);
+    const schemaPath = path.join(this.secondarySchemaDir, '001_initial_schema.sql');
+    await fs.promises.writeFile(schemaPath, secondarySchema);
     this.log(`Secondary schema file created: ${schemaPath}`);
   }
 
@@ -142,9 +144,9 @@ CREATE TABLE UserLogs (
     console.log('');
     console.log('export SPANWRIGHT_DB_COUNT=2');
     console.log('export SPANWRIGHT_PRIMARY_DB_NAME=ci-primary-db');
-    console.log(`export SPANWRIGHT_PRIMARY_SCHEMA_PATH=${PRIMARY_SCHEMA_DIR}`);
+    console.log(`export SPANWRIGHT_PRIMARY_SCHEMA_PATH=${this.primarySchemaDir}`);
     console.log('export SPANWRIGHT_SECONDARY_DB_NAME=ci-secondary-db');
-    console.log(`export SPANWRIGHT_SECONDARY_SCHEMA_PATH=${SECONDARY_SCHEMA_DIR}`);
+    console.log(`export SPANWRIGHT_SECONDARY_SCHEMA_PATH=${this.secondarySchemaDir}`);
     console.log('export CI=true');
     console.log('');
   }
@@ -152,11 +154,11 @@ CREATE TABLE UserLogs (
   /**
    * Main execution function
    */
-  run(): boolean {
+  async run(): Promise<boolean> {
     try {
-      this.createSchemaDirectories();
-      this.createPrimarySchema();
-      this.createSecondarySchema();
+      await this.createSchemaDirectories();
+      await this.createPrimarySchema();
+      await this.createSecondarySchema();
       this.displayEnvironmentVariables();
 
       this.log('='.repeat(60));
@@ -180,8 +182,12 @@ CREATE TABLE UserLogs (
 // Script execution
 if (process.argv[1] === __filename) {
   const setup = new CISchemaSetup();
-  const success = setup.run();
-  process.exit(success ? 0 : 1);
+  setup.run().then(success => {
+    process.exit(success ? 0 : 1);
+  }).catch(error => {
+    console.error('Fatal error:', error);
+    process.exit(1);
+  });
 }
 
 export default CISchemaSetup;
