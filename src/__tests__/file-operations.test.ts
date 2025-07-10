@@ -670,7 +670,7 @@ describe('File Operations Module', () => {
 
       // Mock renameSync to succeed
       mockFs.renameSync.mockReturnValue(undefined);
-      
+
       // Mock go.mod as non-existent after rename (this uses safeFileExists)
       mockFs.existsSync.mockImplementation((path: string) => {
         return !path.endsWith('go.mod');
@@ -870,7 +870,7 @@ describe('File Operations Module', () => {
 
     it('should handle partial file existence', () => {
       const projectPath = '/test/project';
-      
+
       // Mock first file to succeed, others to fail with ENOENT
       let callCount = 0;
       mockFs.unlinkSync.mockImplementation(() => {
