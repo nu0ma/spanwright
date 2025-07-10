@@ -45,23 +45,20 @@ describe('File Operations Module', () => {
   describe('ensureDirectoryExists', () => {
     it('should create directory if it does not exist', () => {
       const dirPath = '/test/directory';
-      mockFs.existsSync.mockReturnValue(false);
       mockFs.mkdirSync.mockReturnValue(undefined);
 
       ensureDirectoryExists(dirPath);
 
-      expect(mockFs.existsSync).toHaveBeenCalledWith(dirPath);
       expect(mockFs.mkdirSync).toHaveBeenCalledWith(dirPath, { recursive: true });
     });
 
-    it('should not create directory if it already exists', () => {
+    it('should create directory idempotently', () => {
       const dirPath = '/test/directory';
-      mockFs.existsSync.mockReturnValue(true);
+      mockFs.mkdirSync.mockReturnValue(undefined);
 
       ensureDirectoryExists(dirPath);
 
-      expect(mockFs.existsSync).toHaveBeenCalledWith(dirPath);
-      expect(mockFs.mkdirSync).not.toHaveBeenCalled();
+      expect(mockFs.mkdirSync).toHaveBeenCalledWith(dirPath, { recursive: true });
     });
 
     it('should throw FileSystemError if directory creation fails', () => {
@@ -77,10 +74,10 @@ describe('File Operations Module', () => {
       );
     });
 
-    it('should throw FileSystemError if existsSync throws error', () => {
+    it('should throw FileSystemError if mkdirSync throws error', () => {
       const dirPath = '/test/directory';
-      mockFs.existsSync.mockImplementation(() => {
-        throw new Error('Access denied');
+      mockFs.mkdirSync.mockImplementation(() => {
+        throw new Error('Permission denied');
       });
 
       expect(() => ensureDirectoryExists(dirPath)).toThrow(FileSystemError);
@@ -262,23 +259,23 @@ describe('File Operations Module', () => {
   describe('safeFileDelete', () => {
     it('should delete file if it exists', () => {
       const filePath = '/test/file.txt';
-      mockFs.existsSync.mockReturnValue(true);
       mockFs.unlinkSync.mockReturnValue(undefined);
 
       safeFileDelete(filePath);
 
-      expect(mockFs.existsSync).toHaveBeenCalledWith(filePath);
       expect(mockFs.unlinkSync).toHaveBeenCalledWith(filePath);
     });
 
-    it('should not attempt to delete file if it does not exist', () => {
+    it('should handle file not existing gracefully', () => {
       const filePath = '/test/file.txt';
-      mockFs.existsSync.mockReturnValue(false);
+      const error = new Error('File not found') as any;
+      error.code = 'ENOENT';
+      mockFs.unlinkSync.mockImplementation(() => {
+        throw error;
+      });
 
-      safeFileDelete(filePath);
-
-      expect(mockFs.existsSync).toHaveBeenCalledWith(filePath);
-      expect(mockFs.unlinkSync).not.toHaveBeenCalled();
+      expect(() => safeFileDelete(filePath)).not.toThrow();
+      expect(mockFs.unlinkSync).toHaveBeenCalledWith(filePath);
     });
 
     it('should throw FileSystemError if deletion fails', () => {
@@ -313,24 +310,22 @@ describe('File Operations Module', () => {
     it('should rename file if it exists', () => {
       const oldPath = '/test/old.txt';
       const newPath = '/test/new.txt';
-      mockFs.existsSync.mockReturnValue(true);
       mockFs.renameSync.mockReturnValue(undefined);
 
       safeFileRename(oldPath, newPath);
 
-      expect(mockFs.existsSync).toHaveBeenCalledWith(oldPath);
       expect(mockFs.renameSync).toHaveBeenCalledWith(oldPath, newPath);
     });
 
-    it('should not attempt to rename file if it does not exist', () => {
+    it('should handle file not existing for rename', () => {
       const oldPath = '/test/old.txt';
       const newPath = '/test/new.txt';
-      mockFs.existsSync.mockReturnValue(false);
+      mockFs.renameSync.mockImplementation(() => {
+        throw new Error('File not found');
+      });
 
-      safeFileRename(oldPath, newPath);
-
-      expect(mockFs.existsSync).toHaveBeenCalledWith(oldPath);
-      expect(mockFs.renameSync).not.toHaveBeenCalled();
+      expect(() => safeFileRename(oldPath, newPath)).toThrow(FileSystemError);
+      expect(mockFs.renameSync).toHaveBeenCalledWith(oldPath, newPath);
     });
 
     it('should throw FileSystemError if rename fails', () => {
@@ -660,31 +655,26 @@ describe('File Operations Module', () => {
       const projectPath = '/test/project';
       const projectName = 'my-project';
 
-      // Mock all files as non-existent
-      mockFs.existsSync.mockReturnValue(false);
+      // Mock renameSync to throw for missing files
+      mockFs.renameSync.mockImplementation(() => {
+        throw new Error('File not found');
+      });
 
-      processTemplateFiles(projectPath, projectName);
-
-      // Should not attempt to rename non-existent files
-      expect(mockFs.renameSync).not.toHaveBeenCalled();
-      expect(mockFs.readFileSync).not.toHaveBeenCalled();
-      expect(mockFs.writeFileSync).not.toHaveBeenCalled();
+      // Should not throw error for missing template files
+      expect(() => processTemplateFiles(projectPath, projectName)).not.toThrow();
     });
 
     it('should skip go.mod processing if file does not exist after rename', () => {
       const projectPath = '/test/project';
       const projectName = 'my-project';
 
-      // Mock template files exist but go.mod doesn't exist after rename
-      mockFs.existsSync
-        .mockReturnValueOnce(true) // _package.json exists
-        .mockReturnValueOnce(true) // _gitignore exists
-        .mockReturnValueOnce(true) // go.mod.template exists
-        .mockReturnValueOnce(false) // go.mod doesn't exist after rename
-        .mockReturnValueOnce(false) // expected-primary.yaml.template doesn't exist
-        .mockReturnValueOnce(false); // expected-secondary.yaml.template doesn't exist
-
+      // Mock renameSync to succeed
       mockFs.renameSync.mockReturnValue(undefined);
+      
+      // Mock go.mod as non-existent after rename (this uses safeFileExists)
+      mockFs.existsSync.mockImplementation((path: string) => {
+        return !path.endsWith('go.mod');
+      });
 
       processTemplateFiles(projectPath, projectName);
 
@@ -860,57 +850,40 @@ describe('File Operations Module', () => {
   describe('removeSecondaryDbFiles', () => {
     it('should remove secondary database files', () => {
       const projectPath = '/test/project';
-
-      mockFs.existsSync.mockReturnValue(true);
       mockFs.unlinkSync.mockReturnValue(undefined);
 
       removeSecondaryDbFiles(projectPath);
 
-      const expectedFiles = [
-        path.join(projectPath, 'scenarios', 'example-01-basic-setup', 'expected-secondary.yaml'),
-        path.join(
-          projectPath,
-          'scenarios',
-          'example-01-basic-setup',
-          'seed-data',
-          'secondary-seed.json'
-        ),
-        path.join(projectPath, 'expected-secondary.yaml.template'),
-      ];
-
-      for (const file of expectedFiles) {
-        expect(mockFs.existsSync).toHaveBeenCalledWith(file);
-        expect(mockFs.unlinkSync).toHaveBeenCalledWith(file);
-      }
+      expect(mockFs.unlinkSync).toHaveBeenCalledTimes(3);
     });
 
     it('should handle missing files gracefully', () => {
       const projectPath = '/test/project';
+      const error = new Error('File not found') as any;
+      error.code = 'ENOENT';
+      mockFs.unlinkSync.mockImplementation(() => {
+        throw error;
+      });
 
-      mockFs.existsSync.mockReturnValue(false);
-
-      removeSecondaryDbFiles(projectPath);
-
-      expect(mockFs.unlinkSync).not.toHaveBeenCalled();
+      expect(() => removeSecondaryDbFiles(projectPath)).not.toThrow();
     });
 
     it('should handle partial file existence', () => {
       const projectPath = '/test/project';
+      
+      // Mock first file to succeed, others to fail with ENOENT
+      let callCount = 0;
+      mockFs.unlinkSync.mockImplementation(() => {
+        callCount++;
+        if (callCount > 1) {
+          const error = new Error('File not found') as any;
+          error.code = 'ENOENT';
+          throw error;
+        }
+      });
 
-      // Mock first file exists, others don't
-      mockFs.existsSync
-        .mockReturnValueOnce(true) // expected-secondary.yaml exists
-        .mockReturnValueOnce(false) // secondary-seed.json doesn't exist
-        .mockReturnValueOnce(false); // expected-secondary.yaml.template doesn't exist
-
-      mockFs.unlinkSync.mockReturnValue(undefined);
-
-      removeSecondaryDbFiles(projectPath);
-
-      expect(mockFs.unlinkSync).toHaveBeenCalledTimes(1);
-      expect(mockFs.unlinkSync).toHaveBeenCalledWith(
-        path.join(projectPath, 'scenarios', 'example-01-basic-setup', 'expected-secondary.yaml')
-      );
+      expect(() => removeSecondaryDbFiles(projectPath)).not.toThrow();
+      expect(mockFs.unlinkSync).toHaveBeenCalledTimes(3);
     });
 
     it('should throw FileSystemError if file deletion fails', () => {

@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { promisify } from 'util';
+import crypto from 'crypto';
 
 const fsPromises = fs.promises;
 
@@ -19,7 +20,7 @@ function registerCleanupHandlers(): void {
   const runCleanup = async () => {
     const handlers = Array.from(cleanupHandlers);
     cleanupHandlers.clear();
-    
+
     for (const handler of handlers) {
       try {
         await handler();
@@ -50,11 +51,11 @@ function registerCleanupHandlers(): void {
 export async function createSecureTempDir(prefix: string = 'spanwright-'): Promise<string> {
   // Get the real path of the system temp directory
   const realTmpDir = await fsPromises.realpath(os.tmpdir());
-  
+
   // Create secure temporary directory with random suffix
   // mkdtemp expects a path that ends with XXXXXX or will append random characters
   const tempDir = await fsPromises.mkdtemp(path.join(realTmpDir, prefix));
-  
+
   // Register cleanup handler
   registerCleanupHandlers();
   const cleanup = async () => {
@@ -65,7 +66,7 @@ export async function createSecureTempDir(prefix: string = 'spanwright-'): Promi
     }
   };
   cleanupHandlers.add(cleanup);
-  
+
   return tempDir;
 }
 
@@ -80,7 +81,7 @@ export async function withTempDir<T>(
   prefix: string = 'spanwright-'
 ): Promise<T> {
   const tempDir = await createSecureTempDir(prefix);
-  
+
   try {
     return await fn(tempDir);
   } finally {
@@ -91,7 +92,7 @@ export async function withTempDir<T>(
       // Log but don't throw - the operation succeeded even if cleanup failed
       console.error('Failed to clean up temp directory:', tempDir, error);
     }
-    
+
     // Remove from cleanup handlers since we already cleaned up
     cleanupHandlers.forEach(handler => {
       if (handler.toString().includes(tempDir)) {
@@ -112,14 +113,14 @@ export async function createSecureTempFile(
   prefix: string = 'tmp-'
 ): Promise<{ fd: fs.promises.FileHandle; path: string }> {
   // Generate a unique filename with crypto-random suffix
-  const randomBytes = await promisify(require('crypto').randomBytes)(16);
+  const randomBytes = await promisify(crypto.randomBytes)(16);
   const randomSuffix = randomBytes.toString('hex');
   const filename = `${prefix}${randomSuffix}`;
   const filePath = path.join(dir, filename);
-  
+
   // Open file with exclusive creation flag (O_EXCL)
   const fd = await fsPromises.open(filePath, 'wx', 0o600);
-  
+
   return { fd, path: filePath };
 }
 
@@ -131,10 +132,10 @@ export async function createSecureTempFile(
 export function createSecureTempDirSync(prefix: string = 'spanwright-'): string {
   // Get the real path of the system temp directory
   const realTmpDir = fs.realpathSync(os.tmpdir());
-  
+
   // Create secure temporary directory with random suffix
   const tempDir = fs.mkdtempSync(path.join(realTmpDir, prefix));
-  
+
   // Register cleanup handler
   registerCleanupHandlers();
   const cleanup = () => {
@@ -145,6 +146,6 @@ export function createSecureTempDirSync(prefix: string = 'spanwright-'): string 
     }
   };
   cleanupHandlers.add(cleanup);
-  
+
   return tempDir;
 }

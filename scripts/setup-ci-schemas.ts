@@ -31,11 +31,11 @@ class CISchemaSetup {
 
     // Create secure temporary base directory
     this.tempSchemaBase = await createSecureTempDir('ci-schemas-');
-    
+
     // Create subdirectories
     this.primarySchemaDir = path.join(this.tempSchemaBase, 'primary');
     this.secondarySchemaDir = path.join(this.tempSchemaBase, 'secondary');
-    
+
     await fs.promises.mkdir(this.primarySchemaDir, { recursive: true });
     await fs.promises.mkdir(this.secondarySchemaDir, { recursive: true });
 
@@ -182,12 +182,15 @@ CREATE TABLE UserLogs (
 // Script execution
 if (process.argv[1] === __filename) {
   const setup = new CISchemaSetup();
-  setup.run().then(success => {
-    process.exit(success ? 0 : 1);
-  }).catch(error => {
-    console.error('Fatal error:', error);
-    process.exit(1);
-  });
+  setup
+    .run()
+    .then(success => {
+      process.exit(success ? 0 : 1);
+    })
+    .catch(error => {
+      console.error('Fatal error:', error);
+      process.exit(1);
+    });
 }
 
 export default CISchemaSetup;

@@ -218,7 +218,15 @@ export function processTemplateFiles(projectPath: string, projectName: string): 
   ];
 
   for (const { from, to } of fileRenamings) {
-    safeFileRename(from, to);
+    try {
+      safeFileRename(from, to);
+    } catch (error) {
+      // Template files might not exist, which is okay
+      if (error instanceof FileSystemError) {
+        continue;
+      }
+      throw error;
+    }
   }
 
   // Process go.mod template
