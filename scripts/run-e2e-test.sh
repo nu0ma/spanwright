@@ -71,8 +71,28 @@ setup_ci_schemas() {
     log_info "Setting up CI schemas..."
     
     cd "$PROJECT_ROOT"
-    if ! npx ts-node scripts/setup-ci-schemas.ts; then
+    
+    # Capture the environment variables from the schema setup
+    local setup_output
+    setup_output=$(npx ts-node scripts/setup-ci-schemas.ts 2>&1)
+    local setup_exit_code=$?
+    
+    # Print the output so we can see what happened
+    echo "$setup_output"
+    
+    if [ $setup_exit_code -ne 0 ]; then
         log_error "CI schema setup failed"
+        exit 1
+    fi
+    
+    # Parse the environment variables from the output
+    # Extract schema paths from the output
+    export SPANWRIGHT_PRIMARY_SCHEMA_PATH=$(echo "$setup_output" | grep "export SPANWRIGHT_PRIMARY_SCHEMA_PATH=" | cut -d'=' -f2-)
+    export SPANWRIGHT_SECONDARY_SCHEMA_PATH=$(echo "$setup_output" | grep "export SPANWRIGHT_SECONDARY_SCHEMA_PATH=" | cut -d'=' -f2-)
+    
+    # Validate that we got the paths
+    if [ -z "$SPANWRIGHT_PRIMARY_SCHEMA_PATH" ] || [ -z "$SPANWRIGHT_SECONDARY_SCHEMA_PATH" ]; then
+        log_error "Failed to extract schema paths from setup output"
         exit 1
     fi
     
@@ -99,9 +119,8 @@ create_project_with_cli() {
     # Set environment variables for non-interactive mode
     export SPANWRIGHT_DB_COUNT=2
     export SPANWRIGHT_PRIMARY_DB_NAME=ci-primary-db
-    export SPANWRIGHT_PRIMARY_SCHEMA_PATH="$TEMP_SCHEMA_BASE/primary"
+    # SPANWRIGHT_PRIMARY_SCHEMA_PATH and SPANWRIGHT_SECONDARY_SCHEMA_PATH are already set by setup_ci_schemas
     export SPANWRIGHT_SECONDARY_DB_NAME=ci-secondary-db
-    export SPANWRIGHT_SECONDARY_SCHEMA_PATH="$TEMP_SCHEMA_BASE/secondary"
     export CI=true
     
     # Run actual CLI

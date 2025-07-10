@@ -61,9 +61,9 @@ Examples:
 Non-interactive mode environment variables:
   SPANWRIGHT_DB_COUNT              Number of databases (1 or 2, default: 1)
   SPANWRIGHT_PRIMARY_DB_NAME       Primary database name (default: primary-db)
-  SPANWRIGHT_PRIMARY_SCHEMA_PATH   Primary database schema path (default: /tmp/schema)
+  SPANWRIGHT_PRIMARY_SCHEMA_PATH   Primary database schema path (default: ./schema)
   SPANWRIGHT_SECONDARY_DB_NAME     Secondary database name (default: secondary-db)
-  SPANWRIGHT_SECONDARY_SCHEMA_PATH Secondary database schema path (default: /tmp/schema2)
+  SPANWRIGHT_SECONDARY_SCHEMA_PATH Secondary database schema path (default: ./schema2)
 
 For more information, visit: ${GITHUB_URL}
 `;
