@@ -50,15 +50,25 @@ export class SecurityError extends SpanwrightError {
   }
 }
 
+// Sanitize only truly sensitive information from error messages
+export function sanitizeSensitiveInfo(message: string): string {
+  return message
+    .replace(/password[=:]\s*[^\s]+/gi, 'password=***')
+    .replace(/token[=:]\s*[^\s]+/gi, 'token=***')
+    .replace(/api[_-]?key[=:]\s*[^\s]+/gi, 'api_key=***')
+    .replace(/secret[=:]\s*[^\s]+/gi, 'secret=***')
+    .replace(/bearer\s+[^\s]+/gi, 'bearer ***');
+}
+
 // Error handling utility
 export function handleError(error: unknown): never {
   if (error instanceof SpanwrightError) {
-    console.error(error.message);
+    console.error(sanitizeSensitiveInfo(error.message));
     process.exit(1);
   }
 
   if (error instanceof Error) {
-    console.error('❌ An error occurred:', error.message);
+    console.error('❌ An error occurred:', sanitizeSensitiveInfo(error.message));
     process.exit(1);
   }
 
