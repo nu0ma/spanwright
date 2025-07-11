@@ -674,12 +674,16 @@ func ValidateTableName(tableName string) error {
 		return fmt.Errorf("table name contains invalid path characters")
 	}
 
-	// Check for SQL injection attempts
+	// Check for SQL injection attempts - only check for exact matches or obvious injection patterns
 	lowerName := strings.ToLower(tableName)
-	dangerousPatterns := []string{"select", "insert", "update", "delete", "drop", "create", "alter", "exec", "union", "script", "javascript"}
+	dangerousPatterns := []string{
+		"select ", "insert ", "update ", "delete ", "drop ", "create ", "alter ", "exec ", "union ",
+		";select", ";insert", ";update", ";delete", ";drop", ";create", ";alter", ";exec", ";union",
+		"<script", "javascript:", "onclick=", "onload=",
+	}
 	for _, pattern := range dangerousPatterns {
 		if strings.Contains(lowerName, pattern) {
-			return fmt.Errorf("table name contains potentially dangerous SQL keywords")
+			return fmt.Errorf("table name contains potentially dangerous SQL keywords or patterns")
 		}
 	}
 
