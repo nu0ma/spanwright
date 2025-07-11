@@ -11,12 +11,16 @@ SECONDARY_DB_ID ?= secondary-db
 DB_COUNT ?= 2
 SCENARIO ?= example-01-basic-setup
 
+# Schema configuration
+SCHEMA_MODE ?= file
+SCHEMA_FILE ?= 001_initial_schema.sql
+
 # Docker settings
 DOCKER_IMAGE ?= gcr.io/cloud-spanner-emulator/emulator
 DOCKER_CONTAINER_NAME ?= spanner-emulator
 DOCKER_SPANNER_PORT ?= 9010
 
-.PHONY: help init clean start stop setup run-all test-e2e
+.PHONY: help init clean start stop setup run-all test-e2e configure-schema
 
 help: ## Show this help
 	@echo "Spanwright E2E Testing Framework"
@@ -28,6 +32,7 @@ init: ## Initialize project and check prerequisites
 	@echo "🚀 Initializing Spanwright project..."
 	@$(MAKE) check-tools
 	@$(MAKE) setup-playwright
+	@$(MAKE) configure-schema
 	@echo "✅ Project initialized successfully"
 
 check-tools: ## Check required tools
@@ -86,8 +91,15 @@ setup-primary: ## Setup primary database
 	@echo "📡 Creating Spanner instance $(INSTANCE_ID)..."
 	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench instance create --project $(PROJECT_ID) --instance $(INSTANCE_ID) || { echo "❌ Failed to create Spanner instance"; exit 1; }
 	@echo "🗄️ Creating primary database $(PRIMARY_DB_ID)..."
-	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench reset --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(PRIMARY_DB_ID) --directory "$(PRIMARY_SCHEMA_PATH)" --schema_file "001_initial_schema.sql" 2>/dev/null || \
-	SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench create --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(PRIMARY_DB_ID) --directory "$(PRIMARY_SCHEMA_PATH)" --schema_file "001_initial_schema.sql" || { echo "❌ Failed to create primary database"; exit 1; }
+	@if [ "$(SCHEMA_MODE)" = "folder" ]; then \
+		echo "📁 Using folder mode - processing all .sql files in $(PRIMARY_SCHEMA_PATH)"; \
+		SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench reset --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(PRIMARY_DB_ID) --directory "$(PRIMARY_SCHEMA_PATH)" 2>/dev/null || \
+		SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench create --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(PRIMARY_DB_ID) --directory "$(PRIMARY_SCHEMA_PATH)" || { echo "❌ Failed to create primary database"; exit 1; }; \
+	else \
+		echo "📄 Using file mode - processing $(SCHEMA_FILE)"; \
+		SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench reset --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(PRIMARY_DB_ID) --directory "$(PRIMARY_SCHEMA_PATH)" --schema_file "$(SCHEMA_FILE)" 2>/dev/null || \
+		SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench create --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(PRIMARY_DB_ID) --directory "$(PRIMARY_SCHEMA_PATH)" --schema_file "$(SCHEMA_FILE)" || { echo "❌ Failed to create primary database"; exit 1; }; \
+	fi
 	@echo "🔧 Setting up Go modules..."
 	@go mod tidy >/dev/null 2>&1
 	@echo "🌱 Seeding primary database..."
@@ -97,8 +109,15 @@ setup-primary: ## Setup primary database
 setup-secondary: ## Setup secondary database
 	@echo "☁️ Setting up secondary database..."
 	@echo "🗄️ Creating secondary database $(SECONDARY_DB_ID)..."
-	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench reset --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(SECONDARY_DB_ID) --directory "$(SECONDARY_SCHEMA_PATH)" --schema_file "001_initial_schema.sql" 2>/dev/null || \
-	SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench create --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(SECONDARY_DB_ID) --directory "$(SECONDARY_SCHEMA_PATH)" --schema_file "001_initial_schema.sql" || { echo "❌ Failed to create secondary database"; exit 1; }
+	@if [ "$(SCHEMA_MODE)" = "folder" ]; then \
+		echo "📁 Using folder mode - processing all .sql files in $(SECONDARY_SCHEMA_PATH)"; \
+		SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench reset --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(SECONDARY_DB_ID) --directory "$(SECONDARY_SCHEMA_PATH)" 2>/dev/null || \
+		SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench create --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(SECONDARY_DB_ID) --directory "$(SECONDARY_SCHEMA_PATH)" || { echo "❌ Failed to create secondary database"; exit 1; }; \
+	else \
+		echo "📄 Using file mode - processing $(SCHEMA_FILE)"; \
+		SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench reset --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(SECONDARY_DB_ID) --directory "$(SECONDARY_SCHEMA_PATH)" --schema_file "$(SCHEMA_FILE)" 2>/dev/null || \
+		SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench create --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(SECONDARY_DB_ID) --directory "$(SECONDARY_SCHEMA_PATH)" --schema_file "$(SCHEMA_FILE)" || { echo "❌ Failed to create secondary database"; exit 1; }; \
+	fi
 	@echo "🔧 Setting up Go modules..."
 	@go mod tidy >/dev/null 2>&1
 	@echo "🌱 Seeding secondary database..."
@@ -200,3 +219,32 @@ build: ## Build Go tools
 dev: ## Development mode - setup and watch
 	@$(MAKE) setup
 	@echo "👀 Development mode - run 'make test-e2e' to test"
+
+configure-schema: ## Configure schema mode (file or folder)
+	@echo "🔧 Configuring schema mode..."
+	@echo "Choose schema processing mode:"
+	@echo "  [1] Single file mode (specify one schema file)"
+	@echo "  [2] Folder mode (process all .sql files in directory)"
+	@echo ""
+	@read -p "Enter your choice [1-2]: " choice; \
+	case $$choice in \
+		1) \
+			echo "SCHEMA_MODE=file" >> .env; \
+			echo ""; \
+			read -p "Enter schema file name (default: 001_initial_schema.sql): " schema_file; \
+			if [ -z "$$schema_file" ]; then \
+				schema_file="001_initial_schema.sql"; \
+			fi; \
+			echo "SCHEMA_FILE=$$schema_file" >> .env; \
+			echo "✅ Schema mode set to: single file ($$schema_file)"; \
+			;; \
+		2) \
+			echo "SCHEMA_MODE=folder" >> .env; \
+			echo "SCHEMA_FILE=" >> .env; \
+			echo "✅ Schema mode set to: folder mode (all .sql files)"; \
+			;; \
+		*) \
+			echo "❌ Invalid choice. Please run 'make configure-schema' again."; \
+			exit 1; \
+			;; \
+	esac
