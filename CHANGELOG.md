@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1](https://github.com/nu0ma/spanwright/compare/v2.0.0...v2.0.1) (2025-07-11)
+
+
+### Bug Fixes
+
+* resolve command injection vulnerability in Go database tools ([24cc979](https://github.com/nu0ma/spanwright/commit/24cc979f087760d97abd8c3d48df41c3d407d679)), closes [#59](https://github.com/nu0ma/spanwright/issues/59)
+* resolve template processing code injection vulnerability ([ed8c7e2](https://github.com/nu0ma/spanwright/commit/ed8c7e21a8793a061f261f412cc657a61226e5ad)), closes [nu0ma/spanwright#57](https://github.com/nu0ma/spanwright/issues/57)
+* resolve temporary file race condition vulnerability ([a9bf0fd](https://github.com/nu0ma/spanwright/commit/a9bf0fdd14fb81b6dee57ca21dc9765ca8f90e4e)), closes [#62](https://github.com/nu0ma/spanwright/issues/62)
+
 # [2.0.0](https://github.com/nu0ma/spanwright/compare/v1.4.0...v2.0.0) (2025-07-09)
 
 
