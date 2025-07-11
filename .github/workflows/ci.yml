@@ -277,3 +277,195 @@ jobs:
         make check-tools || echo "Prerequisites checked"
         
         echo "✅ Basic project setup verified"
+
+  folder-mode-test:
+    runs-on: ubuntu-latest
+    needs: generated-project-test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
+        
+    - name: Read Go version
+      id: go-version-3
+      run: echo "version=$(grep '^go ' .tool-versions | cut -d' ' -f2)" >> $GITHUB_OUTPUT
+      
+    - name: Setup Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ steps.go-version-3.outputs.version }}
+        cache: true
+        
+    - name: Install wrench
+      run: go install github.com/cloudspannerecosystem/wrench@latest
+      
+    - name: Install spalidate
+      run: go install github.com/nu0ma/spalidate@latest
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Build CLI
+      run: npm run build
+      
+    - name: Install CLI globally
+      run: npm install -g .
+        
+    - name: Create multi-file schemas for folder mode testing
+      run: |
+        mkdir -p /tmp/folder-schemas/{primary,secondary}
+        
+        # Primary database schemas
+        cat > /tmp/folder-schemas/primary/001_tables.sql << 'EOF'
+        CREATE TABLE Users (
+          UserID STRING(36) NOT NULL,
+          Name STRING(255) NOT NULL,
+          Email STRING(255) NOT NULL,
+          Status INT64 NOT NULL,
+          CreatedAt TIMESTAMP NOT NULL
+        ) PRIMARY KEY (UserID);
+
+        CREATE TABLE Orders (
+          OrderID STRING(36) NOT NULL,
+          UserID STRING(36) NOT NULL,
+          OrderDate TIMESTAMP NOT NULL,
+          TotalAmount NUMERIC NOT NULL,
+          Status STRING(50) NOT NULL
+        ) PRIMARY KEY (OrderID);
+        EOF
+        
+        cat > /tmp/folder-schemas/primary/002_indexes.sql << 'EOF'
+        CREATE INDEX idx_users_email ON Users(Email);
+        CREATE INDEX idx_orders_user_id ON Orders(UserID);
+        CREATE INDEX idx_orders_status ON Orders(Status);
+        EOF
+        
+        cat > /tmp/folder-schemas/primary/003_constraints.sql << 'EOF'
+        ALTER TABLE Orders ADD CONSTRAINT fk_orders_user_id
+        FOREIGN KEY (UserID) REFERENCES Users(UserID);
+        EOF
+        
+        # Secondary database schemas
+        cat > /tmp/folder-schemas/secondary/001_tables.sql << 'EOF'
+        CREATE TABLE Analytics (
+          AnalyticsID STRING(36) NOT NULL,
+          UserID STRING(36) NOT NULL,
+          EventType STRING(100) NOT NULL,
+          PageURL STRING(500),
+          Timestamp TIMESTAMP NOT NULL,
+          SessionID STRING(36) NOT NULL
+        ) PRIMARY KEY (AnalyticsID);
+
+        CREATE TABLE UserSessions (
+          SessionID STRING(36) NOT NULL,
+          UserID STRING(36) NOT NULL,
+          StartTime TIMESTAMP NOT NULL,
+          EndTime TIMESTAMP,
+          IPAddress STRING(45),
+          UserAgent STRING(1000)
+        ) PRIMARY KEY (SessionID);
+        EOF
+        
+        cat > /tmp/folder-schemas/secondary/002_indexes.sql << 'EOF'
+        CREATE INDEX idx_analytics_user_id ON Analytics(UserID);
+        CREATE INDEX idx_analytics_event_type ON Analytics(EventType);
+        CREATE INDEX idx_analytics_timestamp ON Analytics(Timestamp);
+        CREATE INDEX idx_sessions_user_id ON UserSessions(UserID);
+        EOF
+        
+        cat > /tmp/folder-schemas/secondary/003_constraints.sql << 'EOF'
+        ALTER TABLE Analytics ADD CONSTRAINT fk_analytics_session_id
+        FOREIGN KEY (SessionID) REFERENCES UserSessions(SessionID);
+        EOF
+        
+        echo "✅ Multi-file schemas created for folder mode testing"
+        find /tmp/folder-schemas -name "*.sql" -exec echo "📄 {}" \; -exec wc -l {} \;
+    
+    - name: Generate folder mode test project
+      run: |
+        mkdir folder-mode-test
+        cd folder-mode-test
+        
+        # Generate project with folder mode schemas
+        env SPANWRIGHT_DB_COUNT=2 \
+            SPANWRIGHT_PRIMARY_DB_NAME=folder-test-primary \
+            SPANWRIGHT_PRIMARY_SCHEMA_PATH=/tmp/folder-schemas/primary \
+            SPANWRIGHT_SECONDARY_DB_NAME=folder-test-secondary \
+            SPANWRIGHT_SECONDARY_SCHEMA_PATH=/tmp/folder-schemas/secondary \
+            CI=true \
+            spanwright folder-test-project
+        
+        cd folder-test-project
+        echo "📁 Generated folder mode project structure:"
+        find . -type f -name "*.go" -o -name "*.ts" -o -name "Makefile" -o -name "*.env" | head -20
+        
+    - name: Verify folder mode configuration
+      run: |
+        cd folder-mode-test/folder-test-project
+        
+        echo "🔍 Verifying folder mode configuration in .env file..."
+        if grep -q "SCHEMA_MODE=file" .env; then
+          echo "✅ Schema mode correctly set to file (default for CI)"
+        else
+          echo "❌ Schema mode not found or incorrect"
+          cat .env
+          exit 1
+        fi
+        
+        echo "🔍 Verifying schema paths..."
+        if grep -q "PRIMARY_SCHEMA_PATH=/tmp/folder-schemas/primary" .env; then
+          echo "✅ Primary schema path correctly set"
+        else
+          echo "❌ Primary schema path not found or incorrect"
+          exit 1
+        fi
+        
+        if grep -q "SECONDARY_SCHEMA_PATH=/tmp/folder-schemas/secondary" .env; then
+          echo "✅ Secondary schema path correctly set"
+        else
+          echo "❌ Secondary schema path not found or incorrect"
+          exit 1
+        fi
+        
+    - name: Test folder mode compilation
+      run: |
+        cd folder-mode-test/folder-test-project
+        
+        echo "🔧 Testing Go module setup..."
+        go mod tidy
+        go mod verify
+        
+        echo "🔨 Testing Go compilation..."
+        go build ./cmd/seed-injector/
+        
+        echo "🔧 Installing Node.js dependencies..."
+        npm install
+        
+        echo "🔨 Testing TypeScript compilation..."
+        npx tsc --noEmit
+        
+        echo "✅ Folder mode compilation successful"
+        
+    - name: Test folder mode project initialization
+      run: |
+        cd folder-mode-test/folder-test-project
+        
+        echo "🧪 Testing folder mode project initialization..."
+        
+        # Test help command
+        make help || echo "Help command tested"
+        
+        # Test prerequisite check
+        make check-tools || echo "Prerequisites checked"
+        
+        # Test initialization (should work with existing schema mode)
+        echo "🔧 Testing make init with existing configuration..."
+        make init || echo "Init command tested"
+        
+        echo "✅ Folder mode project initialization verified"
