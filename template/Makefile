@@ -222,29 +222,36 @@ dev: ## Development mode - setup and watch
 
 configure-schema: ## Configure schema mode (file or folder)
 	@echo "🔧 Configuring schema mode..."
-	@echo "Choose schema processing mode:"
-	@echo "  [1] Single file mode (specify one schema file)"
-	@echo "  [2] Folder mode (process all .sql files in directory)"
-	@echo ""
-	@read -p "Enter your choice [1-2]: " choice; \
-	case $$choice in \
-		1) \
-			echo "SCHEMA_MODE=file" >> .env; \
-			echo ""; \
-			read -p "Enter schema file name (default: 001_initial_schema.sql): " schema_file; \
-			if [ -z "$$schema_file" ]; then \
-				schema_file="001_initial_schema.sql"; \
-			fi; \
-			echo "SCHEMA_FILE=$$schema_file" >> .env; \
-			echo "✅ Schema mode set to: single file ($$schema_file)"; \
-			;; \
-		2) \
-			echo "SCHEMA_MODE=folder" >> .env; \
-			echo "SCHEMA_FILE=" >> .env; \
-			echo "✅ Schema mode set to: folder mode (all .sql files)"; \
-			;; \
-		*) \
-			echo "❌ Invalid choice. Please run 'make configure-schema' again."; \
-			exit 1; \
-			;; \
-	esac
+	@if [ "$$CI" = "true" ]; then \
+		echo "🤖 CI environment detected - using default configuration"; \
+		echo "SCHEMA_MODE=file" >> .env; \
+		echo "SCHEMA_FILE=001_initial_schema.sql" >> .env; \
+		echo "✅ Schema mode set to: single file (001_initial_schema.sql)"; \
+	else \
+		echo "Choose schema processing mode:"; \
+		echo "  [1] Single file mode (specify one schema file)"; \
+		echo "  [2] Folder mode (process all .sql files in directory)"; \
+		echo ""; \
+		read -p "Enter your choice [1-2]: " choice; \
+		case $$choice in \
+			1) \
+				echo "SCHEMA_MODE=file" >> .env; \
+				echo ""; \
+				read -p "Enter schema file name (default: 001_initial_schema.sql): " schema_file; \
+				if [ -z "$$schema_file" ]; then \
+					schema_file="001_initial_schema.sql"; \
+				fi; \
+				echo "SCHEMA_FILE=$$schema_file" >> .env; \
+				echo "✅ Schema mode set to: single file ($$schema_file)"; \
+				;; \
+			2) \
+				echo "SCHEMA_MODE=folder" >> .env; \
+				echo "SCHEMA_FILE=" >> .env; \
+				echo "✅ Schema mode set to: folder mode (all .sql files)"; \
+				;; \
+			*) \
+				echo "❌ Invalid choice. Please run 'make configure-schema' again."; \
+				exit 1; \
+				;; \
+		esac; \
+	fi
