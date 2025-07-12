@@ -1,21 +1,46 @@
-# Spalidate validation configuration for secondary database
-# This file defines expected database state after data seeding for example-01-basic-setup
+# Expected Secondary Database State Validation for CI Testing
+# This file defines the expected state for the sample schema used in CI testing
+# In real projects, edit this to match your actual secondary database schema
 
 tables:
-  Analytics:
-    count: 1
+  SystemConfig:
+    count: 0
     columns:
-      AnalyticsID: "analytics-001"
-      UserID: "user-001"
-      EventType: "page_view"
-      Timestamp: "2024-01-01T00:00:00Z"
-      PageURL: "/test-page"
+      - name: ConfigID
+        type: STRING
+      - name: ConfigKey
+        type: STRING
+      - name: ConfigValue
+        type: STRING
+      - name: CreatedAt
+        type: TIMESTAMP
+
+  Analytics:
+    count: 2
+    columns:
+      - name: AnalyticsID
+        type: STRING
+      - name: UserID
+        type: STRING
+      - name: EventType
+        type: STRING
+      - name: PageURL
+        type: STRING
+      - name: Timestamp
+        type: TIMESTAMP
 
   UserLogs:
-    count: 1
+    count: 0
     columns:
-      LogID: "log-001"
-      UserID: "user-001"
-      Action: "login"
-      CreatedAt: "2024-01-01T00:00:00Z"
-      IpAddress: "127.0.0.1"
+      - name: LogID
+        type: STRING
+      - name: UserID
+        type: STRING
+      - name: Action
+        type: STRING
+      - name: IpAddress
+        type: STRING
+      - name: UserAgent
+        type: STRING
+      - name: CreatedAt
+        type: TIMESTAMP

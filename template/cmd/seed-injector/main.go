@@ -97,6 +97,12 @@ func injectSeedData(projectID, instanceID, databaseID, fixtureDir string) error 
 	if err != nil {
 		return fmt.Errorf("failed to get fixture files: %v", err)
 	}
+	
+	// If no fixture files found, skip seeding
+	if len(fixtureFiles) == 0 {
+		log.Printf("✅ No fixture files to process - database remains empty")
+		return nil
+	}
 
 	err = spanwright.WithRetry(ctx, "Create testfixtures loader", func(ctx context.Context, attempt int) error {
 		var loadErr error
@@ -168,18 +174,9 @@ func getFixtureFilesInOrder(fixtureDir string, availableTables map[string]bool) 
 	
 	var fixtureFiles []string
 	
-	// Define dependency order for common table patterns
-	// Parent tables should come before child tables
-	preferredOrder := []string{
-		"Users", "Products", "Orders", "OrderItems",
-		"Analytics", "UserLogs",
-	}
-	
-	// Create a map for quick lookup
-	orderMap := make(map[string]int)
-	for i, name := range preferredOrder {
-		orderMap[name] = i
-	}
+	// No predefined table order - let users define their own fixture loading order
+	// Files will be processed in alphabetical order by filename
+	// Users can use numeric prefixes (001_, 002_, etc.) to control loading order
 	
 	// Collect YAML/YML files for tables that exist in the database
 	var yamlFiles []string
@@ -205,25 +202,9 @@ func getFixtureFilesInOrder(fixtureDir string, availableTables map[string]bool) 
 		}
 	}
 	
-	// Sort files based on dependency order
-	sort.Slice(yamlFiles, func(i, j int) bool {
-		nameI := getTableNameFromFile(yamlFiles[i])
-		nameJ := getTableNameFromFile(yamlFiles[j])
-		
-		orderI, existsI := orderMap[nameI]
-		orderJ, existsJ := orderMap[nameJ]
-		
-		if existsI && existsJ {
-			return orderI < orderJ
-		} else if existsI {
-			return true
-		} else if existsJ {
-			return false
-		}
-		
-		// If neither is in the preferred order, sort alphabetically
-		return strings.Compare(nameI, nameJ) < 0
-	})
+	// Sort files alphabetically by filename
+	// Users can control loading order using filename prefixes (001_, 002_, etc.)
+	sort.Strings(yamlFiles)
 	
 	// Convert to full paths
 	for _, file := range yamlFiles {
@@ -231,7 +212,9 @@ func getFixtureFilesInOrder(fixtureDir string, availableTables map[string]bool) 
 	}
 	
 	if len(fixtureFiles) == 0 {
-		return nil, fmt.Errorf("no YAML fixture files found in directory: %s", fixtureDir)
+		log.Printf("⚠️ No YAML fixture files found in directory: %s", fixtureDir)
+		log.Printf("💡 Database will remain empty - add .yml or .yaml files to seed data")
+		return []string{}, nil // Return empty slice instead of error
 	}
 	
 	return fixtureFiles, nil
@@ -292,7 +275,8 @@ func validateFixtureDir(path string) error {
 	}
 	
 	if !hasYAMLFiles {
-		return fmt.Errorf("fixture directory must contain at least one YAML file (.yml or .yaml)")
+		log.Printf("⚠️ No YAML fixture files found in directory - database will be empty")
+		log.Printf("💡 Add .yml or .yaml files to %s to seed your database", cleanPath)
 	}
 	
 	return nil

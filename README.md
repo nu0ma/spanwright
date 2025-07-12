@@ -43,12 +43,12 @@ Make sure you have these tools installed:
 ```
 your-project-name/
 ├── Makefile                    # Workflow automation
-├── schema/                     # Database schemas
+├── schema/                     # Database schemas (user-provided)
 │   ├── primary/               # Primary database schemas
-│   │   ├── 001_initial_schema.sql
-│   │   └── 002_products_schema.sql
+│   │   ├── 001_your_tables.sql
+│   │   └── 002_your_indexes.sql
 │   └── secondary/             # Secondary database schemas (if 2-DB)
-│       └── 001_analytics_schema.sql
+│       └── 001_your_secondary_schema.sql
 ├── cmd/                        # Go CLI tools
 │   ├── db-validator/          # Database validation
 │   └── seed-injector/         # Data seeding
@@ -90,9 +90,9 @@ schema/
 #### Multiple Schema Files (Folder Mode)
 ```bash
 schema/
-├── 001_initial_schema.sql     # Core tables (Users, etc.)
-├── 002_products_schema.sql    # Product-related tables
-└── 003_analytics_schema.sql   # Analytics tables
+├── 001_core_tables.sql        # Your core tables
+├── 002_business_logic.sql     # Your business tables
+└── 003_indexes.sql            # Your indexes and constraints
 ```
 
 **Benefits of Folder Mode:**

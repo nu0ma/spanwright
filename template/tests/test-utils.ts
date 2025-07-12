@@ -36,12 +36,10 @@ export interface ValidationResult {
 }
 
 // Mock validation for testing
-export function mockValidateDatabase(databaseId: string): ValidationResult[] {
-  const mockData: Record<string, number> = {
-    'Companies': 1,
-    'Users': 1,
-    'SystemConfig': 1
-  };
+// Returns empty results by default - users should provide their own validation logic
+export function mockValidateDatabase(databaseId: string, mockTables?: Record<string, number>): ValidationResult[] {
+  // Use provided mock data or return empty array
+  const mockData = mockTables || {};
   
   return Object.entries(mockData).map(([table, count]) => ({
     table,
