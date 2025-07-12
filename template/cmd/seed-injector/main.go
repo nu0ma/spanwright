@@ -268,7 +268,7 @@ func validateFixtureDir(path string) error {
 	
 	if !hasYAMLFiles {
 		log.Printf("⚠️ No YAML fixture files found in directory - database will be empty")
-		log.Printf("💡 Add .yml or .yaml files to %s to seed your database", fixtureDir)
+		log.Printf("💡 Add .yml or .yaml files to %s to seed your database", cleanPath)
 	}
 	
 	return nil
