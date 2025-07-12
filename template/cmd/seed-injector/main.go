@@ -97,6 +97,12 @@ func injectSeedData(projectID, instanceID, databaseID, fixtureDir string) error 
 	if err != nil {
 		return fmt.Errorf("failed to get fixture files: %v", err)
 	}
+	
+	// If no fixture files found, skip seeding
+	if len(fixtureFiles) == 0 {
+		log.Printf("✅ No fixture files to process - database remains empty")
+		return nil
+	}
 
 	err = spanwright.WithRetry(ctx, "Create testfixtures loader", func(ctx context.Context, attempt int) error {
 		var loadErr error
@@ -206,7 +212,9 @@ func getFixtureFilesInOrder(fixtureDir string, availableTables map[string]bool) 
 	}
 	
 	if len(fixtureFiles) == 0 {
-		return nil, fmt.Errorf("no YAML fixture files found in directory: %s", fixtureDir)
+		log.Printf("⚠️ No YAML fixture files found in directory: %s", fixtureDir)
+		log.Printf("💡 Database will remain empty - add .yml or .yaml files to seed data")
+		return []string{}, nil // Return empty slice instead of error
 	}
 	
 	return fixtureFiles, nil
