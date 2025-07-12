@@ -1,0 +1,12 @@
+# Sample Analytics fixture for CI testing
+- AnalyticsID: "analytics-001"
+  UserID: "user-001"
+  EventType: "page_view"
+  PageURL: "/home"
+  Timestamp: "2024-01-01T00:00:00Z"
+
+- AnalyticsID: "analytics-002"
+  UserID: "user-002"
+  EventType: "click"
+  PageURL: "/products"
+  Timestamp: "2024-01-01T00:00:00Z"

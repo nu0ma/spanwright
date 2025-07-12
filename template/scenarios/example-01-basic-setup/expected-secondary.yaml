@@ -16,7 +16,7 @@ tables:
         type: TIMESTAMP
 
   Analytics:
-    count: 0
+    count: 2
     columns:
       - name: AnalyticsID
         type: STRING

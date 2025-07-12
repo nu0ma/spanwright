@@ -4,7 +4,7 @@
 
 tables:
   Users:
-    count: 0
+    count: 2
     columns:
       - name: UserID
         type: STRING
@@ -30,7 +30,7 @@ tables:
         type: TIMESTAMP
 
   Products:
-    count: 0
+    count: 2
     columns:
       - name: ProductID
         type: STRING

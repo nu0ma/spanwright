@@ -1,0 +1,12 @@
+# Sample Products fixture for CI testing
+- ProductID: "product-001"
+  Name: "Test Product 1"
+  Price: 1000
+  CategoryID: "category-001"
+  IsActive: true
+
+- ProductID: "product-002"
+  Name: "Test Product 2"
+  Price: 2000
+  CategoryID: "category-002"
+  IsActive: true
