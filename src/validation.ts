@@ -186,10 +186,6 @@ export function validateSchemaPath(path: string, fieldName: string): void {
   if (path.includes('\0')) {
     throw new ValidationError(`${fieldName} cannot contain null bytes`, fieldName);
   }
-
-  if (path.startsWith('/')) {
-    throw new ValidationError(`${fieldName} must be a relative path`, fieldName);
-  }
 }
 
 export function validateAllTemplateInputs(inputs: Record<string, string>): void {
