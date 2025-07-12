@@ -309,3 +309,78 @@ export function removeSecondaryDbFiles(projectPath: string): void {
     safeFileDelete(file);
   }
 }
+
+export function setupSchemaDirectories(projectPath: string, config: any): void {
+  // Only validate relative paths to avoid issues with absolute paths in tests
+  if (!path.isAbsolute(projectPath)) {
+    validatePath(process.cwd(), projectPath, 'setupSchemaDirectories');
+  }
+
+  // Create primary schema directory
+  const primarySchemaPath = path.join(projectPath, config.primarySchemaPath);
+  ensureDirectoryExists(primarySchemaPath);
+
+  // Create initial schema file for primary database
+  const primarySchemaFile = path.join(primarySchemaPath, '001_initial_schema.sql');
+  const primarySchemaContent = `-- Primary Database Schema
+-- Add your DDL statements here
+
+CREATE TABLE Users (
+  UserID STRING(36) NOT NULL,
+  Name STRING(255) NOT NULL,
+  Email STRING(255) NOT NULL,
+  Status INT64 NOT NULL,
+  CreatedAt TIMESTAMP NOT NULL
+) PRIMARY KEY (UserID);
+
+CREATE TABLE Products (
+  ProductID STRING(36) NOT NULL,
+  Name STRING(255) NOT NULL,
+  Price INT64 NOT NULL,
+  CategoryID STRING(36) NOT NULL,
+  IsActive BOOL NOT NULL
+) PRIMARY KEY (ProductID);
+`;
+
+  writeFileContent(primarySchemaFile, primarySchemaContent);
+
+  // Create empty schema file for database creation
+  const emptySchemaFile = path.join(primarySchemaPath, 'empty_schema.sql');
+  const emptySchemaContent = '-- Empty schema file for database creation\n-- DDL files will be applied separately\n';
+  writeFileContent(emptySchemaFile, emptySchemaContent);
+
+  // Create secondary schema directory if needed
+  if (config.count === '2') {
+    const secondarySchemaPath = path.join(projectPath, config.secondarySchemaPath);
+    ensureDirectoryExists(secondarySchemaPath);
+
+    // Create initial schema file for secondary database
+    const secondarySchemaFile = path.join(secondarySchemaPath, '001_initial_schema.sql');
+    const secondarySchemaContent = `-- Secondary Database Schema
+-- Add your DDL statements here
+
+CREATE TABLE Analytics (
+  AnalyticsID STRING(36) NOT NULL,
+  UserID STRING(36) NOT NULL,
+  EventType STRING(100) NOT NULL,
+  PageURL STRING(500),
+  Timestamp TIMESTAMP NOT NULL
+) PRIMARY KEY (AnalyticsID);
+
+CREATE TABLE UserLogs (
+  LogID STRING(36) NOT NULL,
+  UserID STRING(36) NOT NULL,
+  Action STRING(255) NOT NULL,
+  IpAddress STRING(50),
+  UserAgent STRING(500),
+  CreatedAt TIMESTAMP NOT NULL
+) PRIMARY KEY (LogID);
+`;
+
+    writeFileContent(secondarySchemaFile, secondarySchemaContent);
+
+    // Create empty schema file for secondary database
+    const secondaryEmptySchemaFile = path.join(secondarySchemaPath, 'empty_schema.sql');
+    writeFileContent(secondaryEmptySchemaFile, emptySchemaContent);
+  }
+}
