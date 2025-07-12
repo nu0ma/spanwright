@@ -57,6 +57,17 @@ export function validateWithSpalidate(scenario: string, database: 'primary' | 's
     return true; // Skip validation if file doesn't exist
   }
 
+  // Skip validation if no fixture files exist (empty database)
+  const fixtureDir = path.join(process.cwd(), 'scenarios', scenario, 'fixtures', database);
+  if (existsSync(fixtureDir)) {
+    const fs = require('fs');
+    const files = fs.readdirSync(fixtureDir).filter((f: string) => f.endsWith('.yml') || f.endsWith('.yaml'));
+    if (files.length === 0) {
+      console.log(`⚠️ No fixture files found - skipping validation for ${database} database`);
+      return true;
+    }
+  }
+
   const projectId = process.env.PROJECT_ID || 'test-project';
   const instanceId = process.env.INSTANCE_ID || 'test-instance';
   const targetDatabaseId = databaseId || (database === 'primary' 
