@@ -168,3 +168,5 @@ go.work.sum
 
 # Test CLI directories (temporary project generations)
 test-cli/
+test-*/
+ci-test-project/

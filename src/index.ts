@@ -18,6 +18,7 @@ import {
   replaceProjectNameInGoFiles,
   removeSecondaryDbFiles,
   writeFileContent,
+  setupSchemaDirectories,
 } from './file-operations';
 
 async function createProject(): Promise<void> {
@@ -72,6 +73,10 @@ async function createProject(): Promise<void> {
     const envPath = path.join(projectPath, FILE_PATTERNS.ENV);
 
     writeFileContent(envPath, envContent);
+
+    // Create schema directories and initial files
+    console.log('📁 Setting up schema directories...');
+    setupSchemaDirectories(projectPath, config);
 
     // Remove unnecessary files for single DB configuration
     if (config.count === '1') {
