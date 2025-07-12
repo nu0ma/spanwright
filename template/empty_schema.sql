@@ -1,0 +1,2 @@
+-- Empty schema file for database creation
+-- DDL files will be applied separately
