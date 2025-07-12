@@ -160,11 +160,9 @@ describe('Validation Module', () => {
       expect(() => validateSchemaPath('   ', 'schemaPath')).toThrow('schemaPath cannot be empty');
     });
 
-    it('should throw ValidationError for absolute paths', () => {
-      expect(() => validateSchemaPath('/absolute/path', 'schemaPath')).toThrow(ValidationError);
-      expect(() => validateSchemaPath('/absolute/path', 'schemaPath')).toThrow(
-        'schemaPath must be a relative path'
-      );
+    it('should accept absolute paths (path traversal prevention still applies)', () => {
+      expect(() => validateSchemaPath('/absolute/path', 'schemaPath')).not.toThrow();
+      expect(() => validateSchemaPath('/home/user/schema', 'schemaPath')).not.toThrow();
     });
 
     it('should throw ValidationError for paths with path traversal', () => {
@@ -195,13 +193,12 @@ describe('Validation Module', () => {
       const testCases = ['primarySchemaPath', 'secondarySchemaPath', 'customFieldName'];
 
       testCases.forEach(fieldName => {
+        // Test with empty string to trigger validation error
         try {
-          validateSchemaPath('relative/path', fieldName);
+          validateSchemaPath('', fieldName);
         } catch (error) {
           expect(error).toBeInstanceOf(ValidationError);
-          expect((error as ValidationError).message).toContain(
-            `${fieldName} must be an absolute path`
-          );
+          expect((error as ValidationError).message).toContain(`${fieldName} cannot be empty`);
           expect((error as ValidationError).field).toBe(fieldName);
         }
       });
