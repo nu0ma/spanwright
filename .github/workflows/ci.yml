@@ -6,23 +6,89 @@ on:
   pull_request:
     branches: [ main, develop ]
 
+env:
+  NODE_VERSION: '22.x'
+
 jobs:
+  # Fast feedback job for quick checks
+  fast-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+    - name: Record start time
+      run: echo "START_TIME=$(date +%s)" >> $GITHUB_ENV
+      
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: 'package-lock.json'
+        
+    - name: Cache npm dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-npm-${{ hashFiles('package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-npm-
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run linting
+      run: npm run lint
+      
+    - name: Check TypeScript compilation
+      run: npx tsc --noEmit
+      
+    - name: Build project
+      run: npm run build
+      
+    - name: Cache build artifacts
+      uses: actions/cache@v4
+      with:
+        path: dist
+        key: ${{ runner.os }}-build-${{ github.sha }}
+        
+    - name: Run unit tests
+      run: npm run test:unit
+      
+    - name: Calculate and report fast-checks duration
+      run: |
+        END_TIME=$(date +%s)
+        DURATION=$((END_TIME - START_TIME))
+        echo "⏱️ Fast checks completed in ${DURATION}s"
+        echo "FAST_CHECKS_DURATION=${DURATION}" >> $GITHUB_ENV
+
+  # Main test job with E2E tests
   test:
     runs-on: ubuntu-latest
-    
-    strategy:
-      matrix:
-        node-version: [22.x]
+    needs: fast-checks
+    timeout-minutes: 30
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Setup Node.js ${{ matrix.node-version }}
+    - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
+        cache-dependency-path: 'package-lock.json'
+        
+    - name: Cache npm dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-npm-${{ hashFiles('package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-npm-
         
     - name: Read Go version
       id: go-version
@@ -33,52 +99,66 @@ jobs:
       with:
         go-version: ${{ steps.go-version.outputs.version }}
         cache: true
+        cache-dependency-path: |
+          go.sum
+          template/go.mod.template
         
-    - name: Install wrench
-      run: go install github.com/cloudspannerecosystem/wrench@latest
-      
-    - name: Install spalidate
-      run: go install github.com/nu0ma/spalidate@latest
+    - name: Cache Go tools
+      uses: actions/cache@v4
+      with:
+        path: ~/go/bin
+        key: ${{ runner.os }}-go-tools-${{ steps.go-version.outputs.version }}-v1
+        restore-keys: |
+          ${{ runner.os }}-go-tools-${{ steps.go-version.outputs.version }}-
+          ${{ runner.os }}-go-tools-
+        
+    - name: Install Go tools
+      run: |
+        if [ ! -f ~/go/bin/wrench ]; then
+          go install github.com/cloudspannerecosystem/wrench@latest
+        fi
+        if [ ! -f ~/go/bin/spalidate ]; then
+          go install github.com/nu0ma/spalidate@latest
+        fi
         
     - name: Install dependencies
       run: npm ci
       
-    - name: Build project
-      run: npm run build
+    - name: Restore build artifacts
+      uses: actions/cache@v4
+      with:
+        path: dist
+        key: ${{ runner.os }}-build-${{ github.sha }}
+        
+    - name: Get Playwright version
+      id: playwright-version
+      run: echo "version=$(npm list @playwright/test --depth=0 --json 2>/dev/null | jq -r '.dependencies["@playwright/test"].version // "latest"')" >> $GITHUB_OUTPUT
       
-    - name: Run unit tests
-      run: npm run test:unit
-      
+    - name: Cache Playwright browsers
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
+        restore-keys: |
+          ${{ runner.os }}-playwright-
+        
     - name: Install Playwright with system dependencies
       run: npx playwright install --with-deps
       
     - name: Run E2E tests with real CLI
-      run: npm test
+      run: |
+        echo "🧪 Starting E2E tests..."
+        START_E2E=$(date +%s)
+        npm test
+        END_E2E=$(date +%s)
+        E2E_DURATION=$((END_E2E - START_E2E))
+        echo "⏱️ E2E tests completed in ${E2E_DURATION}s"
       
-    - name: Check TypeScript compilation
-      run: npx tsc --noEmit
-      
-  lint:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '22.x'
-        cache: 'npm'
-        
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Run linting
-      run: npm run lint
-      
+  # Build and CLI tests (parallel with main test)
   build-test:
     runs-on: ubuntu-latest
+    needs: fast-checks
+    timeout-minutes: 15
     
     steps:
     - name: Checkout code
@@ -87,14 +167,26 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '22.x'
+        node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
+        cache-dependency-path: 'package-lock.json'
+        
+    - name: Cache npm dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-npm-${{ hashFiles('package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-npm-
         
     - name: Install dependencies
       run: npm ci
       
-    - name: Build project
-      run: npm run build
+    - name: Restore build artifacts
+      uses: actions/cache@v4
+      with:
+        path: dist
+        key: ${{ runner.os }}-build-${{ github.sha }}
       
     - name: Create temporary schema files for testing
       run: |
@@ -150,9 +242,11 @@ jobs:
         
         echo "✅ All essential files verified"
 
+  # Generated project comprehensive tests
   generated-project-test:
     runs-on: ubuntu-latest
-    needs: build-test
+    needs: [fast-checks, build-test]
+    timeout-minutes: 25
     
     steps:
     - name: Checkout code
@@ -161,30 +255,57 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '22.x'
+        node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
+        cache-dependency-path: 'package-lock.json'
+        
+    - name: Cache npm dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-npm-${{ hashFiles('package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-npm-
         
     - name: Read Go version
-      id: go-version-2
+      id: go-version
       run: echo "version=$(grep '^go ' .tool-versions | cut -d' ' -f2)" >> $GITHUB_OUTPUT
       
     - name: Setup Go
       uses: actions/setup-go@v4
       with:
-        go-version: ${{ steps.go-version-2.outputs.version }}
+        go-version: ${{ steps.go-version.outputs.version }}
         cache: true
+        cache-dependency-path: |
+          go.sum
+          template/go.mod.template
         
-    - name: Install wrench
-      run: go install github.com/cloudspannerecosystem/wrench@latest
-      
-    - name: Install spalidate
-      run: go install github.com/nu0ma/spalidate@latest
+    - name: Cache Go tools
+      uses: actions/cache@v4
+      with:
+        path: ~/go/bin
+        key: ${{ runner.os }}-go-tools-${{ steps.go-version.outputs.version }}-v1
+        restore-keys: |
+          ${{ runner.os }}-go-tools-${{ steps.go-version.outputs.version }}-
+          ${{ runner.os }}-go-tools-
+        
+    - name: Install Go tools
+      run: |
+        if [ ! -f ~/go/bin/wrench ]; then
+          go install github.com/cloudspannerecosystem/wrench@latest
+        fi
+        if [ ! -f ~/go/bin/spalidate ]; then
+          go install github.com/nu0ma/spalidate@latest
+        fi
         
     - name: Install dependencies
       run: npm ci
       
-    - name: Build CLI
-      run: npm run build
+    - name: Restore build artifacts
+      uses: actions/cache@v4
+      with:
+        path: dist
+        key: ${{ runner.os }}-build-${{ github.sha }}
       
     - name: Install CLI globally
       run: |
@@ -258,10 +379,24 @@ jobs:
         
         echo "✅ TypeScript compilation successful"
         
-    - name: Install Playwright in generated project
+    - name: Get Playwright version for generated project
+      id: playwright-version-gen
       run: |
         cd generated-project-test/test-e2e-project
         npm install
+        echo "version=$(npm list @playwright/test --depth=0 --json 2>/dev/null | jq -r '.dependencies["@playwright/test"].version // "latest"')" >> $GITHUB_OUTPUT
+        
+    - name: Cache Playwright browsers for generated project
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: ${{ runner.os }}-playwright-${{ steps.playwright-version-gen.outputs.version }}
+        restore-keys: |
+          ${{ runner.os }}-playwright-
+        
+    - name: Install Playwright in generated project
+      run: |
+        cd generated-project-test/test-e2e-project
         npx playwright install --with-deps
         
     - name: Test basic project setup
