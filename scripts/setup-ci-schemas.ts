@@ -95,14 +95,6 @@ CREATE TABLE OrderItems (
     const schemaPath = path.join(this.primarySchemaDir, '001_initial_schema.sql');
     await fs.promises.writeFile(schemaPath, primarySchema);
     this.log(`Primary schema file created: ${schemaPath}`);
-
-    // Create empty schema file for folder mode
-    const emptySchemaPath = path.join(this.primarySchemaDir, 'empty_schema.sql');
-    await fs.promises.writeFile(
-      emptySchemaPath,
-      '-- Empty schema file for database creation\n-- DDL files will be applied separately\n'
-    );
-    this.log(`Empty schema file created: ${emptySchemaPath}`);
   }
 
   /**
@@ -142,14 +134,6 @@ CREATE TABLE UserLogs (
     const schemaPath = path.join(this.secondarySchemaDir, '001_initial_schema.sql');
     await fs.promises.writeFile(schemaPath, secondarySchema);
     this.log(`Secondary schema file created: ${schemaPath}`);
-
-    // Create empty schema file for folder mode
-    const emptySchemaPath = path.join(this.secondarySchemaDir, 'empty_schema.sql');
-    await fs.promises.writeFile(
-      emptySchemaPath,
-      '-- Empty schema file for database creation\n-- DDL files will be applied separately\n'
-    );
-    this.log(`Empty schema file created: ${emptySchemaPath}`);
   }
 
   /**

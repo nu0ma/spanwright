@@ -84,16 +84,18 @@ endif
 setup-primary: ## Setup primary database
 	@echo "🔶 Setting up primary database..."
 	@echo "📡 Creating Spanner instance $(INSTANCE_ID)..."
-	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench instance create --project $(PROJECT_ID) --instance $(INSTANCE_ID) || { echo "❌ Failed to create Spanner instance"; exit 1; }
-	@echo "🗄️ Creating primary database $(PRIMARY_DB_ID)..."
-	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench reset --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(PRIMARY_DB_ID) --directory "$(PRIMARY_SCHEMA_PATH)" --schema_file empty_schema.sql 2>/dev/null || \
-	SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench create --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(PRIMARY_DB_ID) --directory "$(PRIMARY_SCHEMA_PATH)" --schema_file empty_schema.sql || { echo "❌ Failed to create primary database"; exit 1; }
+	@SPANNER_PROJECT_ID=$(PROJECT_ID) SPANNER_INSTANCE_ID=$(INSTANCE_ID) SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench instance create 2>/dev/null || echo "  ℹ️  Instance $(INSTANCE_ID) already exists or has been created"
+	@echo "🗄️ Creating empty database $(PRIMARY_DB_ID)..."
+	@mkdir -p ./tmp && echo "-- Empty schema for database creation" > ./tmp/schema.sql
+	@SPANNER_PROJECT_ID=$(PROJECT_ID) SPANNER_INSTANCE_ID=$(INSTANCE_ID) SPANNER_DATABASE_ID=$(PRIMARY_DB_ID) SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench create --directory="$$(pwd)/tmp" --schema_file=schema.sql 2>/dev/null || echo "  ℹ️  Database $(PRIMARY_DB_ID) already exists or has been created"
+	@echo "🔄 Applying individual schema files from $(PRIMARY_SCHEMA_PATH)..."
 	@for file in "$(PRIMARY_SCHEMA_PATH)"/*.sql; do \
-		if [ "$$file" != "$(PRIMARY_SCHEMA_PATH)/empty_schema.sql" ] && [ -f "$$file" ]; then \
-			echo "🔨 Applying $$file to primary database..."; \
-			SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench apply --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(PRIMARY_DB_ID) --ddl "$$file" || { echo "❌ Failed to apply $$file to primary database"; exit 1; }; \
+		if [ -f "$$file" ]; then \
+			echo "  📄 Applying: $$file"; \
+			SPANNER_PROJECT_ID=$(PROJECT_ID) SPANNER_INSTANCE_ID=$(INSTANCE_ID) SPANNER_DATABASE_ID=$(PRIMARY_DB_ID) SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench apply --ddl="$$file" || { echo "❌ Failed to apply: $$file"; exit 1; }; \
 		fi; \
-	done
+	 done
+	@echo "✅ Schema application completed for primary database"
 	@echo "🔧 Setting up Go modules..."
 	@go mod tidy >/dev/null 2>&1
 	@echo "🌱 Seeding primary database..."
@@ -102,15 +104,17 @@ setup-primary: ## Setup primary database
 
 setup-secondary: ## Setup secondary database
 	@echo "☁️ Setting up secondary database..."
-	@echo "🗄️ Creating secondary database $(SECONDARY_DB_ID)..."
-	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench reset --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(SECONDARY_DB_ID) --directory "$(SECONDARY_SCHEMA_PATH)" --schema_file empty_schema.sql 2>/dev/null || \
-	SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench create --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(SECONDARY_DB_ID) --directory "$(SECONDARY_SCHEMA_PATH)" --schema_file empty_schema.sql || { echo "❌ Failed to create secondary database"; exit 1; }
+	@echo "🗄️ Creating empty database $(SECONDARY_DB_ID)..."
+	@mkdir -p ./tmp && echo "-- Empty schema for database creation" > ./tmp/schema.sql
+	@SPANNER_PROJECT_ID=$(PROJECT_ID) SPANNER_INSTANCE_ID=$(INSTANCE_ID) SPANNER_DATABASE_ID=$(SECONDARY_DB_ID) SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench create --directory="$$(pwd)/tmp" --schema_file=schema.sql 2>/dev/null || echo "  ℹ️  Database $(SECONDARY_DB_ID) already exists or has been created"
+	@echo "🔄 Applying individual schema files from $(SECONDARY_SCHEMA_PATH)..."
 	@for file in "$(SECONDARY_SCHEMA_PATH)"/*.sql; do \
-		if [ "$$file" != "$(SECONDARY_SCHEMA_PATH)/empty_schema.sql" ] && [ -f "$$file" ]; then \
-			echo "🔨 Applying $$file to secondary database..."; \
-			SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench apply --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(SECONDARY_DB_ID) --ddl "$$file" || { echo "❌ Failed to apply $$file to secondary database"; exit 1; }; \
+		if [ -f "$$file" ]; then \
+			echo "  📄 Applying: $$file"; \
+			SPANNER_PROJECT_ID=$(PROJECT_ID) SPANNER_INSTANCE_ID=$(INSTANCE_ID) SPANNER_DATABASE_ID=$(SECONDARY_DB_ID) SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench apply --ddl="$$file" || { echo "❌ Failed to apply: $$file"; exit 1; }; \
 		fi; \
-	done
+	 done
+	@echo "✅ Schema application completed for secondary database"
 	@echo "🔧 Setting up Go modules..."
 	@go mod tidy >/dev/null 2>&1
 	@echo "🌱 Seeding secondary database..."

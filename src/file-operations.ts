@@ -368,11 +368,6 @@ CREATE TABLE OrderItems (
 
   writeFileContent(productsSchemaFile, productsSchemaContent);
 
-  // Create empty schema file for database creation
-  const emptySchemaFile = path.join(primarySchemaPath, 'empty_schema.sql');
-  const emptySchemaContent = '-- Empty schema file for database creation\n-- DDL files will be applied separately\n';
-  writeFileContent(emptySchemaFile, emptySchemaContent);
-
   // Create secondary schema directory if needed
   if (config.count === '2') {
     const secondarySchemaPath = path.join(projectPath, config.secondarySchemaPath);
@@ -402,9 +397,5 @@ CREATE TABLE UserLogs (
 `;
 
     writeFileContent(secondarySchemaFile, secondarySchemaContent);
-
-    // Create empty schema file for secondary database
-    const secondaryEmptySchemaFile = path.join(secondarySchemaPath, 'empty_schema.sql');
-    writeFileContent(secondaryEmptySchemaFile, emptySchemaContent);
   }
 }
