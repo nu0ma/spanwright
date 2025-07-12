@@ -103,12 +103,14 @@ async function getInteractiveConfiguration(): Promise<DatabaseConfig> {
       try {
         validateSchemaPath(inputPath, 'Primary schema path');
         primarySchemaPath = inputPath;
-        
+
         // Show portability warning for absolute paths
         if (inputPath.startsWith('/')) {
-          console.log('⚠️  Using absolute path. Consider using relative paths for better portability.');
+          console.log(
+            '⚠️  Using absolute path. Consider using relative paths for better portability.'
+          );
         }
-        
+
         break;
       } catch (error) {
         if (error instanceof ValidationError) {
@@ -142,12 +144,14 @@ async function getInteractiveConfiguration(): Promise<DatabaseConfig> {
         try {
           validateSchemaPath(inputPath, 'Secondary schema path');
           secondarySchemaPath = inputPath;
-          
+
           // Show portability warning for absolute paths
           if (inputPath.startsWith('/')) {
-            console.log('⚠️  Using absolute path. Consider using relative paths for better portability.');
+            console.log(
+              '⚠️  Using absolute path. Consider using relative paths for better portability.'
+            );
           }
-          
+
           break;
         } catch (error) {
           if (error instanceof ValidationError) {
