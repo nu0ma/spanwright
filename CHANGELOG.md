@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [2.2.0](https://github.com/nu0ma/spanwright/compare/v2.1.0...v2.2.0) (2025-07-12)
+
+
+### Features
+
+* allow absolute paths for schema configuration ([#75](https://github.com/nu0ma/spanwright/issues/75)) ([5b3812c](https://github.com/nu0ma/spanwright/commit/5b3812c5cc51b33c9d4316e809a6aea691676d23))
+
 # [2.1.0](https://github.com/nu0ma/spanwright/compare/v2.0.1...v2.1.0) (2025-07-12)
 
 
