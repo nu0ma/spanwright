@@ -21,6 +21,7 @@ make run-all-scenarios
 ## Features
 
 - **Flexible Database Configuration**: Support for single or dual Spanner databases
+- **Multi-File Schema Support**: Directory-based schema management with automatic SQL file application
 - **Interactive Project Setup**: CLI guides you through database configuration
 - **Playwright Integration**: Browser automation with database validation
 - **Scenario-Based Testing**: Structured test organization with YAML configuration
@@ -42,6 +43,12 @@ Make sure you have these tools installed:
 ```
 your-project-name/
 ├── Makefile                    # Workflow automation
+├── schema/                     # Database schemas
+│   ├── primary/               # Primary database schemas
+│   │   ├── 001_initial_schema.sql
+│   │   └── 002_products_schema.sql
+│   └── secondary/             # Secondary database schemas (if 2-DB)
+│       └── 001_analytics_schema.sql
 ├── cmd/                        # Go CLI tools
 │   ├── db-validator/          # Database validation
 │   └── seed-injector/         # Data seeding
@@ -67,8 +74,37 @@ npx spanwright my-spanner-tests
 # - Project name
 # - Number of databases (1 or 2)
 # - Database IDs
-# - Schema paths
+# - Schema directory paths (supports multiple .sql files)
 ```
+
+### Schema Management
+
+Spanwright supports both single-file and multi-file schema approaches:
+
+#### Single Schema File (Traditional)
+```bash
+schema/
+└── schema.sql    # Single file with all DDL
+```
+
+#### Multiple Schema Files (Folder Mode)
+```bash
+schema/
+├── 001_initial_schema.sql     # Core tables (Users, etc.)
+├── 002_products_schema.sql    # Product-related tables
+└── 003_analytics_schema.sql   # Analytics tables
+```
+
+**Benefits of Folder Mode:**
+- Better organization for large schemas
+- Incremental development with logical separation
+- Team collaboration on different schema components
+- Automatic sequential application (alphabetical order)
+
+**Generated Projects Include:**
+- Primary database: Multiple schema files by default
+- Secondary database: Additional schema files (if 2-DB setup)
+- Automatic detection and application of all `.sql` files in schema directories
 
 ### Generated Project Commands
 
@@ -194,15 +230,15 @@ See the [examples directory](examples/) for detailed documentation on each examp
 npx spanwright my-app-tests
 # Choose: 1 database
 # Database ID: app-db
-# Schema path: ./schemas/app
+# Schema directory: ./schemas/app
 ```
 
 #### Dual Database Setup
 ```bash
 npx spanwright multi-db-tests
 # Choose: 2 databases
-# Primary DB: user-db, Schema: ./schemas/users
-# Secondary DB: analytics-db, Schema: ./schemas/analytics
+# Primary DB: user-db, Schema directory: ./schemas/users
+# Secondary DB: analytics-db, Schema directory: ./schemas/analytics
 ```
 
 ## Troubleshooting
