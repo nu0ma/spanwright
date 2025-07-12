@@ -405,15 +405,20 @@ jobs:
         echo "📁 Generated folder mode project structure:"
         find . -type f -name "*.go" -o -name "*.ts" -o -name "Makefile" -o -name "*.env" | head -20
         
+        # Set folder mode in .env file
+        echo "🔧 Setting folder mode in .env file..."
+        echo "SCHEMA_MODE=folder" >> .env
+        echo "SCHEMA_FILE=" >> .env
+        
     - name: Verify folder mode configuration
       run: |
         cd folder-mode-test/folder-test-project
         
         echo "🔍 Verifying folder mode configuration in .env file..."
-        if grep -q "SCHEMA_MODE=file" .env; then
-          echo "✅ Schema mode correctly set to file (default for CI)"
+        if grep -q "SCHEMA_MODE=folder" .env; then
+          echo "✅ Schema mode correctly set to folder"
         else
-          echo "❌ Schema mode not found or incorrect"
+          echo "❌ Schema mode not found or incorrect (expected: folder)"
           cat .env
           exit 1
         fi
