@@ -1,29 +1,46 @@
-# Expected Secondary Database State Validation
-# This file defines the expected state of your secondary database after test execution
-# Edit this file to match your actual database schema and expected test results
-# This file is only used in 2-database configurations
+# Expected Secondary Database State Validation for CI Testing
+# This file defines the expected state for the sample schema used in CI testing
+# In real projects, edit this to match your actual secondary database schema
 
-# Example validation configuration for spalidate
-# Uncomment and modify based on your actual tables and expected data
+tables:
+  SystemConfig:
+    count: 0
+    columns:
+      - name: ConfigID
+        type: STRING
+      - name: ConfigKey
+        type: STRING
+      - name: ConfigValue
+        type: STRING
+      - name: CreatedAt
+        type: TIMESTAMP
 
-# tables:
-#   YourSecondaryTable1:
-#     count: 1
-#     columns:
-#       - name: ID
-#         type: STRING
-#       - name: Data
-#         type: STRING
-#       - name: Timestamp
-#         type: TIMESTAMP
-#
-#   YourSecondaryTable2:
-#     count: 0
-#     columns:
-#       - name: ID
-#         type: STRING
-#       - name: Value
-#         type: INT64
+  Analytics:
+    count: 0
+    columns:
+      - name: AnalyticsID
+        type: STRING
+      - name: UserID
+        type: STRING
+      - name: EventType
+        type: STRING
+      - name: PageURL
+        type: STRING
+      - name: Timestamp
+        type: TIMESTAMP
 
-# For more information on spalidate configuration:
-# https://github.com/nu0ma/spalidate
+  UserLogs:
+    count: 0
+    columns:
+      - name: LogID
+        type: STRING
+      - name: UserID
+        type: STRING
+      - name: Action
+        type: STRING
+      - name: IpAddress
+        type: STRING
+      - name: UserAgent
+        type: STRING
+      - name: CreatedAt
+        type: TIMESTAMP

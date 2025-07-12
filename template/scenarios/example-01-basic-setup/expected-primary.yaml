@@ -1,28 +1,72 @@
-# Expected Primary Database State Validation
-# This file defines the expected state of your primary database after test execution
-# Edit this file to match your actual database schema and expected test results
+# Expected Primary Database State Validation for CI Testing
+# This file defines the expected state for the sample schema used in CI testing
+# In real projects, edit this to match your actual database schema
 
-# Example validation configuration for spalidate
-# Uncomment and modify based on your actual tables and expected data
+tables:
+  Users:
+    count: 0
+    columns:
+      - name: UserID
+        type: STRING
+      - name: Name
+        type: STRING
+      - name: Email
+        type: STRING
+      - name: Status
+        type: INT64
+      - name: CreatedAt
+        type: TIMESTAMP
 
-# tables:
-#   YourTable1:
-#     count: 1
-#     columns:
-#       - name: ID
-#         type: STRING
-#       - name: Name
-#         type: STRING
-#       - name: CreatedAt
-#         type: TIMESTAMP
-#
-#   YourTable2:
-#     count: 0
-#     columns:
-#       - name: ID
-#         type: STRING
-#       - name: Data
-#         type: STRING
+  Companies:
+    count: 0
+    columns:
+      - name: CompanyID
+        type: STRING
+      - name: Name
+        type: STRING
+      - name: Status
+        type: INT64
+      - name: CreatedAt
+        type: TIMESTAMP
 
-# For more information on spalidate configuration:
-# https://github.com/nu0ma/spalidate
+  Products:
+    count: 0
+    columns:
+      - name: ProductID
+        type: STRING
+      - name: Name
+        type: STRING
+      - name: Price
+        type: INT64
+      - name: CategoryID
+        type: STRING
+      - name: IsActive
+        type: BOOL
+
+  Orders:
+    count: 0
+    columns:
+      - name: OrderID
+        type: STRING
+      - name: UserID
+        type: STRING
+      - name: TotalAmount
+        type: INT64
+      - name: Status
+        type: STRING
+      - name: OrderDate
+        type: TIMESTAMP
+
+  OrderItems:
+    count: 0
+    columns:
+      - name: OrderItemID
+        type: STRING
+      - name: OrderID
+        type: STRING
+      - name: ProductID
+        type: STRING
+      - name: Quantity
+        type: INT64
+      - name: UnitPrice
+        type: INT64
