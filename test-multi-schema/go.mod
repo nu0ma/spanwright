@@ -1,4 +1,4 @@
-module test-folder-mode
+module test-multi-schema
 
 go 1.24.5
 

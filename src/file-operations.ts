@@ -320,10 +320,10 @@ export function setupSchemaDirectories(projectPath: string, config: any): void {
   const primarySchemaPath = path.join(projectPath, config.primarySchemaPath);
   ensureDirectoryExists(primarySchemaPath);
 
-  // Create initial schema file for primary database
+  // Create initial schema file for primary database (Users table)
   const primarySchemaFile = path.join(primarySchemaPath, '001_initial_schema.sql');
-  const primarySchemaContent = `-- Primary Database Schema
--- Add your DDL statements here
+  const primarySchemaContent = `-- Primary Database Schema - Core Tables
+-- Add your core DDL statements here
 
 CREATE TABLE Users (
   UserID STRING(36) NOT NULL,
@@ -332,6 +332,14 @@ CREATE TABLE Users (
   Status INT64 NOT NULL,
   CreatedAt TIMESTAMP NOT NULL
 ) PRIMARY KEY (UserID);
+`;
+
+  writeFileContent(primarySchemaFile, primarySchemaContent);
+
+  // Create products schema file (Products and related tables)
+  const productsSchemaFile = path.join(primarySchemaPath, '002_products_schema.sql');
+  const productsSchemaContent = `-- Products and Catalog Schema
+-- Product-related tables and structures
 
 CREATE TABLE Products (
   ProductID STRING(36) NOT NULL,
@@ -340,9 +348,25 @@ CREATE TABLE Products (
   CategoryID STRING(36) NOT NULL,
   IsActive BOOL NOT NULL
 ) PRIMARY KEY (ProductID);
+
+CREATE TABLE Orders (
+  OrderID STRING(36) NOT NULL,
+  UserID STRING(36) NOT NULL,
+  TotalAmount INT64 NOT NULL,
+  Status STRING(50) NOT NULL,
+  OrderDate TIMESTAMP NOT NULL
+) PRIMARY KEY (OrderID);
+
+CREATE TABLE OrderItems (
+  OrderItemID STRING(36) NOT NULL,
+  OrderID STRING(36) NOT NULL,
+  ProductID STRING(36) NOT NULL,
+  Quantity INT64 NOT NULL,
+  UnitPrice INT64 NOT NULL
+) PRIMARY KEY (OrderItemID);
 `;
 
-  writeFileContent(primarySchemaFile, primarySchemaContent);
+  writeFileContent(productsSchemaFile, productsSchemaContent);
 
   // Create empty schema file for database creation
   const emptySchemaFile = path.join(primarySchemaPath, 'empty_schema.sql');
