@@ -168,18 +168,9 @@ func getFixtureFilesInOrder(fixtureDir string, availableTables map[string]bool) 
 	
 	var fixtureFiles []string
 	
-	// Define dependency order for common table patterns
-	// Parent tables should come before child tables
-	preferredOrder := []string{
-		"Users", "Products", "Orders", "OrderItems",
-		"Analytics", "UserLogs",
-	}
-	
-	// Create a map for quick lookup
-	orderMap := make(map[string]int)
-	for i, name := range preferredOrder {
-		orderMap[name] = i
-	}
+	// No predefined table order - let users define their own fixture loading order
+	// Files will be processed in alphabetical order by filename
+	// Users can use numeric prefixes (001_, 002_, etc.) to control loading order
 	
 	// Collect YAML/YML files for tables that exist in the database
 	var yamlFiles []string
@@ -205,25 +196,9 @@ func getFixtureFilesInOrder(fixtureDir string, availableTables map[string]bool) 
 		}
 	}
 	
-	// Sort files based on dependency order
-	sort.Slice(yamlFiles, func(i, j int) bool {
-		nameI := getTableNameFromFile(yamlFiles[i])
-		nameJ := getTableNameFromFile(yamlFiles[j])
-		
-		orderI, existsI := orderMap[nameI]
-		orderJ, existsJ := orderMap[nameJ]
-		
-		if existsI && existsJ {
-			return orderI < orderJ
-		} else if existsI {
-			return true
-		} else if existsJ {
-			return false
-		}
-		
-		// If neither is in the preferred order, sort alphabetically
-		return strings.Compare(nameI, nameJ) < 0
-	})
+	// Sort files alphabetically by filename
+	// Users can control loading order using filename prefixes (001_, 002_, etc.)
+	sort.Strings(yamlFiles)
 	
 	// Convert to full paths
 	for _, file := range yamlFiles {
@@ -292,7 +267,8 @@ func validateFixtureDir(path string) error {
 	}
 	
 	if !hasYAMLFiles {
-		return fmt.Errorf("fixture directory must contain at least one YAML file (.yml or .yaml)")
+		log.Printf("⚠️ No YAML fixture files found in directory - database will be empty")
+		log.Printf("💡 Add .yml or .yaml files to %s to seed your database", fixtureDir)
 	}
 	
 	return nil

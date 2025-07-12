@@ -1,21 +1,28 @@
-# Spalidate validation configuration for primary database
-# This file defines expected database state after data seeding for example-01-basic-setup
+# Expected Primary Database State Validation
+# This file defines the expected state of your primary database after test execution
+# Edit this file to match your actual database schema and expected test results
 
-tables:
-  Users:
-    count: 1
-    columns:
-      UserID: "user-001"
-      Name: "E2E Test User"
-      Email: "e2e-test-user@example.com"
-      Status: 1
-      # CreatedAt: "2024-01-01T00:00:00Z"  # Commented out for flexible timestamp validation
-  
-  Products:
-    count: 1
-    columns:
-      ProductID: "product-001"
-      Name: "E2E Test Product"
-      Price: 1000
-      CategoryID: "category-001"
-      IsActive: true
+# Example validation configuration for spalidate
+# Uncomment and modify based on your actual tables and expected data
+
+# tables:
+#   YourTable1:
+#     count: 1
+#     columns:
+#       - name: ID
+#         type: STRING
+#       - name: Name
+#         type: STRING
+#       - name: CreatedAt
+#         type: TIMESTAMP
+#
+#   YourTable2:
+#     count: 0
+#     columns:
+#       - name: ID
+#         type: STRING
+#       - name: Data
+#         type: STRING
+
+# For more information on spalidate configuration:
+# https://github.com/nu0ma/spalidate
