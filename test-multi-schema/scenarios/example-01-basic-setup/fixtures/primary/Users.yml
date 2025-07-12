@@ -1,6 +1,0 @@
-# Minimal Users fixture for testfixtures
-- UserID: "user-001"
-  Name: "E2E Test User"
-  Email: "e2e-test-user@example.com"
-  Status: 1
-  CreatedAt: "2024-01-01T00:00:00Z"
