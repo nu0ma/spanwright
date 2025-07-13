@@ -24,7 +24,7 @@ make run-all-scenarios
 
 -  **Instant Setup** - `npx spanwright project-name` creates everything you need
 -  **Playwright Integration** - Full browser automation with database state validation
--  **Parallel Testing** - Worker-isolated databases enable safe concurrent test execution
+-  **Parallel Testing** - Shared database architecture with configurable parallel workers
 -  **Scenario Organization** - Structured tests with seed data, browser automation, and expected results
 -  **Auto Cleanup** - Built-in teardown ensures clean state between test runs
 -  **Zero Config Docker** - Spanner emulator management out of the box
@@ -152,7 +152,7 @@ Generated projects provide:
    - Connection pooling and error handling
 
 2. **Browser Tests** (Playwright):
-   - Database isolation for parallel execution
+   - Shared database configuration for parallel execution
    - Scenario-based test organization
    - Automatic cleanup and teardown
 

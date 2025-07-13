@@ -291,7 +291,7 @@ No changes since last tag.
 - Docker-based Spanner emulator integration
 - Make-based workflow automation
 - Scenario-based testing framework
-- Database isolation for parallel test execution
+- Shared database configuration for parallel test execution
 - Comprehensive validation tools for templates
 - E2E testing pipeline with browser automation
 
@@ -334,7 +334,7 @@ The generated projects include:
 - Playwright browser automation tests
 - Make-based workflow automation
 - Scenario-based test organization
-- Database isolation for parallel execution
+- Shared database approach for parallel execution
 
 For usage instructions, see the [README](README.md).
 For contributing guidelines, see [CONTRIBUTING](CONTRIBUTING.md).

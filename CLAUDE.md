@@ -35,7 +35,7 @@ Spanwright is a **project generator** that creates Cloud Spanner E2E testing fra
 - **TypeScript**: CLI generator and Playwright test framework
 - **Go**: High-performance database tools (validation, seeding, connection pooling)
 - **Make**: Workflow automation and Docker orchestration
-- **Playwright**: Browser automation with database isolation
+- **Playwright**: Browser automation with shared database configuration
 
 ### Key Components
 
@@ -55,7 +55,7 @@ Spanwright is a **project generator** that creates Cloud Spanner E2E testing fra
 
 #### Testing Framework
 - **Scenario-based**: Each test scenario has minimal seed data and inline E2E tests
-- **Database Isolation**: Simple process-based database naming for parallel execution
+- **Database Configuration**: Shared database approach with environment-driven configuration
 - **Inline Validation**: Direct SQL queries for database validation + Playwright for browser testing
 
 ## Project Structure
@@ -114,9 +114,9 @@ Each scenario contains:
 2. **Inline Tests** (`tests/*.spec.ts`): Browser automation with embedded validation
 3. **Direct SQL Validation**: Simple database state checks
 
-### Database Isolation
-- Process-specific database names (`primary-db-{process.pid}`)
-- Parallel test execution without conflicts
+### Database Configuration
+- Environment-driven database naming (shared across test processes)
+- Current implementation uses shared databases for simplicity
 - Simplified setup without complex worker coordination
 
 ### Validation Flow
