@@ -51,7 +51,7 @@ export function mockValidateDatabase(databaseId: string): ValidationResult[] {
 }
 
 // Real spalidate validation
-export function validateWithSpalidate(scenario: string, database: 'primary' | 'secondary', databaseId?: string): boolean {
+export function validateDatabaseState(scenario: string, database: 'primary' | 'secondary', databaseId?: string): boolean {
   const validationFile = path.join(process.cwd(), 'scenarios', scenario, `expected-${database}.yaml`);
   
   if (!existsSync(validationFile)) {
