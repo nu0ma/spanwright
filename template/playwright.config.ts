@@ -11,13 +11,13 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './scenarios',
-  /* Run tests in files in parallel with database isolation */
-  fullyParallel: true, // Now safe with database isolation
+  /* Run tests in files in parallel with shared database */
+  fullyParallel: true, // Parallel execution with shared database setup
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
-  /* Allow parallel execution with database isolation */
+  /* Allow parallel execution with shared database setup */
   workers: process.env.CI ? 2 : 4, // Limit workers in CI, more locally
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
@@ -43,7 +43,7 @@ export default defineConfig({
     actionTimeout: 30000,
   },
 
-  /* Global setup and teardown for database isolation */
+  /* Global setup and teardown for shared database management */
   globalSetup: require.resolve('./tests/global-setup'),
   globalTeardown: require.resolve('./tests/global-teardown'),
 
