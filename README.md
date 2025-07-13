@@ -2,6 +2,12 @@
 
 A CLI tool for generating Cloud Spanner E2E testing framework projects that combine Go database tools with Playwright browser automation.
 
+[![npm version](https://img.shields.io/npm/v/spanwright)](https://www.npmjs.com/package/spanwright)
+[![CI](https://github.com/nu0ma/spanwright/actions/workflows/ci.yml/badge.svg)](https://github.com/nu0ma/spanwright/actions/workflows/ci.yml)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/nu0ma/spanwright)
+
+
+
 ## Quick Start
 
 ```bash
@@ -22,10 +28,9 @@ make run-all-scenarios
 
 **Generate a complete E2E testing environment with one command.** No more manual setup - get a production-ready testing framework that just works.
 
+-  **Scenario Organization** - Structured tests with seed data, browser automation, and expected results
 -  **Instant Setup** - `npx spanwright project-name` creates everything you need
 -  **Playwright Integration** - Full browser automation with database state validation
--  **Parallel Testing** - Shared database architecture with configurable parallel workers
--  **Scenario Organization** - Structured tests with seed data, browser automation, and expected results
 -  **Auto Cleanup** - Built-in teardown ensures clean state between test runs
 -  **Zero Config Docker** - Spanner emulator management out of the box
 
