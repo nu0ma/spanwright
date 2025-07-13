@@ -36,7 +36,7 @@ export interface ValidationResult {
 }
 
 // Real spalidate validation
-export function validateWithSpalidate(
+export function validateDatabaseState(
   scenario: string,
   database: 'primary' | 'secondary',
   databaseId?: string
