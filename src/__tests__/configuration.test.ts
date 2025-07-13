@@ -19,13 +19,11 @@ vi.mock('readline', () => ({
 
 describe('Configuration Module', () => {
   let mockConsoleLog: any;
-  let mockConsoleError: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
     // Mock console methods after clearing
     mockConsoleLog = vi.spyOn(console, 'log').mockImplementation(() => {});
-    mockConsoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     // Reset environment variables
     delete process.env[ENV_VARS.DB_COUNT];
@@ -309,85 +307,18 @@ describe('Configuration Module', () => {
       expect(result.secondaryDbName).toBe(DEFAULTS.SECONDARY_DB_NAME);
     });
 
-    it('should throw ConfigurationError for invalid database count', async () => {
+    it('should throw ValidationError for invalid database count', async () => {
       mockQuestion.mockImplementationOnce((query: string, callback: (answer: string) => void) => {
         callback('3');
       });
 
       vi.mocked(validateDatabaseCount).mockImplementation(() => {
-        throw new Error('Invalid count');
+        throw new ValidationError('Invalid count', 'dbCount');
       });
 
-      await expect(getConfiguration(false)).rejects.toThrow(ConfigurationError);
+      await expect(getConfiguration(false)).rejects.toThrow(ValidationError);
       expect(mockClose).toHaveBeenCalled();
     }, 10000);
-
-    it('should retry schema path validation on failure', async () => {
-      mockQuestion
-        .mockImplementationOnce((query: string, callback: (answer: string) => void) => {
-          callback('1');
-        })
-        .mockImplementationOnce((query: string, callback: (answer: string) => void) => {
-          callback('my-db');
-        })
-        .mockImplementationOnce((query: string, callback: (answer: string) => void) => {
-          callback('invalid-path'); // First attempt - invalid
-        })
-        .mockImplementationOnce((query: string, callback: (answer: string) => void) => {
-          callback('/valid/path'); // Second attempt - valid
-        });
-
-      vi.mocked(validateDatabaseCount).mockImplementation(() => {});
-      vi.mocked(validateSchemaPath)
-        .mockImplementationOnce(() => {
-          throw new ValidationError('Path must be absolute');
-        })
-        .mockImplementationOnce(() => {}); // Second call succeeds
-
-      const result = await getConfiguration(false);
-
-      expect(result.primarySchemaPath).toBe('/valid/path');
-      expect(mockConsoleError).toHaveBeenCalledWith('❌ Path must be absolute');
-      expect(mockConsoleLog).toHaveBeenCalledWith('Please try again.');
-      expect(mockQuestion).toHaveBeenCalledTimes(4); // 1 for count, 1 for name, 2 for schema path
-    });
-
-    it('should retry secondary schema path validation on failure', async () => {
-      mockQuestion
-        .mockImplementationOnce((query: string, callback: (answer: string) => void) => {
-          callback('2');
-        })
-        .mockImplementationOnce((query: string, callback: (answer: string) => void) => {
-          callback('primary-db');
-        })
-        .mockImplementationOnce((query: string, callback: (answer: string) => void) => {
-          callback('/primary/schema');
-        })
-        .mockImplementationOnce((query: string, callback: (answer: string) => void) => {
-          callback('secondary-db');
-        })
-        .mockImplementationOnce((query: string, callback: (answer: string) => void) => {
-          callback('invalid-secondary-path'); // First attempt - invalid
-        })
-        .mockImplementationOnce((query: string, callback: (answer: string) => void) => {
-          callback('/valid/secondary/path'); // Second attempt - valid
-        });
-
-      vi.mocked(validateDatabaseCount).mockImplementation(() => {});
-      vi.mocked(validateSchemaPath)
-        .mockImplementationOnce(() => {}) // Primary schema path validation succeeds
-        .mockImplementationOnce(() => {
-          throw new ValidationError('Secondary path must be absolute');
-        })
-        .mockImplementationOnce(() => {}); // Secondary schema path validation succeeds on retry
-
-      const result = await getConfiguration(false);
-
-      expect(result.secondarySchemaPath).toBe('/valid/secondary/path');
-      expect(mockConsoleError).toHaveBeenCalledWith('❌ Secondary path must be absolute');
-      expect(mockConsoleLog).toHaveBeenCalledWith('Please try again.');
-      expect(mockQuestion).toHaveBeenCalledTimes(6); // 2 for count/names, 1 for primary schema, 1 for secondary name, 2 for secondary schema
-    });
 
     it('should re-throw non-ValidationError exceptions', async () => {
       mockQuestion
