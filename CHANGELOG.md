@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.2](https://github.com/nu0ma/spanwright/compare/v2.2.1...v2.2.2) (2025-07-13)
+
+
+### Bug Fixes
+
+* remove release command ([#93](https://github.com/nu0ma/spanwright/issues/93)) ([3aeca1f](https://github.com/nu0ma/spanwright/commit/3aeca1f1fcb064b8f790458bea82e37f9de3d991))
+
 ## [2.2.1](https://github.com/nu0ma/spanwright/compare/v2.2.0...v2.2.1) (2025-07-13)
 
 
