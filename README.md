@@ -224,16 +224,6 @@ make run-all-scenarios
 See the [examples directory](examples/) for detailed documentation on each example.
 
 ### Creating Your Own Project
-
-#### Single Database Setup
-```bash
-npx spanwright my-app-tests
-# Choose: 1 database
-# Database ID: app-db
-# Schema directory: ./schemas/app
-```
-
-#### Dual Database Setup
 ```bash
 npx spanwright multi-db-tests
 # Choose: 2 databases
