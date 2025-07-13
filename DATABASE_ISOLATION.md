@@ -149,7 +149,7 @@ SECONDARY_DB_ID ?= secondary-db
 
 ```typescript
 async function globalSetup() {
-  // エミュレータ接続確認のみ（実際のDB作成・スキーマ適用・シードはMakefileで事前実行済み）
+  // エミュレータ接続確認のみ（実際のDB作成はMakefileで事前実行済み）
   const emulatorHost = process.env.SPANNER_EMULATOR_HOST || 'localhost:9010';
   
   // 安全性チェック: エミュレータ接続のみ許可
