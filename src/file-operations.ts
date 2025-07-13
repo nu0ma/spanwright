@@ -316,8 +316,10 @@ export function setupSchemaDirectories(projectPath: string, config: any): void {
     validatePath(process.cwd(), projectPath, 'setupSchemaDirectories');
   }
 
-  // Create primary schema directory
-  const primarySchemaPath = path.join(projectPath, config.primarySchemaPath);
+  // Create primary schema directory - handle absolute vs relative paths
+  const primarySchemaPath = path.isAbsolute(config.primarySchemaPath)
+    ? config.primarySchemaPath
+    : path.join(projectPath, config.primarySchemaPath);
   ensureDirectoryExists(primarySchemaPath);
 
   // Create initial schema file for primary database (Users table)
@@ -370,7 +372,9 @@ CREATE TABLE OrderItems (
 
   // Create secondary schema directory if needed
   if (config.count === '2') {
-    const secondarySchemaPath = path.join(projectPath, config.secondarySchemaPath);
+    const secondarySchemaPath = path.isAbsolute(config.secondarySchemaPath)
+      ? config.secondarySchemaPath
+      : path.join(projectPath, config.secondarySchemaPath);
     ensureDirectoryExists(secondarySchemaPath);
 
     // Create initial schema file for secondary database
