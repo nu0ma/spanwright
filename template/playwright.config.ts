@@ -18,7 +18,7 @@ export default defineConfig({
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
   /* Allow parallel execution with shared database setup */
-  workers: process.env.CI ? 2 : 4, // Limit workers in CI, more locally
+  workers: 1, // Limit workers in CI, more locally
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
     ['html'],
