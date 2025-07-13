@@ -58,8 +58,8 @@ func main() {
 func injectSeedData(projectID, instanceID, databaseID, fixtureDir string) error {
 	ctx := context.Background()
 	
-	// Create secure database connection string for Spanner with validation
-	dsn, err := spanwright.BuildSecureDSN(projectID, instanceID, databaseID)
+	// Create database connection string for Spanner with validation
+	dsn, err := spanwright.BuildDSN(projectID, instanceID, databaseID)
 	if err != nil {
 		return fmt.Errorf("failed to build secure DSN: %v", err)
 	}
@@ -298,8 +298,8 @@ func validateFixtureDir(path string) error {
 	return nil
 }
 
-// validateDatabaseID validates that a database ID is safe using enhanced security validation
+// validateDatabaseID validates that a database ID is safe using basic validation
 func validateDatabaseID(databaseID string) error {
-	// Use the enhanced validation from spanwright package
-	return spanwright.ValidateDatabaseID(databaseID)
+	// Use the basic validation from spanwright package
+	return spanwright.ValidateBasicID(databaseID, "database ID")
 }

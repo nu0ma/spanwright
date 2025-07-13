@@ -3,7 +3,7 @@ import * as path from 'path';
 import { FileSystemError, SecurityError } from './errors';
 import { FILE_PATTERNS, TEMPLATE_VARS } from './constants';
 import { validatePath } from './security';
-import { secureTemplateReplace } from './template-security';
+import { simpleTemplateReplace } from './template-security';
 import { validateAllTemplateInputs } from './validation';
 
 // File and directory operation utilities
@@ -183,10 +183,10 @@ export function replaceInFile(filePath: string, replacements: Record<string, str
   // Read the file content
   const content = readFileContent(filePath);
 
-  // Use secure template replacement with context-aware escaping
-  const secureContent = secureTemplateReplace(content, replacements, filePath);
+  // Use simple template replacement
+  const secureContent = simpleTemplateReplace(content, replacements);
 
-  // Write the secure content back to the file
+  // Write the content back to the file
   writeFileContent(filePath, secureContent);
 }
 
