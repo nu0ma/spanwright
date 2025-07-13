@@ -68,7 +68,6 @@ export const VALIDATION_PATTERNS = {
   GENERIC_IDENTIFIER: /^[a-zA-Z0-9_-]+$/,
 } as const;
 
-
 // Messages
 export const MESSAGES = {
   ERRORS: {

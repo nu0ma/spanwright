@@ -90,7 +90,6 @@ describe('CLI Security Tests', () => {
       });
     });
 
-
     it('should handle empty and whitespace-only names', () => {
       const invalidNames = ['', '   ', '\t\n\r'];
 

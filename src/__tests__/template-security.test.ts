@@ -55,9 +55,9 @@ describe('Template Security Module', () => {
 
     it('should handle multiple replacements', () => {
       const content = 'Project: PROJECT_NAME, Database: DB_NAME';
-      const replacements = { 
+      const replacements = {
         PROJECT_NAME: 'myProject',
-        DB_NAME: 'testDB'
+        DB_NAME: 'testDB',
       };
       const result = simpleTemplateReplace(content, replacements);
       expect(result).toBe('Project: myProject, Database: testDB');
@@ -81,7 +81,7 @@ describe('Template Security Module', () => {
     it('should validate correct patterns', () => {
       expect(SAFE_PATTERNS.GENERIC_IDENTIFIER.test('validInput')).toBe(true);
       expect(SAFE_PATTERNS.GENERIC_IDENTIFIER.test('invalid.input')).toBe(false);
-      
+
       expect(SAFE_PATTERNS.PROJECT_NAME.test('myProject')).toBe(true);
       expect(SAFE_PATTERNS.PROJECT_NAME.test('123invalid')).toBe(false);
     });

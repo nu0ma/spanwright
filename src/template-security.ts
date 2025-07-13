@@ -30,11 +30,6 @@ export function validateTemplateInput(
 }
 
 /**
- * Export patterns for use in other modules
- */
-export { VALIDATION_PATTERNS as SAFE_PATTERNS };
-
-/**
  * Simple template replacement
  */
 export function simpleTemplateReplace(
@@ -46,7 +41,7 @@ export function simpleTemplateReplace(
   for (const [search, replace] of Object.entries(replacements)) {
     // Escape the search pattern for regex
     const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    
+
     // Validate the replacement value
     validateTemplateInput(replace);
 
@@ -57,3 +52,7 @@ export function simpleTemplateReplace(
   return result;
 }
 
+/**
+ * Export patterns for use in other modules
+ */
+export { VALIDATION_PATTERNS as SAFE_PATTERNS };

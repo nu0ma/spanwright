@@ -19,13 +19,11 @@ vi.mock('readline', () => ({
 
 describe('Configuration Module', () => {
   let mockConsoleLog: any;
-  let mockConsoleError: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
     // Mock console methods after clearing
     mockConsoleLog = vi.spyOn(console, 'log').mockImplementation(() => {});
-    mockConsoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     // Reset environment variables
     delete process.env[ENV_VARS.DB_COUNT];
@@ -321,8 +319,6 @@ describe('Configuration Module', () => {
       await expect(getConfiguration(false)).rejects.toThrow(ValidationError);
       expect(mockClose).toHaveBeenCalled();
     }, 10000);
-
-
 
     it('should re-throw non-ValidationError exceptions', async () => {
       mockQuestion

@@ -35,7 +35,7 @@ describe('Security Module', () => {
     it('should handle paths with multiple dots correctly', () => {
       const basePath = '/home/user/project';
 
-      expect(isSafePath(basePath, 'file..txt')).toBe(false); // contains .. 
+      expect(isSafePath(basePath, 'file..txt')).toBe(false); // contains ..
       expect(isSafePath(basePath, 'file...txt')).toBe(false); // contains ..
       expect(isSafePath(basePath, '...file')).toBe(false); // contains ..
       expect(isSafePath(basePath, 'dir_name/file_txt')).toBe(true); // safe path
@@ -84,7 +84,6 @@ describe('Security Module', () => {
       expect(() => validatePath(basePath, '/etc/passwd', 'test')).toThrow(SecurityError);
       expect(() => validatePath(basePath, '/root/.ssh/id_rsa', 'test')).toThrow(SecurityError);
     });
-
 
     it('should include operation name in error message', () => {
       const basePath = '/home/user/project';
@@ -148,7 +147,6 @@ describe('Security Module', () => {
       );
     });
   });
-
 
   describe('Edge Cases and Security Scenarios', () => {
     it('should handle symbolic link traversal attempts', () => {

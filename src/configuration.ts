@@ -1,6 +1,6 @@
 import * as readline from 'readline';
 import { ENV_VARS, DEFAULTS, MESSAGES } from './constants';
-import { ConfigurationError, ValidationError } from './errors';
+import { ConfigurationError } from './errors';
 import { validateDatabaseCount, validateSchemaPath, sanitizeInput } from './validation';
 
 export interface DatabaseConfig {
@@ -93,14 +93,12 @@ async function getInteractiveConfiguration(): Promise<DatabaseConfig> {
     // Get primary schema path
     const primarySchemaPathInput = await prompt.question('Primary DB schema path: ');
     const primarySchemaPath = sanitizeInput(primarySchemaPathInput);
-    
+
     validateSchemaPath(primarySchemaPath, 'Primary schema path');
 
     // Show portability warning for absolute paths
     if (primarySchemaPath.startsWith('/')) {
-      console.log(
-        '⚠️  Using absolute path. Consider using relative paths for better portability.'
-      );
+      console.log('⚠️  Using absolute path. Consider using relative paths for better portability.');
     }
 
     const config: DatabaseConfig = {
@@ -119,7 +117,7 @@ async function getInteractiveConfiguration(): Promise<DatabaseConfig> {
       // Get secondary schema path
       const secondarySchemaPathInput = await prompt.question('Secondary DB schema path: ');
       const secondarySchemaPath = sanitizeInput(secondarySchemaPathInput);
-      
+
       validateSchemaPath(secondarySchemaPath, 'Secondary schema path');
 
       // Show portability warning for absolute paths
