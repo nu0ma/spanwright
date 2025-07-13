@@ -20,14 +20,14 @@ make run-all-scenarios
 
 ## Features
 
-- **Flexible Database Configuration**: Support for single or dual Spanner databases
-- **Multi-File Schema Support**: Directory-based schema management with automatic SQL file application
-- **Interactive Project Setup**: CLI guides you through database configuration
-- **Playwright Integration**: Browser automation with database validation
-- **Scenario-Based Testing**: Structured test organization with YAML configuration
-- **Docker Integration**: Automated Spanner emulator management
-- **High-Performance Tools**: Go-based database validation and seeding
-- **Make-Based Workflows**: Automated development and testing workflows
+**Generate a complete E2E testing environment with one command.** No more manual setup - get a production-ready testing framework that just works.
+
+-  **Instant Setup** - `npx spanwright project-name` creates everything you need
+-  **Playwright Integration** - Full browser automation with database state validation
+-  **Parallel Testing** - Worker-isolated databases enable safe concurrent test execution
+-  **Scenario Organization** - Structured tests with seed data, browser automation, and expected results
+-  **Auto Cleanup** - Built-in teardown ensures clean state between test runs
+-  **Zero Config Docker** - Spanner emulator management out of the box
 
 ## Prerequisites
 
@@ -207,14 +207,7 @@ Previous commands are no longer supported.
 
 We provide working examples that you can try immediately:
 
-### 🔢 Single Table Example
-```bash
-git clone https://github.com/nu0ma/spanwright.git
-cd spanwright/examples/single-table
-make run-all-scenarios
-```
-
-### 🗄️ Two Databases Example
+### Databases Example
 ```bash
 git clone https://github.com/nu0ma/spanwright.git
 cd spanwright/examples/two-databases
