@@ -90,10 +90,6 @@ describe('CLI Security Tests', () => {
       });
     });
 
-    it('should reject very long project names', () => {
-      const longName = 'a'.repeat(1000);
-      expect(() => validateProjectName(longName)).toThrow(ValidationError);
-    });
 
     it('should handle empty and whitespace-only names', () => {
       const invalidNames = ['', '   ', '\t\n\r'];

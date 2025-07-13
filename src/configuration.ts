@@ -84,42 +84,23 @@ async function getInteractiveConfiguration(): Promise<DatabaseConfig> {
     const dbCountInput = await prompt.question('Select number of databases (1 or 2): ');
     const dbCount = sanitizeInput(dbCountInput);
 
-    try {
-      validateDatabaseCount(dbCount);
-    } catch {
-      throw new ConfigurationError(MESSAGES.ERRORS.INVALID_DB_COUNT, 'dbCount');
-    }
+    validateDatabaseCount(dbCount);
 
     // Get primary database configuration
     const primaryDbNameInput = await prompt.question('Primary DB name (default: primary-db): ');
     const primaryDbName = sanitizeInput(primaryDbNameInput) || DEFAULTS.PRIMARY_DB_NAME;
 
-    // Get primary schema path with retry on validation failure
-    let primarySchemaPath: string;
-    while (true) {
-      const primarySchemaPathInput = await prompt.question('Primary DB schema path: ');
-      const inputPath = sanitizeInput(primarySchemaPathInput);
+    // Get primary schema path
+    const primarySchemaPathInput = await prompt.question('Primary DB schema path: ');
+    const primarySchemaPath = sanitizeInput(primarySchemaPathInput);
+    
+    validateSchemaPath(primarySchemaPath, 'Primary schema path');
 
-      try {
-        validateSchemaPath(inputPath, 'Primary schema path');
-        primarySchemaPath = inputPath;
-
-        // Show portability warning for absolute paths
-        if (inputPath.startsWith('/')) {
-          console.log(
-            '⚠️  Using absolute path. Consider using relative paths for better portability.'
-          );
-        }
-
-        break;
-      } catch (error) {
-        if (error instanceof ValidationError) {
-          console.error(`❌ ${error.message}`);
-          console.log('Please try again.');
-        } else {
-          throw error;
-        }
-      }
+    // Show portability warning for absolute paths
+    if (primarySchemaPath.startsWith('/')) {
+      console.log(
+        '⚠️  Using absolute path. Consider using relative paths for better portability.'
+      );
     }
 
     const config: DatabaseConfig = {
@@ -135,32 +116,17 @@ async function getInteractiveConfiguration(): Promise<DatabaseConfig> {
       );
       const secondaryDbName = sanitizeInput(secondaryDbNameInput) || DEFAULTS.SECONDARY_DB_NAME;
 
-      // Get secondary schema path with retry on validation failure
-      let secondarySchemaPath: string;
-      while (true) {
-        const secondarySchemaPathInput = await prompt.question('Secondary DB schema path: ');
-        const inputPath = sanitizeInput(secondarySchemaPathInput);
+      // Get secondary schema path
+      const secondarySchemaPathInput = await prompt.question('Secondary DB schema path: ');
+      const secondarySchemaPath = sanitizeInput(secondarySchemaPathInput);
+      
+      validateSchemaPath(secondarySchemaPath, 'Secondary schema path');
 
-        try {
-          validateSchemaPath(inputPath, 'Secondary schema path');
-          secondarySchemaPath = inputPath;
-
-          // Show portability warning for absolute paths
-          if (inputPath.startsWith('/')) {
-            console.log(
-              '⚠️  Using absolute path. Consider using relative paths for better portability.'
-            );
-          }
-
-          break;
-        } catch (error) {
-          if (error instanceof ValidationError) {
-            console.error(`❌ ${error.message}`);
-            console.log('Please try again.');
-          } else {
-            throw error;
-          }
-        }
+      // Show portability warning for absolute paths
+      if (secondarySchemaPath.startsWith('/')) {
+        console.log(
+          '⚠️  Using absolute path. Consider using relative paths for better portability.'
+        );
       }
 
       config.secondaryDbName = secondaryDbName;
