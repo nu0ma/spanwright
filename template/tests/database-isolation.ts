@@ -25,18 +25,3 @@ export function getDatabaseConfig(): DatabaseConfig {
   };
 }
 
-/**
- * Simple setup for isolated databases
- */
-export function setupIsolatedScenario(scenarioName: string): void {
-  console.log(`🚀 Setting up scenario ${scenarioName}...`);
-  // Simplified setup - actual database setup handled by Makefile
-}
-
-/**
- * Validate scenario
- */
-export function validateIsolatedScenario(scenarioName: string): void {
-  console.log(`✅ Scenario ${scenarioName} validated`);
-  // Simplified validation
-}
