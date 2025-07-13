@@ -29,6 +29,16 @@ make run-all-scenarios
 -  **Auto Cleanup** - Built-in teardown ensures clean state between test runs
 -  **Zero Config Docker** - Spanner emulator management out of the box
 
+## Built With
+
+Generated projects leverage battle-tested tools from the Cloud Spanner ecosystem:
+
+- **[testfixtures](https://github.com/go-testfixtures/testfixtures)** - YAML-based database seeding with referential integrity support
+- **[wrench](https://github.com/cloudspannerecosystem/wrench)** - Schema migration tool for Cloud Spanner
+- **[spalidate](https://github.com/nu0ma/spalidate)** - Declarative database validation for asserting expected state
+- **[Cloud Spanner Go Client](https://cloud.google.com/go/spanner)** - Official Google client with connection pooling
+- **[Playwright](https://playwright.dev)** - Modern browser automation with multi-browser support
+
 ## Prerequisites
 
 Make sure you have these tools installed:
