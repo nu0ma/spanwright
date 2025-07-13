@@ -28,10 +28,9 @@ make run-all-scenarios
 
 **Generate a complete E2E testing environment with one command.** No more manual setup - get a production-ready testing framework that just works.
 
+-  **Scenario Organization** - Structured tests with seed data, browser automation, and expected results
 -  **Instant Setup** - `npx spanwright project-name` creates everything you need
 -  **Playwright Integration** - Full browser automation with database state validation
--  **Parallel Testing** - Shared database architecture with configurable parallel workers
--  **Scenario Organization** - Structured tests with seed data, browser automation, and expected results
 -  **Auto Cleanup** - Built-in teardown ensures clean state between test runs
 -  **Zero Config Docker** - Spanner emulator management out of the box
 
