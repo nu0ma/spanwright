@@ -19,4 +19,3 @@ export function getDatabaseConfig(): DatabaseConfig {
     secondaryDbId: `secondary-db-${processId}`,
   };
 }
-
