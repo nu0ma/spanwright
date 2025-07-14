@@ -10,7 +10,7 @@ import path from 'path';
 export function runCommand(command: string, args: string[] = []): string {
   try {
     return execFileSync(command, args, { encoding: 'utf-8' });
-  } catch (error: any) {
+  } catch {
     throw new Error(`Command failed: ${command} ${args.join(' ')}`);
   }
 }
@@ -36,25 +36,34 @@ export interface ValidationResult {
 }
 
 // Mock validation for testing
-export function mockValidateDatabase(databaseId: string): ValidationResult[] {
+export function mockValidateDatabase(): ValidationResult[] {
   const mockData: Record<string, number> = {
-    'Products': 1,
-    'Users': 1,
-    'Analytics': 1,
-    'UserLogs': 1
+    Products: 1,
+    Users: 1,
+    Analytics: 1,
+    UserLogs: 1,
   };
-  
+
   return Object.entries(mockData).map(([table, count]) => ({
     table,
     count,
-    valid: count > 0
+    valid: count > 0,
   }));
 }
 
 // Real spalidate validation
-export function validateDatabaseState(scenario: string, database: 'primary' | 'secondary', databaseId?: string): boolean {
-  const validationFile = path.join(process.cwd(), 'scenarios', scenario, `expected-${database}.yaml`);
-  
+export function validateDatabaseState(
+  scenario: string,
+  database: 'primary' | 'secondary',
+  databaseId?: string
+): boolean {
+  const validationFile = path.join(
+    process.cwd(),
+    'scenarios',
+    scenario,
+    `expected-${database}.yaml`
+  );
+
   if (!existsSync(validationFile)) {
     console.log(`⚠️ No validation file found: ${validationFile}`);
     return true; // Skip validation if file doesn't exist
@@ -62,40 +71,45 @@ export function validateDatabaseState(scenario: string, database: 'primary' | 's
 
   const projectId = process.env.PROJECT_ID || 'test-project';
   const instanceId = process.env.INSTANCE_ID || 'test-instance';
-  const targetDatabaseId = databaseId || (database === 'primary' 
-    ? process.env.PRIMARY_DB_ID || 'primary-db'
-    : process.env.SECONDARY_DB_ID || 'secondary-db');
+  const targetDatabaseId =
+    databaseId ||
+    (database === 'primary'
+      ? process.env.PRIMARY_DB_ID || 'primary-db'
+      : process.env.SECONDARY_DB_ID || 'secondary-db');
 
   const emulatorHost = process.env.SPANNER_EMULATOR_HOST || 'localhost:9010';
-  
+
   console.log(`🔍 Validating ${database} database:`, {
     project: projectId,
     instance: instanceId,
     database: targetDatabaseId,
     emulatorHost,
-    validationFile
+    validationFile,
   });
 
   const spalidateArgs = [
-    '--project', projectId,
-    '--instance', instanceId,
-    '--database', targetDatabaseId,
+    '--project',
+    projectId,
+    '--instance',
+    instanceId,
+    '--database',
+    targetDatabaseId,
     '--verbose',
-    validationFile
+    validationFile,
   ];
-  
+
   const spalidateCmd = `spalidate ${spalidateArgs.join(' ')}`;
   console.log(`🔍 Executing: ${spalidateCmd}`);
   console.log(`🌐 SPANNER_EMULATOR_HOST: ${emulatorHost}`);
 
   try {
-    const result = execFileSync('spalidate', spalidateArgs, { 
+    const result = execFileSync('spalidate', spalidateArgs, {
       encoding: 'utf-8',
       env: { ...process.env, SPANNER_EMULATOR_HOST: emulatorHost },
       timeout: 30000, // 30 second timeout
-      maxBuffer: 1024 * 1024 // 1MB buffer for long output
+      maxBuffer: 1024 * 1024, // 1MB buffer for long output
     });
-    
+
     console.log(`✅ Validation passed for ${database} database`);
     console.log(`📋 Validation output:\n${result}`);
     return true;
@@ -113,9 +127,9 @@ ${error.stdout || 'No stdout'}`,
       `⚠️ ERROR OUTPUT:
 ${error.stderr || 'No stderr'}`,
       ``,
-      `💥 Error message: ${error.message}`
+      `💥 Error message: ${error.message}`,
     ].join('\n');
-    
+
     throw new Error(errorDetails);
   }
 }
