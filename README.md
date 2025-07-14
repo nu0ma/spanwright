@@ -79,6 +79,16 @@ your-project-name/
 
 ## Usage Guide
 
+If you want to verify the behavior, go to the [examples/two-databases](examples/two-databases) directory and run:
+
+```bash
+cd examples/two-databases
+make run-all-scenarios
+# 🚀 Running all scenarios...
+# 🏗️ Setting up databases...
+# 🐳 Starting fresh Spanner emulator...
+```
+
 ### Project Generation
 
 ```bash
@@ -146,25 +156,6 @@ make test-report          # Show test results
 make clean                 # Clean build artifacts
 make help                  # Show all commands
 ```
-
-### Testing Architecture
-
-Generated projects provide:
-
-1. **Database Tools** (Go):
-   - `db-validator`: Batch validation with performance metrics
-   - `seed-injector`: Data seeding with type conversion
-   - Connection pooling and error handling
-
-2. **Browser Tests** (Playwright):
-   - Shared database configuration for parallel execution
-   - Scenario-based test organization
-   - Automatic cleanup and teardown
-
-3. **Workflow Integration**:
-   - Make-based automation
-   - Docker compose for services
-   - Environment-based configuration
 
 ## Development
 
@@ -254,21 +245,6 @@ docker info
 # Install wrench
 go install github.com/cloudspannerecosystem/wrench@latest
 ```
-
-**Permission denied on make commands**
-```bash
-# Make scripts executable
-chmod +x scripts/*.sh
-```
-
-## Architecture
-
-Spanwright generates projects with a hybrid architecture:
-
-- **Go Tools**: High-performance database operations
-- **TypeScript/Playwright**: Browser automation and test framework
-- **Docker**: Isolated development environment
-- **Make**: Cross-platform workflow automation
 
 ## Security
 

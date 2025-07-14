@@ -35,6 +35,22 @@ export interface ValidationResult {
   valid: boolean;
 }
 
+// Mock validation for testing
+export function mockValidateDatabase(): ValidationResult[] {
+  const mockData: Record<string, number> = {
+    Products: 1,
+    Users: 1,
+    Analytics: 1,
+    UserLogs: 1,
+  };
+
+  return Object.entries(mockData).map(([table, count]) => ({
+    table,
+    count,
+    valid: count > 0,
+  }));
+}
+
 // Real spalidate validation
 export function validateDatabaseState(
   scenario: string,
@@ -58,8 +74,8 @@ export function validateDatabaseState(
   const targetDatabaseId =
     databaseId ||
     (database === 'primary'
-      ? process.env.PRIMARY_DATABASE_ID || process.env.PRIMARY_DB_ID || 'primary-db'
-      : process.env.SECONDARY_DATABASE_ID || process.env.SECONDARY_DB_ID || 'secondary-db');
+      ? process.env.PRIMARY_DB_ID || 'primary-db'
+      : process.env.SECONDARY_DB_ID || 'secondary-db');
 
   const emulatorHost = process.env.SPANNER_EMULATOR_HOST || 'localhost:9010';
 
