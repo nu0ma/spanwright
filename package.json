@@ -52,7 +52,7 @@
   "author": "nu0ma",
   "license": "MIT",
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=22.15.1"
   },
   "repository": {
     "type": "git",
