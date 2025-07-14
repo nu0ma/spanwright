@@ -38,9 +38,10 @@ export interface ValidationResult {
 // Mock validation for testing
 export function mockValidateDatabase(databaseId: string): ValidationResult[] {
   const mockData: Record<string, number> = {
-    'Companies': 1,
+    'Products': 1,
     'Users': 1,
-    'SystemConfig': 1
+    'Analytics': 1,
+    'UserLogs': 1
   };
   
   return Object.entries(mockData).map(([table, count]) => ({
