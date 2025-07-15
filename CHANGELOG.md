@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0](https://github.com/nu0ma/spanwright/compare/v2.2.5...v2.3.0) (2025-07-15)
+
+
+### Features
+
+* migrate from semantic-release to release-please ([#99](https://github.com/nu0ma/spanwright/issues/99)) ([00a1f49](https://github.com/nu0ma/spanwright/commit/00a1f49b6824f0c8ce9cd6e30f065e07bb89b9e2))
+
+
+### Bug Fixes
+
+* add pull-requests write permission to release workflow ([b2c40ef](https://github.com/nu0ma/spanwright/commit/b2c40ef0ea8199297bb1d486947b978c9db5cf65))
+* release flow ([#101](https://github.com/nu0ma/spanwright/issues/101)) ([8229ab3](https://github.com/nu0ma/spanwright/commit/8229ab3aa6e926260be90a9bada6ca13b55e7947))
+* simplify release flow ([#98](https://github.com/nu0ma/spanwright/issues/98)) ([6c7bf39](https://github.com/nu0ma/spanwright/commit/6c7bf391fa257dc75867c8c4d71e48fec25de188))
+* use pat ([#103](https://github.com/nu0ma/spanwright/issues/103)) ([15da180](https://github.com/nu0ma/spanwright/commit/15da18011e59c27c31d2933c4238639f09a47032))
+
 ## [2.2.5](https://github.com/nu0ma/spanwright/compare/v2.2.4...v2.2.5) (2025-07-15)
 
 
