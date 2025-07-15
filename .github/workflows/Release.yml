@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read # for checkout
+  contents: write 
 
 jobs:
   release-please:
@@ -39,6 +39,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.release_tag_name }}
         
       - name: Setup Node.js
         uses: actions/setup-node@v4
