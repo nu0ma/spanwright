@@ -79,16 +79,6 @@ your-project-name/
 
 ## Usage Guide
 
-If you want to verify the behavior, go to the [examples/two-databases](examples/two-databases) directory and run:
-
-```bash
-cd examples/two-databases
-make run-all-scenarios
-# 🚀 Running all scenarios...
-# 🏗️ Setting up databases...
-# 🐳 Starting fresh Spanner emulator...
-```
-
 ### Project Generation
 
 ```bash
@@ -245,7 +235,6 @@ docker info
 # Install wrench
 go install github.com/cloudspannerecosystem/wrench@latest
 ```
-
 ## Security
 
 Please report security vulnerabilities responsibly. See [SECURITY.md](SECURITY.md) for details.
