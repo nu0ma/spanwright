@@ -149,7 +149,7 @@ make run-all-scenarios      # Run all scenarios
 
 # Browser testing
 make test-e2e              # Run Playwright tests
-make test-e2e-ui           # Interactive test UI
+make test-e2e-ui          # Interactive test UI
 make test-report          # Show test results
 
 # Development
