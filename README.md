@@ -4,6 +4,7 @@ CLI tool for generating Cloud Spanner E2E testing framework projects with Go dat
 
 [![npm version](https://img.shields.io/npm/v/spanwright)](https://www.npmjs.com/package/spanwright)
 [![CI](https://github.com/nu0ma/spanwright/actions/workflows/ci.yml/badge.svg)](https://github.com/nu0ma/spanwright/actions/workflows/ci.yml)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/nu0ma/spanwright)
 
 ## Quick Start
 
