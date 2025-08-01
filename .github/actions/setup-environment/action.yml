@@ -1,0 +1,65 @@
+name: 'Setup Environment'
+description: 'Setup Node.js, Go, and install dependencies'
+inputs:
+  node-version:
+    description: 'Node.js version to use'
+    required: false
+    default: '22.x'
+  go-tools:
+    description: 'Whether to install Go tools (wrench, spalidate)'
+    required: false
+    default: 'false'
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: 'npm'
+        cache-dependency-path: '**/package-lock.json'
+        
+    - name: Install dependencies
+      shell: bash
+      run: npm ci
+      
+    - name: Read Go version
+      if: inputs.go-tools == 'true'
+      id: go-version
+      shell: bash
+      run: echo "version=$(grep '^go ' .tool-versions | cut -d' ' -f2)" >> $GITHUB_OUTPUT
+      
+    - name: Setup Go
+      if: inputs.go-tools == 'true'
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ steps.go-version.outputs.version }}
+        cache: true
+        cache-dependency-path: |
+          go.sum
+          template/go.mod.template
+    
+    - name: Cache Go tools
+      if: inputs.go-tools == 'true'
+      uses: actions/cache@v4
+      with:
+        path: ~/go/bin
+        key: ${{ runner.os }}-go-tools-${{ hashFiles('**/go.mod') }}
+        restore-keys: |
+          ${{ runner.os }}-go-tools-
+        
+    - name: Install wrench
+      if: inputs.go-tools == 'true'
+      shell: bash
+      run: |
+        if ! command -v wrench &> /dev/null; then
+          go install github.com/cloudspannerecosystem/wrench@latest
+        fi
+      
+    - name: Install spalidate
+      if: inputs.go-tools == 'true'
+      shell: bash
+      run: |
+        if ! command -v spalidate &> /dev/null; then
+          go install github.com/nu0ma/spalidate@latest
+        fi
