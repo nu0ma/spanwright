@@ -37,18 +37,6 @@ features:
     details: Built on testfixtures, wrench, spalidate, and official Cloud Spanner Go client
 ---
 
-## Quick Example
-
-```bash
-# Create new project
-npx spanwright my-spanner-tests
-
-# Initialize and run
-cd my-spanner-tests
-make init
-make run-all-scenarios
-```
-
 ## Use Cases
 
 - **E2E Testing** - Test web applications with real Spanner database interactions
