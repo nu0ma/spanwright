@@ -170,3 +170,5 @@ go.work.sum
 test-cli/
 test-*/
 ci-test-project/
+
+.serena/cache/
