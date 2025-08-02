@@ -653,10 +653,10 @@ This tutorial demonstrated:
 
 ## Next Steps
 
-- **[Real-World Examples](./real-world)** - Industry-specific testing patterns
-- **[Multi-Database Setup](./multi-database)** - Advanced database configuration
-- **[Performance Testing](../guide/performance)** - Scaling your test suite
-- **[CI/CD Integration](../guide/ci-cd)** - Automating test execution
+- **[Real-World Examples](#)** - Industry-specific testing patterns (Coming Soon)
+- **[Multi-Database Setup](#)** - Advanced database configuration (Coming Soon)
+- **[Performance Testing](../guide/troubleshooting)** - Scaling your test suite
+- **[CI/CD Integration](#)** - Automating test execution (Coming Soon)
 
 ## Additional Resources
 
