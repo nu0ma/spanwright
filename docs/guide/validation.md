@@ -11,8 +11,6 @@ Spanwright provides two complementary validation approaches:
 
 Both approaches ensure your database state matches expectations after E2E test execution.
 
-## Inline SQL Validation
-
 ### Basic Usage
 
 Use the `validateDatabaseState` utility for direct SQL validation within your Playwright tests:
