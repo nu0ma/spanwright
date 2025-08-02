@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.1](https://github.com/nu0ma/spanwright/compare/v2.3.0...v2.3.1) (2025-08-02)
+
+
+### Bug Fixes
+
+* resolve VitePress build dead links and update dependencies ([#111](https://github.com/nu0ma/spanwright/issues/111)) ([f903c6a](https://github.com/nu0ma/spanwright/commit/f903c6ada12799fb69740bee7f9109958b27fcbd))
+* resolve VitePress ESM build errors and add missing docs ([#109](https://github.com/nu0ma/spanwright/issues/109)) ([c338943](https://github.com/nu0ma/spanwright/commit/c3389433133eeaec9ba56c5a62999426f5ada9f1))
+
 ## [2.3.0](https://github.com/nu0ma/spanwright/compare/v2.2.5...v2.3.0) (2025-07-15)
 
 
