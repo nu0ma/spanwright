@@ -286,7 +286,7 @@ Once everything is installed:
 
 1. **[Quick Start Guide](./quick-start)** - Create your first project in 5 minutes
 2. **[Project Structure](./project-structure)** - Understand generated project layout
-3. **[Configuration](./configuration)** - Learn about project configuration options
+3. **[Configuration](#)** - Learn about project configuration options (Coming Soon)
 
 ## Getting Help
 
