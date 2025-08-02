@@ -58,21 +58,6 @@ your-project/
 └── Makefile
 ```
 
-### Schema Migration
-
-Apply schemas to both databases:
-
-```bash
-# Apply all schemas
-make apply-schemas
-
-# Apply primary database schema only
-make apply-primary-schema
-
-# Apply secondary database schema only  
-make apply-secondary-schema
-```
-
 ## Testing with Multiple Databases
 
 ### Test Scenario Structure
@@ -159,21 +144,12 @@ test.describe('Cross-Service Integration', () => {
     await expect(page.locator('.order-confirmation')).toBeVisible();
     
     // Validate primary database (user and order data)
-    const orderData = await validateDatabaseState(`
-      SELECT o.OrderID, o.UserID, u.Email
-      FROM Orders o
-      JOIN Users u ON o.UserID = u.UserID
-      WHERE o.UserID = 'user-001'
-    `);
+    const orderData = await validateDatabaseState('example-01-basic-setup', 'primary');
     expect(orderData).toHaveLength(1);
     expect(orderData[0].Email).toBe('test@example.com');
     
     // Validate secondary database (product inventory)
-    const productData = await validateSecondaryDatabase(`
-      SELECT ProductID, InventoryCount
-      FROM Products
-      WHERE ProductID = 'prod-001'
-    `);
+    const productData = await validateDatabaseState( 'example-01-basic-setup', 'secondary');
     expect(productData[0].InventoryCount).toBe(9); // Decremented from 10
   });
 });
@@ -438,4 +414,4 @@ npx spanwright migrate --add-database
 
 ## Examples
 
-See [Multi-Database Examples](../examples/multi-database) for complete implementation examples and [Real-World Scenarios](../examples/real-world) for production-ready patterns.
+See [Multi-Database Examples](../examples/multi-database) for complete implementation examples.
