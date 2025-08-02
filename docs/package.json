@@ -1,6 +1,7 @@
 {
   "name": "spanwright-docs",
   "version": "1.0.0",
+  "type": "module",
   "description": "Spanwright documentation site",
   "scripts": {
     "docs:dev": "vitepress dev",
