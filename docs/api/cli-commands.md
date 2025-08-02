@@ -32,7 +32,7 @@ npx spanwright my-project --non-interactive
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `SPANWRIGHT_DB_COUNT` | Number of databases (1 or 2) | `1` |
+| `SPANWRIGHT_DB_COUNT=1) | `1` |
 | `SPANWRIGHT_PRIMARY_DB_NAME` | Primary database name | `primary-db` |
 | `SPANWRIGHT_PRIMARY_SCHEMA_PATH` | Path to primary schema files | `./schema` |
 | `SPANWRIGHT_SECONDARY_DB_NAME` | Secondary database name | `secondary-db` |
@@ -91,7 +91,7 @@ make start
 make stop
 
 # Apply all database schemas
-make setup-all
+make setup
 
 # Setup specific database
 make setup-primary    # Primary database only

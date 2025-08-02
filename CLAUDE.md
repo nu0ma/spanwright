@@ -259,3 +259,27 @@ GitHub workflows automatically read the Go version from `.tool-versions`:
 - No hardcoded versions in workflow files
 - Single source of truth for Go version across local and CI environments
 - Automatic version synchronization when `.tool-versions` is updated
+
+## AI Assistant Guidelines
+
+### Serena Tool Usage
+
+When working with this codebase, AI assistants should utilize Serena tools for enhanced code analysis and navigation:
+
+#### Code Analysis & Search
+- **Symbol Discovery**: Use `find_symbol` to locate specific classes, functions, and methods
+- **Reference Tracking**: Use `find_referencing_symbols` to understand code dependencies
+- **Pattern Search**: Use `search_for_pattern` for content-based searches across files
+- **Project Overview**: Use `get_symbols_overview` to understand codebase structure
+
+#### Development Workflow Integration
+- **Before Code Changes**: Always use Serena tools to understand existing code structure
+- **Symbol Modification**: Use `replace_symbol_body` for targeted code updates
+- **Code Insertion**: Use `insert_after_symbol` or `insert_before_symbol` for adding new code
+- **Memory Management**: Utilize Serena's memory system to retain project insights
+
+#### Best Practices
+- Prefer Serena tools over simple text search when analyzing code structure
+- Use `think_about_collected_information` after gathering data to synthesize findings
+- Leverage `think_about_task_adherence` before making significant changes
+- Always call `think_about_whether_you_are_done` when completing tasks

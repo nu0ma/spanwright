@@ -117,7 +117,7 @@ SPANNER_EMULATOR_HOST=localhost:9010
 
 Provides consistent commands across all generated projects:
 
-- **Setup**: `make init`, `make start`, `make setup-all`
+- **Setup**: `make init`, `make start`, `make setup`
 - **Testing**: `make run-all-scenarios`, `make test-e2e`
 - **Development**: `make clean`, `make help`
 
