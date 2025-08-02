@@ -19,25 +19,33 @@ npx spanwright
 
 ### Environment Configuration
 
-Multi-database projects generate a `.env` file with both database configurations:
+Multi-database projects generate environment variables for both database configurations:
 
 ```bash
-# .env (generated for 2-database setup)
-SPANNER_PROJECT_ID=your-project-id
-SPANNER_INSTANCE_ID=your-instance-id
+# Environment variables (automatically generated in .env file)
+PROJECT_ID=test-project
+INSTANCE_ID=test-instance
 
 # Primary Database
-PRIMARY_DB_NAME=user-service-db
-PRIMARY_SCHEMA_PATH=schemas/user-service
+PRIMARY_DB_ID=primary-db
+PRIMARY_DATABASE_ID=primary-db
+PRIMARY_SCHEMA_PATH=./schema
+PRIMARY_DB_SCHEMA_PATH=./schema
 
 # Secondary Database  
-SECONDARY_DB_NAME=product-service-db
-SECONDARY_SCHEMA_PATH=schemas/product-service
+SECONDARY_DB_ID=secondary-db
+SECONDARY_DATABASE_ID=secondary-db
+SECONDARY_SCHEMA_PATH=./schema2
+SECONDARY_DB_SCHEMA_PATH=./schema2
 
-# Shared Configuration
-BASE_URL=http://localhost:3000
-PLAYWRIGHT_HEADED=false
+# Database Count
+DB_COUNT=2
+
+# Spanner Emulator
+SPANNER_EMULATOR_HOST=localhost:9010
 ```
+
+**Note**: The generator creates both `PRIMARY_DB_ID` and `PRIMARY_DATABASE_ID` for compatibility with different components. The Makefile uses `_DB_ID` variants while Go configuration loads `_DATABASE_ID` variants.
 
 ## Database Schema Management
 
@@ -45,15 +53,14 @@ PLAYWRIGHT_HEADED=false
 
 ```
 your-project/
-├── schemas/
-│   ├── user-service/
-│   │   ├── 001_initial_schema.sql
-│   │   ├── 002_add_users_table.sql
-│   │   └── 003_add_user_profiles.sql
-│   └── product-service/
-│       ├── 001_initial_schema.sql
-│       ├── 002_add_products_table.sql
-│       └── 003_add_categories.sql
+├── schema/                     # Primary database schemas (./schema)
+│   ├── 001_initial_schema.sql
+│   ├── 002_add_users_table.sql
+│   └── 003_add_user_profiles.sql
+├── schema2/                    # Secondary database schemas (./schema2)
+│   ├── 001_initial_schema.sql
+│   ├── 002_add_products_table.sql
+│   └── 003_add_categories.sql
 ├── scenarios/
 └── Makefile
 ```
@@ -63,18 +70,18 @@ your-project/
 ### Test Scenario Structure
 
 ```
-scenarios/example-02-cross-service/
+scenarios/example-01-basic-setup/
 ├── fixtures/
-│   ├── primary/          # Primary database fixtures
+│   ├── primary/                # Primary database fixtures
 │   │   ├── Users.yml
-│   │   └── UserProfiles.yml
-│   └── secondary/        # Secondary database fixtures
-│       ├── Products.yml
-│       └── Categories.yml
-├── expected-primary.yaml     # Expected primary DB state
-├── expected-secondary.yaml   # Expected secondary DB state
+│   │   └── Products.yml
+│   └── secondary/              # Secondary database fixtures
+│       ├── UserLogs.yml
+│       └── Analytics.yml
+├── expected-primary.yaml       # Expected primary DB state
+├── expected-secondary.yaml     # Expected secondary DB state
 └── tests/
-    └── cross-service.spec.ts
+    └── simple-test.spec.ts
 ```
 
 ### Fixture Organization
@@ -83,205 +90,283 @@ scenarios/example-02-cross-service/
 ```yaml
 # fixtures/primary/Users.yml
 - UserID: "user-001"
-  Email: "test@example.com"
-  Name: "Test User"
-  Status: "active"
+  Name: "E2E Test User"
+  Email: "e2e-test-user@example.com"
+  Status: 1
   CreatedAt: "2024-01-01T00:00:00Z"
+```
 
-- UserID: "user-002"
-  Email: "admin@example.com"
-  Name: "Admin User"
-  Status: "active"
-  CreatedAt: "2024-01-01T00:00:00Z"
+```yaml
+# fixtures/primary/Products.yml
+- ProductID: "product-001"
+  Name: "E2E Test Product"
+  Price: 1000
+  CategoryID: "category-001"
+  IsActive: true
 ```
 
 **Secondary database fixtures:**
 ```yaml
-# fixtures/secondary/Products.yml
-- ProductID: "prod-001"
-  Name: "Test Product"
-  Price: 1000
-  CategoryID: "cat-001"
+# fixtures/secondary/UserLogs.yml
+- LogID: "log-001"
+  UserID: "user-001"
+  Action: "login"
+  IpAddress: "127.0.0.1"
+  UserAgent: "E2E-Test-Agent/1.0"
   CreatedAt: "2024-01-01T00:00:00Z"
+```
 
-- ProductID: "prod-002"
-  Name: "Premium Product"
-  Price: 2000
-  CategoryID: "cat-001"
-  CreatedAt: "2024-01-01T00:00:00Z"
+```yaml
+# fixtures/secondary/Analytics.yml
+- AnalyticsID: "analytics-001"
+  UserID: "user-001"
+  EventType: "page_view"
+  PageURL: "/test-page"
+  Timestamp: "2024-01-01T00:00:00Z"
 ```
 
 ### Cross-Database Testing
 
 ```typescript
-// tests/cross-service.spec.ts
+// tests/simple-test.spec.ts
 import { test, expect } from '@playwright/test';
-import { 
-  validateDatabaseState,      // Primary database
-  validateSecondaryDatabase   // Secondary database
-} from '../../../tests/utils/sql-validator';
+import { getDatabaseConfig } from '../../../tests/database-isolation';
+import { validateDatabaseState } from '../../../tests/test-utils';
 
-test.describe('Cross-Service Integration', () => {
-  test('should create order linking user and product', async ({ page }) => {
-    // Navigate to product catalog
-    await page.goto('/products');
+test.describe('Multi-Database Integration', () => {
+  test('Database Validation', async () => {
+    const dbConfig = getDatabaseConfig();
     
-    // Select product (stored in secondary DB)
-    await page.click('[data-testid="product-prod-001"]');
-    await page.click('[data-testid="add-to-cart"]');
+    // Validate primary database using spalidate
+    const primaryValid = validateDatabaseState('example-01-basic-setup', 'primary');
+    expect(primaryValid).toBe(true);
     
-    // Login as user (stored in primary DB)
-    await page.goto('/login');
-    await page.fill('[data-testid="email"]', 'test@example.com');
-    await page.fill('[data-testid="password"]', 'password123');
-    await page.click('[data-testid="login"]');
+    // Validate secondary database (if DB_COUNT=2)
+    const dbCount = parseInt(process.env.DB_COUNT || '2');
+    if (dbCount === 2) {
+      const secondaryValid = validateDatabaseState('example-01-basic-setup', 'secondary');
+      expect(secondaryValid).toBe(true);
+    }
     
-    // Complete checkout
-    await page.goto('/checkout');
-    await page.click('[data-testid="place-order"]');
+    console.log(`✅ Database validation passed for process ${dbConfig.processId}`);
+  });
+
+  test('should handle cross-database workflow', async ({ page }) => {
+    // Navigate to application
+    await page.goto('https://example.com');
     
-    // Verify success
-    await expect(page.locator('.order-confirmation')).toBeVisible();
+    // Perform user actions that affect both databases
+    await page.fill('[data-testid="email"]', 'e2e-test-user@example.com');
+    await page.click('[data-testid="submit"]');
     
-    // Validate primary database (user and order data)
-    const orderData = await validateDatabaseState('example-01-basic-setup', 'primary');
-    expect(orderData).toHaveLength(1);
-    expect(orderData[0].Email).toBe('test@example.com');
+    // Verify UI response
+    await expect(page.locator('.success-message')).toBeVisible();
     
-    // Validate secondary database (product inventory)
-    const productData = await validateDatabaseState( 'example-01-basic-setup', 'secondary');
-    expect(productData[0].InventoryCount).toBe(9); // Decremented from 10
+    // Validate both databases
+    const primaryValid = validateDatabaseState('example-01-basic-setup', 'primary');
+    expect(primaryValid).toBe(true);
+    
+    const secondaryValid = validateDatabaseState('example-01-basic-setup', 'secondary');
+    expect(secondaryValid).toBe(true);
   });
 });
 ```
 
-## Database Seeding
+## Database Operations
 
-### Multi-Database Seeding
+### Setup Commands
 
-The seed-injector tool handles both databases automatically:
+**Note**: Ensure environment variables are set before running commands.
 
 ```bash
-# Seed both databases
-make seed-all
+# Setup both databases with schemas and seed data
+PRIMARY_SCHEMA_PATH=./schema SECONDARY_SCHEMA_PATH=./schema2 make setup
 
-# Seed primary database only
-make seed-primary
+# Setup primary database only
+PRIMARY_SCHEMA_PATH=./schema make setup-primary
 
-# Seed secondary database only
-make seed-secondary
+# Setup secondary database only  
+SECONDARY_SCHEMA_PATH=./schema2 make setup-secondary
 ```
 
-### Makefile Configuration
+### Testing Commands
 
-```makefile
-# Multi-database seeding targets
-seed-all: seed-primary seed-secondary
+```bash
+# Run specific scenario
+make test-scenario SCENARIO=example-01-basic-setup
 
-seed-primary:
-	@echo "🌱 Seeding primary database..."
-	./cmd/seed-injector/seed-injector \
-		-db-name=$(PRIMARY_DB_NAME) \
-		-fixtures-dir=fixtures/primary
+# Run all scenarios
+make run-all-scenarios
 
-seed-secondary:
-	@echo "🌱 Seeding secondary database..."  
-	./cmd/seed-injector/seed-injector \
-		-db-name=$(SECONDARY_DB_NAME) \
-		-fixtures-dir=fixtures/secondary
+# Run Playwright tests only
+make test-e2e
+```
+
+### Validation Commands
+
+```bash
+# Validate scenario databases
+make validate-scenario SCENARIO=example-01-basic-setup
+
+# Validate current scenario databases
+make validate-db
+
+# Validate configuration and schema paths
+PRIMARY_SCHEMA_PATH=./schema SECONDARY_SCHEMA_PATH=./schema2 make validate
 ```
 
 ## Validation
 
-### Multi-Database Validation
+### Multi-Database Validation Files
 
-Create expected state files for each database:
+Create expected state files for each database using spalidate format:
 
 ```yaml
 # expected-primary.yaml
 tables:
   Users:
-    count: 2
-    conditions:
-      - column: "Status"
-        value: "active"
-        count: 2
-        
-  Orders:
     count: 1
-    conditions:
-      - column: "UserID"
-        value: "user-001"
-        count: 1
+    columns:
+      UserID: "user-001"
+      Name: "E2E Test User"
+      Email: "e2e-test-user@example.com"
+      Status: 1
+      # CreatedAt: "2024-01-01T00:00:00Z"  # Commented out for flexible timestamp validation
+  
+  Products:
+    count: 1
+    columns:
+      ProductID: "product-001"
+      Name: "E2E Test Product"
+      Price: 1000
+      CategoryID: "category-001"
+      IsActive: true
 ```
 
 ```yaml
 # expected-secondary.yaml
 tables:
-  Products:
-    count: 2
-    conditions:
-      - column: "Price"
-        operator: ">"
-        value: 0
-        count: 2
-        
-  Categories:
+  Analytics:
     count: 1
-    conditions:
-      - column: "Name"
-        value: "Electronics"
-        count: 1
+    columns:
+      AnalyticsID: "analytics-001"
+      UserID: "user-001"
+      EventType: "page_view"
+      Timestamp: "2024-01-01T00:00:00Z"
+      PageURL: "/test-page"
+
+  UserLogs:
+    count: 1
+    columns:
+      LogID: "log-001"
+      UserID: "user-001"
+      Action: "login"
+      CreatedAt: "2024-01-01T00:00:00Z"
+      IpAddress: "127.0.0.1"
 ```
 
-### Running Validation
+### Spalidate Integration
+
+The validation system uses [spalidate](https://github.com/nu0ma/spalidate) CLI tool:
 
 ```bash
-# Validate both databases
-make validate-all
+# Primary database validation
+SPANNER_EMULATOR_HOST=localhost:9010 spalidate \
+  --project test-project \
+  --instance test-instance \
+  --database primary-db \
+  --verbose scenarios/example-01-basic-setup/expected-primary.yaml
 
-# Validate individual databases
-make validate-primary
-make validate-secondary
+# Secondary database validation  
+SPANNER_EMULATOR_HOST=localhost:9010 spalidate \
+  --project test-project \
+  --instance test-instance \
+  --database secondary-db \
+  --verbose scenarios/example-01-basic-setup/expected-secondary.yaml
 ```
 
 ## Configuration Management
 
-### Environment Validation
+### Go Configuration Structure
 
-The configuration system validates database setup:
+The actual Go configuration loads environment variables:
 
 ```go
-// internal/config/config.go (auto-generated)
+// Config represents the complete application configuration
 type Config struct {
-    SpannerProjectID     string `env:"SPANNER_PROJECT_ID,required"`
-    SpannerInstanceID    string `env:"SPANNER_INSTANCE_ID,required"`
-    
-    // Primary Database
-    PrimaryDBName        string `env:"PRIMARY_DB_NAME,required"`
-    PrimarySchemaPath    string `env:"PRIMARY_SCHEMA_PATH,required"`
-    
-    // Secondary Database (conditional)
-    SecondaryDBName      string `env:"SECONDARY_DB_NAME"`
-    SecondarySchemaPath  string `env:"SECONDARY_SCHEMA_PATH"`
-    
-    DBCount             int    `env:"DB_COUNT,default=1"`
+    ProjectID       string  // From PROJECT_ID
+    InstanceID      string  // From INSTANCE_ID
+    EmulatorHost    string  // From SPANNER_EMULATOR_HOST
+    PrimaryDB       string  // From PRIMARY_DATABASE_ID
+    SecondaryDB     string  // From SECONDARY_DATABASE_ID
+    PrimarySchema   string  // From PRIMARY_SCHEMA_PATH
+    SecondarySchema string  // From SECONDARY_SCHEMA_PATH
+    Environment     string
+    Timeout         int
+}
+
+// LoadConfig loads configuration from environment variables
+func LoadConfig() (*Config, error) {
+    _ = godotenv.Load()
+
+    config := &Config{
+        ProjectID:       os.Getenv("PROJECT_ID"),
+        InstanceID:      os.Getenv("INSTANCE_ID"),
+        EmulatorHost:    os.Getenv("SPANNER_EMULATOR_HOST"),
+        PrimaryDB:       os.Getenv("PRIMARY_DATABASE_ID"),     // Note: _DATABASE_ID variant
+        SecondaryDB:     os.Getenv("SECONDARY_DATABASE_ID"),   // Note: _DATABASE_ID variant
+        PrimarySchema:   os.Getenv("PRIMARY_SCHEMA_PATH"),
+        SecondarySchema: os.Getenv("SECONDARY_SCHEMA_PATH"),
+        Environment:     getEnvWithDefault("ENVIRONMENT", "development"),
+        Timeout:         getEnvIntWithDefault("TIMEOUT_SECONDS", 120),
+    }
+
+    return config, config.Validate()
+}
+
+// GetDatabaseConfig returns a DatabaseConfig for the specified database ID
+func (c *Config) GetDatabaseConfig(databaseID string) *DatabaseConfig {
+    return &DatabaseConfig{
+        ProjectID:  c.ProjectID,
+        InstanceID: c.InstanceID,
+        DatabaseID: databaseID,
+    }
 }
 ```
 
-### Conditional Logic
-
-Generated code includes conditional database handling:
+### Database Connection Management
 
 ```go
-// Database connection setup
-func (c *Config) GetDatabaseNames() []string {
-    databases := []string{c.PrimaryDBName}
-    if c.DBCount == 2 && c.SecondaryDBName != "" {
-        databases = append(databases, c.SecondaryDBName)
-    }
-    return databases
+// DatabaseConfig represents database connection configuration
+type DatabaseConfig struct {
+    ProjectID  string
+    InstanceID string
+    DatabaseID string
 }
+
+// DatabasePath returns the full database path
+func (dc *DatabaseConfig) DatabasePath() string {
+    return fmt.Sprintf("projects/%s/instances/%s/databases/%s", 
+        dc.ProjectID, dc.InstanceID, dc.DatabaseID)
+}
+```
+
+### Test Database Configuration
+
+```typescript
+// Database configuration for tests
+export interface DatabaseConfig {
+  processId: number;        // Process identifier for isolation
+  primaryDbId: string;      // Primary database ID
+  secondaryDbId: string;    // Secondary database ID
+}
+
+// Validation function signature
+export function validateDatabaseState(
+  scenario: string, 
+  database: 'primary' | 'secondary', 
+  databaseId?: string       // Optional override for database ID
+): boolean
 ```
 
 ## Development Workflow
@@ -292,25 +377,82 @@ func (c *Config) GetDatabaseNames() []string {
 # Start emulator and apply schemas
 make start
 
-# Run development server
-npm run dev
+# Initialize project
+make init
 
-# Run tests with hot reload
-make watch-tests
+# Setup databases (with required environment variables)
+PRIMARY_SCHEMA_PATH=./schema SECONDARY_SCHEMA_PATH=./schema2 make setup
+
+# Run development tests
+make test-e2e
 ```
 
 ### Testing Workflow
 
 ```bash
 # Run specific multi-database scenario
-make run-scenario SCENARIO=example-02-cross-service
+make test-scenario SCENARIO=example-01-basic-setup
 
-# Run all scenarios
+# Run all scenarios with validation
 make run-all-scenarios
 
 # Clean and reset
-make clean-databases
-make apply-schemas
+make clean
+PRIMARY_SCHEMA_PATH=./schema SECONDARY_SCHEMA_PATH=./schema2 make setup
+```
+
+### Creating New Scenarios
+
+```bash
+# Create new scenario structure
+make new-scenario SCENARIO=my-test-scenario
+
+# This creates:
+# scenarios/my-test-scenario/
+# ├── expected-primary.yaml
+# ├── expected-secondary.yaml (if DB_COUNT=2)
+# ├── fixtures/
+# │   ├── primary/
+# │   └── secondary/
+# └── tests/
+```
+
+**Note**: The `new-scenario` target requires template files (`expected-primary.yaml.template`, `expected-secondary.yaml.template`) to exist in the project root.
+
+## Seed Data Management
+
+### Seed Injection Process
+
+The seed-injector tool processes fixture data:
+
+```bash
+# Primary database seeding
+SPANNER_EMULATOR_HOST=localhost:9010 go run cmd/seed-injector/main.go \
+  --database-id primary-db \
+  --fixture-dir "$(pwd)/scenarios/example-01-basic-setup/fixtures/primary"
+
+# Secondary database seeding
+SPANNER_EMULATOR_HOST=localhost:9010 go run cmd/seed-injector/main.go \
+  --database-id secondary-db \
+  --fixture-dir "$(pwd)/scenarios/example-01-basic-setup/fixtures/secondary"
+```
+
+### Makefile Integration
+
+The Makefile handles multi-database seeding automatically:
+
+```makefile
+setup-primary: ## Setup primary database
+	@echo "🔶 Setting up primary database..."
+	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) go run cmd/seed-injector/main.go \
+		--database-id $(PRIMARY_DB_ID) \
+		--fixture-dir "$(pwd)/scenarios/$(SCENARIO)/fixtures/primary"
+
+setup-secondary: ## Setup secondary database  
+	@echo "☁️ Setting up secondary database..."
+	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) go run cmd/seed-injector/main.go \
+		--database-id $(SECONDARY_DB_ID) \
+		--fixture-dir "$(pwd)/scenarios/$(SCENARIO)/fixtures/secondary"
 ```
 
 ## Best Practices
@@ -325,7 +467,7 @@ make apply-schemas
 ### Testing Strategy
 
 1. **Test boundaries** - Focus on service boundaries and interactions
-2. **Independent validation** - Validate each database independently
+2. **Independent validation** - Validate each database independently using spalidate
 3. **Cross-service flows** - Test complete user journeys across services
 4. **Data consistency** - Ensure referential integrity across databases
 
@@ -342,18 +484,30 @@ make apply-schemas
 
 **Database connection errors:**
 ```bash
-# Check both databases are accessible
-make validate-connections
+# Check emulator status
+docker ps | grep spanner-emulator
 
 # Restart emulator
 make stop && make start
+
+# Verify configuration (ensure environment variables are set)
+PRIMARY_SCHEMA_PATH=./schema SECONDARY_SCHEMA_PATH=./schema2 make validate
+```
+
+**Environment variable issues:**
+```bash
+# Check all required environment variables
+env | grep -E "(PROJECT_ID|INSTANCE_ID|DB_ID|SCHEMA_PATH)"
+
+# Verify .env file contains both _DB_ID and _DATABASE_ID variants
+cat .env | grep -E "(PRIMARY|SECONDARY).*ID"
 ```
 
 **Schema inconsistencies:**
 ```bash
 # Reset and reapply schemas
-make clean-databases
-make apply-schemas
+make clean
+PRIMARY_SCHEMA_PATH=./schema SECONDARY_SCHEMA_PATH=./schema2 make setup
 ```
 
 **Cross-database timing issues:**
@@ -365,52 +519,27 @@ make apply-schemas
 
 **Check database state:**
 ```bash
-# Inspect primary database
-make shell-primary
+# Inspect database configuration
+PRIMARY_SCHEMA_PATH=./schema SECONDARY_SCHEMA_PATH=./schema2 make validate
 
-# Inspect secondary database  
-make shell-secondary
+# View emulator logs
+docker logs spanner-emulator
 ```
 
-**Log database operations:**
+**Validate environment:**
 ```bash
-# Enable connection logging
-DEBUG=spanner make run-scenario SCENARIO=example-02-cross-service
+# Check environment variables
+env | grep -E "(PROJECT_ID|INSTANCE_ID|DB_ID|SCHEMA_PATH)"
+
+# Test database connections
+make validate-scenario SCENARIO=example-01-basic-setup
 ```
 
-## Migration from Single Database
-
-### Automated Migration
-
-Use the update script to add a second database:
-
+**Enable debug output:**
 ```bash
-# Generate new multi-database configuration
-npx spanwright migrate --add-database
-
-# Follow prompts to configure second database
+# Run with debug information
+DEBUG=1 make test-scenario SCENARIO=example-01-basic-setup
 ```
-
-### Manual Migration
-
-1. **Update environment:**
-   - Add secondary database variables to `.env`
-   - Set `DB_COUNT=2`
-
-2. **Create schema directory:**
-   ```bash
-   mkdir -p schemas/secondary-service
-   ```
-
-3. **Update Makefile:**
-   - Add secondary database targets
-   - Update validation commands
-
-4. **Migrate fixtures:**
-   ```bash
-   mkdir -p fixtures/secondary
-   # Move relevant fixtures
-   ```
 
 ## Examples
 
