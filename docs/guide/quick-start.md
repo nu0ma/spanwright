@@ -232,7 +232,7 @@ cp -r scenarios/example-01-basic-setup scenarios/my-new-test
 ## Getting Help
 
 - **Documentation**: [Full guide](https://nu0ma.github.io/spanwright)
-- **Examples**: [Real-world scenarios](./examples/tutorials)  
+- **Examples**: [Real-world scenarios](../examples/tutorials)  
 - **Issues**: [GitHub Issues](https://github.com/nu0ma/spanwright/issues)
 - **Discussions**: [Community support](https://github.com/nu0ma/spanwright/discussions)
 
