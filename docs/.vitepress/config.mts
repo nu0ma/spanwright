@@ -45,7 +45,6 @@ export default defineConfig({
           text: 'Advanced',
           items: [
             { text: 'Multi-Database Setup', link: '/guide/multi-database' },
-            { text: 'CI/CD Integration', link: '/guide/ci-cd' },
             { text: 'Troubleshooting', link: '/guide/troubleshooting' },
           ],
         },
