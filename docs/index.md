@@ -5,9 +5,6 @@ hero:
   name: "Spanwright"
   text: "Cloud Spanner E2E Testing"
   tagline: "Generate comprehensive testing frameworks with Go database tools and Playwright browser automation"
-  image:
-    src: /logo.svg
-    alt: Spanwright
   actions:
     - theme: brand
       text: Get Started
