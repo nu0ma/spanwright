@@ -71,7 +71,7 @@ make help
 make start
 
 # Apply database schemas
-make setup-all
+make setup
 
 # Run all test scenarios
 make run-all-scenarios
