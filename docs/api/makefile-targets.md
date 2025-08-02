@@ -105,7 +105,7 @@ make setup
 
 **Environment Variables:**
 - `PRIMARY_SCHEMA_PATH`: Path to primary database schemas
-- `SECONDARY_SCHEMA_PATH`: Path to secondary database schemas (if `DB_COUNT=2`)
+- `SECONDARY_SCHEMA_PATH`: Path to secondary database schemas (if `DB_COUNT=1`)
 
 ### `make setup-primary`
 Setup only the primary database.
@@ -122,7 +122,7 @@ make setup-primary
 5. Injects seed data from current scenario
 
 ### `make setup-secondary`
-Setup only the secondary database (when `DB_COUNT=2`).
+Setup only the secondary database (when `DB_COUNT=1`).
 
 ```bash
 make setup-secondary
@@ -130,7 +130,7 @@ make setup-secondary
 
 **Process:**
 - Same as `setup-primary` but for secondary database
-- Only runs when `DB_COUNT=2` in environment
+- Only runs when `DB_COUNT=1` in environment
 
 ## Testing
 
@@ -207,7 +207,7 @@ make validate-scenario SCENARIO=example-01-basic-setup
 
 **Files Required:**
 - `scenarios/{SCENARIO}/expected-primary.yaml`
-- `scenarios/{SCENARIO}/expected-secondary.yaml` (when `DB_COUNT=2`)
+- `scenarios/{SCENARIO}/expected-secondary.yaml` (when `DB_COUNT=1`)
 
 ### `make validate-db`
 Alias for `validate-scenario` using current environment.
@@ -253,7 +253,7 @@ make validate
 **Checks:**
 - `.env` file exists
 - `PRIMARY_SCHEMA_PATH` is set and directory exists
-- `SECONDARY_SCHEMA_PATH` validation (when `DB_COUNT=2`)
+- `SECONDARY_SCHEMA_PATH` validation (when `DB_COUNT=1`)
 
 ### `make build`
 Build Go tools manually.
@@ -279,7 +279,7 @@ scenarios/my-new-test/
 ├── fixtures/
 ├── tests/
 ├── expected-primary.yaml
-└── expected-secondary.yaml  # if DB_COUNT=2
+└── expected-secondary.yaml  # if DB_COUNT=1
 ```
 
 ### `make dev`
@@ -304,7 +304,7 @@ make dev
 | `INSTANCE_ID` | `test-instance` | Spanner instance ID |
 | `PRIMARY_DB_ID` | `primary-db` | Primary database ID |
 | `SECONDARY_DB_ID` | `secondary-db` | Secondary database ID |
-| `DB_COUNT` | `2` | Number of databases (1 or 2) |
+| `DB_COUNT=1) |
 | `SCENARIO` | `example-01-basic-setup` | Default scenario name |
 
 ### Docker Configuration

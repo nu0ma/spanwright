@@ -100,7 +100,7 @@ export PATH=$PATH:$(go env GOPATH)/bin
 
 **Symptom:**
 ```
-❌ SPANWRIGHT_DB_COUNT must be 1 or 2
+❌ SPANWRIGHT_DB_COUNT=1
 ```
 
 **Solution:**

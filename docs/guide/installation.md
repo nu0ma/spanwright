@@ -11,7 +11,7 @@ Spanwright requires several external tools to function properly. Follow this gui
 - **Operating System**: macOS, Linux, or Windows (with WSL2)
 - **Node.js**: 22.0.0 or higher
 - **Docker**: For running Cloud Spanner emulator
-- **Go**: 1.23.0 or higher (for database tools)
+- **Go**: 1.24.5 or higher (for database tools)
 - **Git**: For version control
 
 ### Node.js Installation
@@ -90,8 +90,8 @@ brew install go
 **Linux:**
 ```bash
 # Download and install
-wget https://go.dev/dl/go1.23.0.linux-amd64.tar.gz
-sudo tar -C /usr/local -xzf go1.23.0.linux-amd64.tar.gz
+wget https://go.dev/dl/go1.24.5.linux-amd64.tar.gz
+sudo tar -C /usr/local -xzf go1.24.5.linux-amd64.tar.gz
 
 # Add to PATH in ~/.bashrc or ~/.zshrc
 export PATH=$PATH:/usr/local/go/bin
@@ -102,7 +102,7 @@ Download installer from [go.dev](https://go.dev/dl/)
 
 **Verify installation:**
 ```bash
-go version  # Should show go1.23.0 or higher
+go version  # Should show go1.24.5 or higher
 ```
 
 ### Required Go Tools
@@ -239,7 +239,7 @@ After installing all prerequisites, verify your setup:
 node --version    # >= 22.0.0
 npm --version     # >= 10.0.0
 docker --version  # Any recent version
-go version        # >= 1.23.0
+go version        # >= 1.24.5
 wrench --version  # Latest
 spalidate --version # Latest
 

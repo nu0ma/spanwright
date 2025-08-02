@@ -24,7 +24,7 @@ Before contributing, ensure you have the following tools installed:
 
 - **Node.js** >= 22.0.0
 - **Docker** (for Spanner emulator)
-- **Go** >= 1.23.0 (for testing generated projects)
+- **Go** >= 1.24.5 (for testing generated projects)
 - **wrench** (Spanner migration tool): `go install github.com/cloudspannerecosystem/wrench@latest`
 - **spalidate** (Database validation): Install from [github.com/nu0ma/spalidate](https://github.com/nu0ma/spalidate)
 

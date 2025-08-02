@@ -67,7 +67,7 @@ make migrate-primary
 make migrate-secondary
 
 # Apply to all databases
-make setup-all
+make setup
 ```
 
 ### Reset Database
@@ -125,7 +125,7 @@ make start
 Schemas are automatically applied during test setup:
 
 1. `make start` - Starts Spanner emulator
-2. `make setup-all` - Applies all schemas
+2. `make setup` - Applies all schemas
 3. Test scenarios run with fresh schema state
 
 See [Writing Tests](./writing-tests) for test-specific schema considerations.

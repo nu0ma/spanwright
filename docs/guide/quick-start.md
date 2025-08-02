@@ -7,7 +7,7 @@ Get up and running with Spanwright in 5 minutes. This guide will walk you throug
 Make sure you have the [prerequisites installed](./installation):
 - Node.js 22.0.0+
 - Docker  
-- Go 1.23.0+
+- Go 1.24.5+
 - wrench CLI tool
 - spalidate CLI tool
 
@@ -80,7 +80,7 @@ This starts the Cloud Spanner emulator in Docker. You should see:
 ## Step 5: Apply Database Schema
 
 ```bash
-make setup-all
+make setup
 ```
 
 This applies your database schemas using wrench migrations:
@@ -179,7 +179,7 @@ Now that your project is set up, here are the most useful commands:
 ```bash
 # Project lifecycle
 make start                    # Start Spanner emulator
-make setup-all               # Apply database schemas
+make setup               # Apply database schemas
 make clean                   # Clean up containers and build artifacts
 
 # Testing
@@ -213,7 +213,7 @@ make help                    # Show all available commands
 ```bash
 # Create a new migration
 echo "CREATE TABLE Products (...)" > schema/002_products.sql
-make setup-all
+make setup
 ```
 
 **Create a New Test Scenario:**

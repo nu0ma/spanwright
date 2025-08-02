@@ -94,7 +94,7 @@ PRIMARY_SCHEMA_PATH=./schema
 Directory containing secondary database schema files.
 
 ```bash
-SECONDARY_SCHEMA_PATH=./secondary-schema
+SECONDARY_SCHEMA_PATH=./schema2-schema
 ```
 
 **Required:** Only when `DB_COUNT=2`
@@ -112,7 +112,7 @@ When you run `npx spanwright project-name`, you'll be prompted for:
 ? Primary database name: (primary-db)
 ? Primary database schema path: (./schema)
 ? Secondary database name: (secondary-db)        # Only if count=2
-? Secondary database schema path: (./secondary)  # Only if count=2
+? Secondary database schema path: (./schema2)  # Only if count=2
 ```
 
 ### Non-Interactive Mode
@@ -143,7 +143,7 @@ npx spanwright my-project --non-interactive
 
 | Variable | Description | Valid Values |
 |----------|-------------|--------------|
-| `SPANWRIGHT_DB_COUNT` | Database count | `1`, `2` |
+| `SPANWRIGHT_DB_COUNT=1` |
 | `SPANWRIGHT_PRIMARY_DB_NAME` | Primary DB name | Alphanumeric + hyphens/underscores |
 | `SPANWRIGHT_PRIMARY_SCHEMA_PATH` | Primary schema directory | Valid directory path |
 | `SPANWRIGHT_SECONDARY_DB_NAME` | Secondary DB name | Alphanumeric + hyphens/underscores |
@@ -176,11 +176,12 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   
-  // Browser projects
+  // Browser projects (default template includes only chromium)
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+    // Additional browsers can be enabled:
+    // { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+    // { name: 'webkit', use: { ...devices['Desktop Safari'] } },
   ],
 });
 ```
@@ -221,12 +222,16 @@ Generated Go module configuration:
 ```go
 module spanwright-project
 
-go 1.23
+go 1.24.5
+
+toolchain go1.24.5
 
 require (
-    cloud.google.com/go/spanner v1.68.0
-    github.com/go-testfixtures/testfixtures/v3 v3.12.0
-    github.com/lib/pq v1.10.9
+    cloud.google.com/go/spanner v1.82.0
+    github.com/go-testfixtures/testfixtures/v3 v3.16.0
+    github.com/googleapis/go-sql-spanner v1.7.0
+    github.com/joho/godotenv v1.5.1
+    google.golang.org/api v0.239.0
 )
 ```
 
@@ -398,7 +403,7 @@ make validate  # Checks configuration
 
 **❌ Invalid database count**
 ```bash
-# Error: SPANWRIGHT_DB_COUNT must be 1 or 2
+# Error: SPANWRIGHT_DB_COUNT=1
 export SPANWRIGHT_DB_COUNT=1  # Fix
 ```
 

@@ -26,7 +26,7 @@ Create a new project with dual database configuration:
 
 ```bash
 # Set up environment for dual databases
-export SPANWRIGHT_DB_COUNT=2
+export SPANWRIGHT_DB_COUNT=1
 export SPANWRIGHT_PRIMARY_DB_NAME=user-service-db
 export SPANWRIGHT_PRIMARY_SCHEMA_PATH=./schemas/users
 export SPANWRIGHT_SECONDARY_DB_NAME=product-service-db
@@ -596,7 +596,7 @@ make test-report
 
 ```
 🚀 Running all scenarios...
-📋 Environment: PROJECT_ID=test-project, INSTANCE_ID=test-instance, DB_COUNT=2
+📋 Environment: PROJECT_ID=test-project, INSTANCE_ID=test-instance, DB_COUNT=1
 
 🏗️ Setting up databases...
 ✅ Database setup complete
