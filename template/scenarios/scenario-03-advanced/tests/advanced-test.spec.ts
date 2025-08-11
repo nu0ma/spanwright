@@ -15,12 +15,12 @@ test.describe('scenario-03-advanced', () => {
   test('Comprehensive Database Validation', async () => {
     const dbConfig = getDatabaseConfig();
     
-    const primaryValid = validateDatabaseState('scenario-03-advanced', 'primary', dbConfig.primaryDbId);
+    const primaryValid = validateDatabaseState('primary', dbConfig.primaryDbId);
     expect(primaryValid).toBe(true);
     
     const dbCount = parseInt(process.env.DB_COUNT || '2');
     if (dbCount === 2) {
-      const secondaryValid = validateDatabaseState('scenario-03-advanced', 'secondary', dbConfig.secondaryDbId);
+      const secondaryValid = validateDatabaseState('secondary', dbConfig.secondaryDbId);
       expect(secondaryValid).toBe(true);
     }
   });

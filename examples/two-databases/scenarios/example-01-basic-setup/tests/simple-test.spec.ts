@@ -21,6 +21,7 @@ test.describe('Simple Basic Test', () => {
   test('Database Validation Test', async () => {
     const dbConfig = getDatabaseConfig();
 
+    // Use the environment variable database IDs instead of process-specific ones
     const validation1 = validateDatabaseState('example-01-basic-setup', 'primary');
     expect(validation1).toBe(true);
 
