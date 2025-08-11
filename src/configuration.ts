@@ -96,11 +96,6 @@ async function getInteractiveConfiguration(): Promise<DatabaseConfig> {
 
     validateSchemaPath(primarySchemaPath, 'Primary schema path');
 
-    // Show portability warning for absolute paths
-    if (primarySchemaPath.startsWith('/')) {
-      console.log('⚠️  Using absolute path. Consider using relative paths for better portability.');
-    }
-
     const config: DatabaseConfig = {
       count: dbCount as '1' | '2',
       primaryDbName,
@@ -119,13 +114,6 @@ async function getInteractiveConfiguration(): Promise<DatabaseConfig> {
       const secondarySchemaPath = sanitizeInput(secondarySchemaPathInput);
 
       validateSchemaPath(secondarySchemaPath, 'Secondary schema path');
-
-      // Show portability warning for absolute paths
-      if (secondarySchemaPath.startsWith('/')) {
-        console.log(
-          '⚠️  Using absolute path. Consider using relative paths for better portability.'
-        );
-      }
 
       config.secondaryDbName = secondaryDbName;
       config.secondarySchemaPath = secondarySchemaPath;
