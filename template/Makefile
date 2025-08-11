@@ -18,6 +18,22 @@ DOCKER_SPANNER_PORT ?= 9010
 
 .PHONY: help init clean clean-databases start stop setup run-all test-e2e
 
+wait_for_spanner: ## Wait for Spanner emulator to be ready
+	@max_attempts=30; \
+	attempt=0; \
+	echo "⏳ Waiting for Spanner emulator to be ready..."; \
+	while [ $$attempt -lt $$max_attempts ]; do \
+		if nc -z localhost $(DOCKER_SPANNER_PORT) 2>/dev/null; then \
+			echo "✅ Spanner emulator port is ready!"; \
+			sleep 2; \
+			exit 0; \
+		fi; \
+		attempt=$$((attempt + 1)); \
+		sleep 1; \
+	done; \
+	echo "❌ Timeout waiting for Spanner emulator"; \
+	exit 1
+
 help: ## Show this help
 	@echo "Spanwright E2E Testing Framework"
 	@echo "================================"
@@ -56,8 +72,7 @@ start: ## Start Spanner emulator
 		docker rm $(DOCKER_CONTAINER_NAME) >/dev/null 2>&1 || true; \
 	fi
 	@docker run -d --name $(DOCKER_CONTAINER_NAME) -p $(DOCKER_SPANNER_PORT):9010 $(DOCKER_IMAGE) >/dev/null
-	@echo "⏳ Waiting for emulator to be ready..."
-	@sleep 15
+	@$(MAKE) wait_for_spanner
 	@echo "🔍 Verifying emulator status..."
 	@if ! docker ps | grep -q $(DOCKER_CONTAINER_NAME); then echo "❌ Emulator container not running"; exit 1; fi
 	@echo "✅ Spanner emulator ready on localhost:$(DOCKER_SPANNER_PORT)"

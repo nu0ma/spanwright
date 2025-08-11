@@ -12,7 +12,7 @@ test.describe('scenario-03-advanced', () => {
 
   test('Advanced Page Test with Complex Interactions', async ({ page }) => {
     // Advanced page test with complex user flows
-    await page.goto('https://example.com');
+    await page.goto('http://example.com');
     await expect(page).toHaveTitle(/Example/);
     
     // Advanced test steps that might involve multiple pages
@@ -46,7 +46,7 @@ test.describe('scenario-03-advanced', () => {
     // Advanced test simulating performance scenarios
     const startTime = Date.now();
     
-    await page.goto('https://example.com');
+    await page.goto('http://example.com');
     await page.waitForLoadState('networkidle');
     
     const loadTime = Date.now() - startTime;
