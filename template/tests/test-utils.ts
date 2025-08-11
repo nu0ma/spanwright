@@ -53,19 +53,21 @@ export function mockValidateDatabase(databaseId: string): ValidationResult[] {
 // Real spalidate validation
 export function validateDatabaseState(scenario: string, database: 'primary' | 'secondary', databaseId?: string): boolean {
   const validationFile = path.join(process.cwd(), 'scenarios', scenario, `expected-${database}.yaml`);
+  const config   = {
+    projectId: process.env.PROJECT_ID || 'test-project',
+    instanceId: process.env.INSTANCE_ID || 'test-instance',
+    databaseId: databaseId || (database === 'primary' 
+      ? process.env.PRIMARY_DB_ID || 'primary-db'
+      : process.env.SECONDARY_DB_ID || 'secondary-db'),
+    emulatorHost: process.env.SPANNER_EMULATOR_HOST || 'localhost:9010'
+  }
   
   if (!existsSync(validationFile)) {
     console.log(`⚠️ No validation file found: ${validationFile}`);
     return true; // Skip validation if file doesn't exist
   }
 
-  const projectId = process.env.PROJECT_ID || 'test-project';
-  const instanceId = process.env.INSTANCE_ID || 'test-instance';
-  const targetDatabaseId = databaseId || (database === 'primary' 
-    ? process.env.PRIMARY_DB_ID || 'primary-db'
-    : process.env.SECONDARY_DB_ID || 'secondary-db');
-
-  const emulatorHost = process.env.SPANNER_EMULATOR_HOST || 'localhost:9010';
+  const { projectId, instanceId, databaseId: targetDatabaseId, emulatorHost } = config;
   
   console.log(`🔍 Validating ${database} database:`, {
     project: projectId,
