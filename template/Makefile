@@ -99,7 +99,7 @@ setup-primary: ## Setup primary database
 	@echo "🔧 Setting up Go modules..."
 	@go mod tidy >/dev/null 2>&1
 	@echo "🌱 Seeding primary database..."
-	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) go run cmd/seed-injector/main.go --database-id $(PRIMARY_DB_ID) --fixture-dir "$$(pwd)/scenarios/$(SCENARIO)/fixtures/\$(PRIMARY_DB_ID)" || { echo "❌ Failed to seed primary database"; exit 1; }
+	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) go run cmd/seed-injector/main.go --database-id $(PRIMARY_DB_ID) --fixture-dir "$$(pwd)/scenarios/$(SCENARIO)/fixtures/primary" || { echo "❌ Failed to seed primary database"; exit 1; }
 	@echo "✅ Primary database ready"
 
 setup-secondary: ## Setup secondary database
@@ -118,7 +118,7 @@ setup-secondary: ## Setup secondary database
 	@echo "🔧 Setting up Go modules..."
 	@go mod tidy >/dev/null 2>&1
 	@echo "🌱 Seeding secondary database..."
-	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) go run cmd/seed-injector/main.go --database-id $(SECONDARY_DB_ID) --fixture-dir "$$(pwd)/scenarios/$(SCENARIO)/fixtures/$(SECONDARY_DB_ID)" || { echo "❌ Failed to seed secondary database"; exit 1; }
+	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) go run cmd/seed-injector/main.go --database-id $(SECONDARY_DB_ID) --fixture-dir "$$(pwd)/scenarios/$(SCENARIO)/fixtures/secondary" || { echo "❌ Failed to seed secondary database"; exit 1; }
 	@echo "✅ Secondary database ready"
 
 test-scenario: ## Run specific scenario test  
