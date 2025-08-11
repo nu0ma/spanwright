@@ -252,6 +252,76 @@ export function processTemplateFiles(projectPath: string, projectName: string): 
   }
 }
 
+export function renameFixtureDirectories(
+  projectPath: string,
+  primaryDbName: string,
+  secondaryDbName?: string
+): void {
+  // Only validate relative paths to avoid issues with absolute paths in tests
+  if (!path.isAbsolute(projectPath)) {
+    validatePath(process.cwd(), projectPath, 'renameFixtureDirectories');
+  }
+
+  // Find all scenario directories
+  const scenariosPath = path.join(projectPath, 'scenarios');
+  if (!safeFileExists(scenariosPath)) {
+    return;
+  }
+
+  try {
+    const scenarioFolders = fs.readdirSync(scenariosPath);
+
+    for (const scenarioFolder of scenarioFolders) {
+      const scenarioPath = path.join(scenariosPath, scenarioFolder);
+      const fixturesPath = path.join(scenarioPath, 'fixtures');
+
+      if (!safeFileExists(fixturesPath)) {
+        continue;
+      }
+
+      // Rename primary fixture directory
+      const oldPrimaryPath = path.join(fixturesPath, 'primary-db');
+      const newPrimaryPath = path.join(fixturesPath, primaryDbName);
+
+      if (safeFileExists(oldPrimaryPath) && oldPrimaryPath !== newPrimaryPath) {
+        try {
+          safeFileRename(oldPrimaryPath, newPrimaryPath);
+        } catch (error) {
+          // Continue if rename fails - might already be renamed or not exist
+          if (!(error instanceof FileSystemError)) {
+            throw error;
+          }
+        }
+      }
+
+      // Rename secondary fixture directory if provided
+      if (secondaryDbName) {
+        const oldSecondaryPath = path.join(fixturesPath, 'secondary-db');
+        const newSecondaryPath = path.join(fixturesPath, secondaryDbName);
+
+        if (safeFileExists(oldSecondaryPath) && oldSecondaryPath !== newSecondaryPath) {
+          try {
+            safeFileRename(oldSecondaryPath, newSecondaryPath);
+          } catch (error) {
+            // Continue if rename fails
+            if (!(error instanceof FileSystemError)) {
+              throw error;
+            }
+          }
+        }
+      }
+    }
+  } catch (error) {
+    if (error instanceof Error && error.name === 'SecurityError') {
+      throw error;
+    }
+    throw new FileSystemError(
+      `Failed to rename fixture directories in ${scenariosPath}`,
+      scenariosPath
+    );
+  }
+}
+
 export function replaceProjectNameInGoFiles(projectPath: string, projectName: string): void {
   // Only validate relative paths to avoid issues with absolute paths in tests
   if (!path.isAbsolute(projectPath)) {
