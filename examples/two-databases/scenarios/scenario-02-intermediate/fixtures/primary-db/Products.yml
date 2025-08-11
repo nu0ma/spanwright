@@ -1,0 +1,6 @@
+# Minimal Products fixture for testfixtures
+- ProductID: "product-002"
+  Name: "Intermediate Test Product"
+  Price: 2500
+  CategoryID: "category-002"
+  IsActive: true

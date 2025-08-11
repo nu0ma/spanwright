@@ -16,7 +16,23 @@ DOCKER_IMAGE ?= gcr.io/cloud-spanner-emulator/emulator
 DOCKER_CONTAINER_NAME ?= spanner-emulator
 DOCKER_SPANNER_PORT ?= 9010
 
-.PHONY: help init clean start stop setup run-all test-e2e
+.PHONY: help init clean clean-databases start stop setup run-all test-e2e
+
+wait_for_spanner: ## Wait for Spanner emulator to be ready
+	@max_attempts=30; \
+	attempt=0; \
+	echo "⏳ Waiting for Spanner emulator to be ready..."; \
+	while [ $$attempt -lt $$max_attempts ]; do \
+		if nc -z localhost $(DOCKER_SPANNER_PORT) 2>/dev/null; then \
+			echo "✅ Spanner emulator port is ready!"; \
+			sleep 2; \
+			exit 0; \
+		fi; \
+		attempt=$$((attempt + 1)); \
+		sleep 1; \
+	done; \
+	echo "❌ Timeout waiting for Spanner emulator"; \
+	exit 1
 
 help: ## Show this help
 	@echo "Spanwright E2E Testing Framework"
@@ -56,8 +72,7 @@ start: ## Start Spanner emulator
 		docker rm $(DOCKER_CONTAINER_NAME) >/dev/null 2>&1 || true; \
 	fi
 	@docker run -d --name $(DOCKER_CONTAINER_NAME) -p $(DOCKER_SPANNER_PORT):9010 $(DOCKER_IMAGE) >/dev/null
-	@echo "⏳ Waiting for emulator to be ready..."
-	@sleep 15
+	@$(MAKE) wait_for_spanner
 	@echo "🔍 Verifying emulator status..."
 	@if ! docker ps | grep -q $(DOCKER_CONTAINER_NAME); then echo "❌ Emulator container not running"; exit 1; fi
 	@echo "✅ Spanner emulator ready on localhost:$(DOCKER_SPANNER_PORT)"
@@ -71,6 +86,16 @@ clean: ## Clean up containers and artifacts
 	@$(MAKE) stop
 	@echo "🧹 Cleaning build artifacts..."
 	@rm -rf test-results/ playwright-report/
+
+clean-databases: ## Clean/reset databases for fresh scenario runs
+	@echo "🧹 Truncating databases for fresh scenario execution..."
+	@echo "🔄 Truncating primary database $(PRIMARY_DB_ID)..."
+	@SPANNER_PROJECT_ID=$(PROJECT_ID) SPANNER_INSTANCE_ID=$(INSTANCE_ID) SPANNER_DATABASE_ID=$(PRIMARY_DB_ID) SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench truncate
+ifeq ($(DB_COUNT),2)
+	@echo "🔄 Truncating secondary database $(SECONDARY_DB_ID)..."
+	@SPANNER_PROJECT_ID=$(PROJECT_ID) SPANNER_INSTANCE_ID=$(INSTANCE_ID) SPANNER_DATABASE_ID=$(SECONDARY_DB_ID) SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench truncate
+endif
+	@echo "✅ Database reset completed"
 
 setup: ## Setup databases and schemas
 	@echo "🏗️ Setting up databases..."
@@ -122,10 +147,10 @@ setup-secondary: ## Setup secondary database
 	@echo "✅ Secondary database ready"
 
 test-scenario: ## Run specific scenario test  
-	@echo "🧪 Running scenario: $(SCENARIO)"
-	@echo "🔍 Verifying emulator status before tests..."
+	@echo "Running scenario: $(SCENARIO)"
+	@echo "Verifying emulator status before tests..."
 	@if ! docker ps | grep -q $(DOCKER_CONTAINER_NAME); then echo "❌ Emulator not running"; exit 1; fi
-	@echo "🎭 Starting Playwright tests..."
+	@echo "Starting Playwright tests..."
 	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) \
 	PROJECT_ID=$(PROJECT_ID) \
 	INSTANCE_ID=$(INSTANCE_ID) \
@@ -139,21 +164,45 @@ run-all: run-all-scenarios ## Alias for run-all-scenarios
 run-all-scenarios: ## Run all scenarios
 	@echo "🚀 Running all scenarios..."
 	@echo "📋 Environment: PROJECT_ID=$(PROJECT_ID), INSTANCE_ID=$(INSTANCE_ID), DB_COUNT=$(DB_COUNT)"
-	@$(MAKE) setup
 	@scenarios=$$(ls scenarios/ | grep -E '^(scenario|example)-'); \
 	if [ -z "$$scenarios" ]; then \
 		echo "❌ No scenarios found in scenarios/ directory"; \
 		exit 1; \
 	fi; \
 	echo "📝 Found scenarios: $$scenarios"; \
+	echo ""; \
+	passed=0; \
+	failed=0; \
+	total=0; \
 	for scenario in $$scenarios; do \
-		echo "▶️ Running $$scenario"; \
-		SCENARIO=$$scenario $(MAKE) test-scenario || { echo "❌ Failed running scenario $$scenario"; exit 1; }; \
-		echo "🔍 Validating $$scenario database state..."; \
-		SCENARIO=$$scenario $(MAKE) validate-scenario || { echo "❌ Failed validating scenario $$scenario"; exit 1; }; \
-		echo "✅ Scenario $$scenario completed successfully"; \
-	done
-	@echo "✅ All scenarios completed"
+		total=$$((total + 1)); \
+		echo "═══════════════════════════════════════════════════════════"; \
+		echo "🧪 SCENARIO: $$scenario"; \
+		echo "═══════════════════════════════════════════════════════════"; \
+		if SCENARIO=$$scenario $(MAKE) setup > /dev/null 2>&1 && \
+		   SCENARIO=$$scenario $(MAKE) test-scenario && \
+		   SCENARIO=$$scenario $(MAKE) validate-scenario && \
+		   $(MAKE) clean-databases > /dev/null 2>&1; then \
+			echo "✅ $$scenario: PASSED"; \
+			passed=$$((passed + 1)); \
+		else \
+			echo "❌ $$scenario: FAILED"; \
+			failed=$$((failed + 1)); \
+		fi; \
+		echo ""; \
+	done; \
+	echo "═══════════════════════════════════════════════════════════"; \
+	echo "📊 TEST RESULTS SUMMARY"; \
+	echo "═══════════════════════════════════════════════════════════"; \
+	echo "Total:  $$total scenarios"; \
+	echo "Passed: $$passed scenarios"; \
+	echo "Failed: $$failed scenarios"; \
+	if [ $$failed -gt 0 ]; then \
+		echo "❌ Some scenarios failed"; \
+		exit 1; \
+	else \
+		echo "✅ All scenarios passed"; \
+	fi
 
 test-e2e: ## Run Playwright E2E tests
 	@npx playwright test

@@ -1,0 +1,7 @@
+# Minimal UserLogs fixture for testfixtures
+- LogID: "log-002"
+  UserID: "user-002"
+  Action: "login"
+  IpAddress: "192.168.2.100"
+  UserAgent: "Intermediate Test Agent"
+  CreatedAt: "2024-01-01T00:00:00Z"
