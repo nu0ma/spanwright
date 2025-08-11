@@ -18,6 +18,7 @@ import {
   replaceProjectNameInGoFiles,
   removeSecondaryDbFiles,
   writeFileContent,
+  renameFixtureDirectories,
 } from './file-operations';
 
 async function createProject(): Promise<void> {
@@ -60,6 +61,10 @@ async function createProject(): Promise<void> {
 
     // Process template files
     processTemplateFiles(projectPath, projectName);
+
+    // Rename fixture directories to match database names
+    const secondaryDbName = config.count === '2' ? config.secondaryDbName : undefined;
+    renameFixtureDirectories(projectPath, config.primaryDbName, secondaryDbName);
 
     // Replace PROJECT_NAME in Go files
     console.log(MESSAGES.INFO.CONFIGURING_GO);
