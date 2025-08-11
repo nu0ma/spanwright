@@ -1,0 +1,14 @@
+- table: UserLogs
+  records:
+    - LogID: log-002
+      UserID: user-002
+      Action: login
+      Timestamp: "2024-06-01T10:15:00.000Z"
+      IPAddress: "192.168.2.100"
+      UserAgent: "Intermediate Test Agent"
+    - LogID: log-003
+      UserID: user-003
+      Action: view_product
+      Timestamp: "2024-06-01T11:30:00.000Z"
+      IPAddress: "192.168.2.101"
+      UserAgent: "Another Test Agent"

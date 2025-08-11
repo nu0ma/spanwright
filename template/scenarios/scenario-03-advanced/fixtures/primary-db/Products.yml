@@ -1,0 +1,23 @@
+- table: Products
+  records:
+    - ProductID: product-004
+      Name: Advanced Test Product
+      Price: 10000
+      CategoryID: category-003
+      IsActive: true
+      CreatedAt: "2024-07-01T10:00:00.000Z"
+      UpdatedAt: "2024-07-01T10:00:00.000Z"
+    - ProductID: product-005
+      Name: Enterprise Product
+      Price: 25000
+      CategoryID: category-003
+      IsActive: true
+      CreatedAt: "2024-07-01T11:00:00.000Z"
+      UpdatedAt: "2024-07-01T11:00:00.000Z"
+    - ProductID: product-006
+      Name: Luxury Product
+      Price: 50000
+      CategoryID: category-004
+      IsActive: true
+      CreatedAt: "2024-07-01T12:00:00.000Z"
+      UpdatedAt: "2024-07-01T12:00:00.000Z"

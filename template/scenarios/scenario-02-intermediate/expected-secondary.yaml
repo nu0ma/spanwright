@@ -1,0 +1,19 @@
+# Spalidate validation configuration for secondary database - Scenario 02 (Intermediate)
+# Expected state after intermediate scenario data seeding
+
+tables:
+  UserLogs:
+    count: 2
+    columns:
+      LogID: "log-002"
+      UserID: "user-002"
+      Action: "login"
+      IPAddress: "192.168.2.100"
+      UserAgent: "Intermediate Test Agent"
+  
+  Analytics:
+    count: 2
+    columns:
+      AnalyticsID: "analytics-002"
+      UserID: "user-002"
+      EventType: "page_view"

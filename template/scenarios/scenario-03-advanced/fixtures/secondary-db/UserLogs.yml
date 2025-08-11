@@ -1,0 +1,20 @@
+- table: UserLogs
+  records:
+    - LogID: log-004
+      UserID: user-004
+      Action: login
+      Timestamp: "2024-07-01T10:15:00.000Z"
+      IPAddress: "192.168.3.100"
+      UserAgent: "Advanced Test Agent"
+    - LogID: log-005
+      UserID: user-005
+      Action: purchase
+      Timestamp: "2024-07-01T11:30:00.000Z"
+      IPAddress: "192.168.3.101"
+      UserAgent: "Premium Test Agent"
+    - LogID: log-006
+      UserID: user-006
+      Action: bulk_operation
+      Timestamp: "2024-07-01T12:45:00.000Z"
+      IPAddress: "192.168.3.102"
+      UserAgent: "Enterprise Test Agent"

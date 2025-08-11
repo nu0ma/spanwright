@@ -1,0 +1,20 @@
+# Spalidate validation configuration for primary database - Scenario 03 (Advanced)
+# Expected state after advanced scenario data seeding with multiple complex records
+
+tables:
+  Users:
+    count: 3
+    columns:
+      UserID: "user-004"
+      Name: "Advanced Test User"
+      Email: "advanced-user@example.com"
+      Status: 1
+  
+  Products:
+    count: 3
+    columns:
+      ProductID: "product-004"
+      Name: "Advanced Test Product"
+      Price: 10000
+      CategoryID: "category-003"
+      IsActive: true
