@@ -4,29 +4,23 @@ import { validateDatabaseState } from '../../../tests/test-utils';
 
 test.describe('Simple Basic Test', () => {
   test.beforeAll(async () => {
-    console.log('🚀 Setting up test environment...');
-
+    console.log(' Setting up test environment...');
     const dbConfig = getDatabaseConfig();
     console.log(
-      `🔧 Process ${dbConfig.processId}: Using databases ${dbConfig.primaryDbId}, ${dbConfig.secondaryDbId}`
+      ` Process ${dbConfig.processId}: Using databases ${dbConfig.primaryDbId}, ${dbConfig.secondaryDbId}`
     );
-
-    // Database setup is already handled by Makefile
-    // No need to run setup here - it would cause container conflicts
-    console.log('✅ Using existing database setup from Makefile');
   });
 
-  test('Basic Page Test', async ({ page }) => {
+  test('Sample Test', async ({ page }) => {
     // Simple page test
-    await page.goto('https://example.com');
+    await page.goto('http://example.com');
     await expect(page).toHaveTitle(/Example/);
     console.log('✅ Basic page test passed');
   });
 
-  test('Database Validation', async () => {
+  test('Database Validation Test', async () => {
     const dbConfig = getDatabaseConfig();
 
-    // Use the environment variable database IDs instead of process-specific ones
     const validation1 = validateDatabaseState('example-01-basic-setup', 'primary');
     expect(validation1).toBe(true);
 
