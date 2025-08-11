@@ -12,7 +12,7 @@ test.describe('example-01-basic-setup', () => {
 
   test('Basic Page Test', async ({ page }) => {
     // Simple page test
-    await page.goto('https://example.com');
+    await page.goto('http://example.com');
     await expect(page).toHaveTitle(/Example/);
     console.log('✅ Basic page test passed');
   });
