@@ -73,20 +73,14 @@ clean: ## Clean up containers and artifacts
 	@rm -rf test-results/ playwright-report/
 
 clean-databases: ## Clean/reset databases for fresh scenario runs
-	@echo "🧹 Cleaning databases for fresh scenario execution..."
-	@echo "🗄️ Attempting to drop primary database $(PRIMARY_DB_ID)..."
-	@SPANNER_PROJECT_ID=$(PROJECT_ID) SPANNER_INSTANCE_ID=$(INSTANCE_ID) SPANNER_DATABASE_ID=$(PRIMARY_DB_ID) SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench drop --force --verbose || echo "  ⚠️  Primary database $(PRIMARY_DB_ID) drop result: $$?"
-	@echo "🗄️ Recreating clean primary database $(PRIMARY_DB_ID)..."
-	@mkdir -p ./tmp && echo "-- Empty schema for clean database creation" > ./tmp/clean_schema.sql
-	@SPANNER_PROJECT_ID=$(PROJECT_ID) SPANNER_INSTANCE_ID=$(INSTANCE_ID) SPANNER_DATABASE_ID=$(PRIMARY_DB_ID) SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench create --directory="$$(pwd)/tmp" --schema_file=clean_schema.sql || echo "  ⚠️  Primary database $(PRIMARY_DB_ID) recreate result: $$?"
+	@echo "🧹 Resetting databases for fresh scenario execution..."
+	@echo "🔄 Resetting primary database $(PRIMARY_DB_ID) with schema from $(PRIMARY_SCHEMA_PATH)..."
+	@SPANNER_PROJECT_ID=$(PROJECT_ID) SPANNER_INSTANCE_ID=$(INSTANCE_ID) SPANNER_DATABASE_ID=$(PRIMARY_DB_ID) SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench reset --directory="$(PRIMARY_SCHEMA_PATH)"
 ifeq ($(DB_COUNT),2)
-	@echo "☁️ Attempting to drop secondary database $(SECONDARY_DB_ID)..."
-	@SPANNER_PROJECT_ID=$(PROJECT_ID) SPANNER_INSTANCE_ID=$(INSTANCE_ID) SPANNER_DATABASE_ID=$(SECONDARY_DB_ID) SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench drop --force --verbose || echo "  ⚠️  Secondary database $(SECONDARY_DB_ID) drop result: $$?"
-	@echo "☁️ Recreating clean secondary database $(SECONDARY_DB_ID)..."
-	@SPANNER_PROJECT_ID=$(PROJECT_ID) SPANNER_INSTANCE_ID=$(INSTANCE_ID) SPANNER_DATABASE_ID=$(SECONDARY_DB_ID) SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench create --directory="$$(pwd)/tmp" --schema_file=clean_schema.sql || echo "  ⚠️  Secondary database $(SECONDARY_DB_ID) recreate result: $$?"
+	@echo "🔄 Resetting secondary database $(SECONDARY_DB_ID) with schema from $(SECONDARY_SCHEMA_PATH)..."
+	@SPANNER_PROJECT_ID=$(PROJECT_ID) SPANNER_INSTANCE_ID=$(INSTANCE_ID) SPANNER_DATABASE_ID=$(SECONDARY_DB_ID) SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench reset --directory="$(SECONDARY_SCHEMA_PATH)"
 endif
-	@rm -f ./tmp/clean_schema.sql
-	@echo "✅ Database cleanup completed"
+	@echo "✅ Database reset completed"
 
 setup: ## Setup databases and schemas
 	@echo "🏗️ Setting up databases..."
