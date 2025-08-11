@@ -51,8 +51,8 @@ export function mockValidateDatabase(databaseId: string): ValidationResult[] {
 }
 
 // Real spalidate validation
-export function validateDatabaseState(scenario: string, database: 'primary' | 'secondary', databaseId?: string): boolean {
-  const validationFile = path.join(process.cwd(), 'scenarios', scenario, `expected-${database}.yaml`);
+export function validateDatabaseState(database: 'primary' | 'secondary', databaseId?: string): boolean {
+  const validationFile = path.join(process.cwd(), `expected-${database}.yaml`);
   const config   = {
     projectId: process.env.PROJECT_ID || 'test-project',
     instanceId: process.env.INSTANCE_ID || 'test-instance',
