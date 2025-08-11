@@ -147,10 +147,10 @@ setup-secondary: ## Setup secondary database
 	@echo "✅ Secondary database ready"
 
 test-scenario: ## Run specific scenario test  
-	@echo "🧪 Running scenario: $(SCENARIO)"
-	@echo "🔍 Verifying emulator status before tests..."
+	@echo "Running scenario: $(SCENARIO)"
+	@echo "Verifying emulator status before tests..."
 	@if ! docker ps | grep -q $(DOCKER_CONTAINER_NAME); then echo "❌ Emulator not running"; exit 1; fi
-	@echo "🎭 Starting Playwright tests..."
+	@echo "Starting Playwright tests..."
 	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) \
 	PROJECT_ID=$(PROJECT_ID) \
 	INSTANCE_ID=$(INSTANCE_ID) \
@@ -170,18 +170,39 @@ run-all-scenarios: ## Run all scenarios
 		exit 1; \
 	fi; \
 	echo "📝 Found scenarios: $$scenarios"; \
+	echo ""; \
+	passed=0; \
+	failed=0; \
+	total=0; \
 	for scenario in $$scenarios; do \
-		echo "▶️ Setting up clean environment for $$scenario"; \
-		SCENARIO=$$scenario $(MAKE) setup; \
-		echo "▶️ Running $$scenario"; \
-		SCENARIO=$$scenario $(MAKE) test-scenario || { echo "❌ Failed running scenario $$scenario"; exit 1; }; \
-		echo "🔍 Validating $$scenario database state..."; \
-		SCENARIO=$$scenario $(MAKE) validate-scenario || { echo "❌ Failed validating scenario $$scenario"; exit 1; }; \
-		echo "🧹 Cleaning up databases after $$scenario"; \
-		$(MAKE) clean-databases; \
-		echo "✅ Scenario $$scenario completed successfully"; \
-	done
-	@echo "✅ All scenarios completed"
+		total=$$((total + 1)); \
+		echo "═══════════════════════════════════════════════════════════"; \
+		echo "🧪 SCENARIO: $$scenario"; \
+		echo "═══════════════════════════════════════════════════════════"; \
+		if SCENARIO=$$scenario $(MAKE) setup > /dev/null 2>&1 && \
+		   SCENARIO=$$scenario $(MAKE) test-scenario && \
+		   SCENARIO=$$scenario $(MAKE) validate-scenario && \
+		   $(MAKE) clean-databases > /dev/null 2>&1; then \
+			echo "✅ $$scenario: PASSED"; \
+			passed=$$((passed + 1)); \
+		else \
+			echo "❌ $$scenario: FAILED"; \
+			failed=$$((failed + 1)); \
+		fi; \
+		echo ""; \
+	done; \
+	echo "═══════════════════════════════════════════════════════════"; \
+	echo "📊 TEST RESULTS SUMMARY"; \
+	echo "═══════════════════════════════════════════════════════════"; \
+	echo "Total:  $$total scenarios"; \
+	echo "Passed: $$passed scenarios"; \
+	echo "Failed: $$failed scenarios"; \
+	if [ $$failed -gt 0 ]; then \
+		echo "❌ Some scenarios failed"; \
+		exit 1; \
+	else \
+		echo "✅ All scenarios passed"; \
+	fi
 
 test-e2e: ## Run Playwright E2E tests
 	@npx playwright test
