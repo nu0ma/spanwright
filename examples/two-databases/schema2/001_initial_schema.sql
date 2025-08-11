@@ -8,7 +8,6 @@ CREATE TABLE UserLogs (
   CreatedAt TIMESTAMP NOT NULL,
   IpAddress STRING(MAX),
   UserAgent STRING(MAX),
-  IPAddress STRING(MAX),
 ) PRIMARY KEY (LogID);
 
 CREATE TABLE Analytics (
