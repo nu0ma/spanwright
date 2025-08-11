@@ -252,7 +252,11 @@ export function processTemplateFiles(projectPath: string, projectName: string): 
   }
 }
 
-export function renameFixtureDirectories(projectPath: string, primaryDbName: string, secondaryDbName?: string): void {
+export function renameFixtureDirectories(
+  projectPath: string,
+  primaryDbName: string,
+  secondaryDbName?: string
+): void {
   // Only validate relative paths to avoid issues with absolute paths in tests
   if (!path.isAbsolute(projectPath)) {
     validatePath(process.cwd(), projectPath, 'renameFixtureDirectories');
@@ -266,11 +270,11 @@ export function renameFixtureDirectories(projectPath: string, primaryDbName: str
 
   try {
     const scenarioFolders = fs.readdirSync(scenariosPath);
-    
+
     for (const scenarioFolder of scenarioFolders) {
       const scenarioPath = path.join(scenariosPath, scenarioFolder);
       const fixturesPath = path.join(scenarioPath, 'fixtures');
-      
+
       if (!safeFileExists(fixturesPath)) {
         continue;
       }
@@ -278,7 +282,7 @@ export function renameFixtureDirectories(projectPath: string, primaryDbName: str
       // Rename primary fixture directory
       const oldPrimaryPath = path.join(fixturesPath, 'primary-db');
       const newPrimaryPath = path.join(fixturesPath, primaryDbName);
-      
+
       if (safeFileExists(oldPrimaryPath) && oldPrimaryPath !== newPrimaryPath) {
         try {
           safeFileRename(oldPrimaryPath, newPrimaryPath);
@@ -294,7 +298,7 @@ export function renameFixtureDirectories(projectPath: string, primaryDbName: str
       if (secondaryDbName) {
         const oldSecondaryPath = path.join(fixturesPath, 'secondary-db');
         const newSecondaryPath = path.join(fixturesPath, secondaryDbName);
-        
+
         if (safeFileExists(oldSecondaryPath) && oldSecondaryPath !== newSecondaryPath) {
           try {
             safeFileRename(oldSecondaryPath, newSecondaryPath);
@@ -311,7 +315,10 @@ export function renameFixtureDirectories(projectPath: string, primaryDbName: str
     if (error instanceof Error && error.name === 'SecurityError') {
       throw error;
     }
-    throw new FileSystemError(`Failed to rename fixture directories in ${scenariosPath}`, scenariosPath);
+    throw new FileSystemError(
+      `Failed to rename fixture directories in ${scenariosPath}`,
+      scenariosPath
+    );
   }
 }
 
