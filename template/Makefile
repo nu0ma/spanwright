@@ -73,12 +73,12 @@ clean: ## Clean up containers and artifacts
 	@rm -rf test-results/ playwright-report/
 
 clean-databases: ## Clean/reset databases for fresh scenario runs
-	@echo "🧹 Resetting databases for fresh scenario execution..."
-	@echo "🔄 Resetting primary database $(PRIMARY_DB_ID)..."
-	@SPANNER_PROJECT_ID=$(PROJECT_ID) SPANNER_INSTANCE_ID=$(INSTANCE_ID) SPANNER_DATABASE_ID=$(PRIMARY_DB_ID) SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench drop
+	@echo "🧹 Truncating databases for fresh scenario execution..."
+	@echo "🔄 Truncating primary database $(PRIMARY_DB_ID)..."
+	@SPANNER_PROJECT_ID=$(PROJECT_ID) SPANNER_INSTANCE_ID=$(INSTANCE_ID) SPANNER_DATABASE_ID=$(PRIMARY_DB_ID) SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench truncate
 ifeq ($(DB_COUNT),2)
-	@echo "🔄 Resetting secondary database $(SECONDARY_DB_ID)..."
-	@SPANNER_PROJECT_ID=$(PROJECT_ID) SPANNER_INSTANCE_ID=$(INSTANCE_ID) SPANNER_DATABASE_ID=$(SECONDARY_DB_ID) SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench drop
+	@echo "🔄 Truncating secondary database $(SECONDARY_DB_ID)..."
+	@SPANNER_PROJECT_ID=$(PROJECT_ID) SPANNER_INSTANCE_ID=$(INSTANCE_ID) SPANNER_DATABASE_ID=$(SECONDARY_DB_ID) SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench truncate
 endif
 	@echo "✅ Database reset completed"
 
