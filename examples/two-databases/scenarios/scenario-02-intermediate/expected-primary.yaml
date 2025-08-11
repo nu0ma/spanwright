@@ -1,0 +1,20 @@
+# Spalidate validation configuration for primary database - Scenario 02 (Intermediate)
+# Expected state after intermediate scenario data seeding
+
+tables:
+  Users:
+    count: 1
+    columns:
+      UserID: "user-002"
+      Name: "Intermediate Test User"
+      Email: "intermediate-user@example.com"
+      Status: 1
+  
+  Products:
+    count: 1
+    columns:
+      ProductID: "product-002"
+      Name: "Intermediate Test Product"
+      Price: 2500
+      CategoryID: "category-002"
+      IsActive: true

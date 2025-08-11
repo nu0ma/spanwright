@@ -4,7 +4,7 @@
  * ENFORCES EMULATOR-ONLY CONNECTIONS for safety
  */
 async function globalSetup() {
-  console.log('🚀 Starting global test setup...');
+  console.log('Starting global test setup...');
 
   try {
     // SAFETY CHECK: Ensure we're only connecting to emulator
@@ -12,16 +12,16 @@ async function globalSetup() {
 
     // The emulator should already be running from Makefile setup
     // Just verify everything is accessible
-    console.log('🔍 Verifying emulator and tools are accessible...');
+    console.log('Verifying emulator and tools are accessible...');
 
     // Basic verification without starting anything
     const emulatorHost = process.env.SPANNER_EMULATOR_HOST || 'localhost:9010';
-    console.log(`📡 Expected emulator at: ${emulatorHost}`);
+    console.log(`Expected emulator at: ${emulatorHost}`);
 
     // Brief wait to ensure any setup is complete
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    console.log('✅ Global setup completed successfully');
+    console.log('Global setup completed successfully');
   } catch (error: any) {
     console.error('❌ Global setup failed:', error.message);
     console.error('🔧 Emulator should be managed by Makefile');
@@ -71,7 +71,7 @@ async function validateEmulatorOnly(): Promise<void> {
     }
   }
 
-  console.log('✅ Emulator-only validation passed');
+  console.log('Emulator-only validation passed');
 }
 
 export default globalSetup;

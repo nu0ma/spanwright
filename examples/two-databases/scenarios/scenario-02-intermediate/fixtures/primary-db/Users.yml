@@ -1,0 +1,5 @@
+# Minimal Users fixture for testfixtures
+- UserID: "user-002"
+  Name: "Intermediate Test User"
+  Email: "intermediate-user@example.com"
+  Status: 1

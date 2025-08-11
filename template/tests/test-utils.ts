@@ -50,7 +50,6 @@ export function mockValidateDatabase(databaseId: string): ValidationResult[] {
   }));
 }
 
-// Real spalidate validation
 export function validateDatabaseState(database: 'primary' | 'secondary', databaseId?: string): boolean {
   const validationFile = path.join(process.cwd(), `expected-${database}.yaml`);
   const config   = {
