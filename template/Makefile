@@ -16,7 +16,7 @@ DOCKER_IMAGE ?= gcr.io/cloud-spanner-emulator/emulator
 DOCKER_CONTAINER_NAME ?= spanner-emulator
 DOCKER_SPANNER_PORT ?= 9010
 
-.PHONY: help init clean start stop setup run-all test-e2e
+.PHONY: help init clean clean-databases start stop setup run-all test-e2e
 
 help: ## Show this help
 	@echo "Spanwright E2E Testing Framework"
@@ -71,6 +71,16 @@ clean: ## Clean up containers and artifacts
 	@$(MAKE) stop
 	@echo "🧹 Cleaning build artifacts..."
 	@rm -rf test-results/ playwright-report/
+
+clean-databases: ## Clean/reset databases for fresh scenario runs
+	@echo "🧹 Truncating databases for fresh scenario execution..."
+	@echo "🔄 Truncating primary database $(PRIMARY_DB_ID)..."
+	@SPANNER_PROJECT_ID=$(PROJECT_ID) SPANNER_INSTANCE_ID=$(INSTANCE_ID) SPANNER_DATABASE_ID=$(PRIMARY_DB_ID) SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench truncate
+ifeq ($(DB_COUNT),2)
+	@echo "🔄 Truncating secondary database $(SECONDARY_DB_ID)..."
+	@SPANNER_PROJECT_ID=$(PROJECT_ID) SPANNER_INSTANCE_ID=$(INSTANCE_ID) SPANNER_DATABASE_ID=$(SECONDARY_DB_ID) SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench truncate
+endif
+	@echo "✅ Database reset completed"
 
 setup: ## Setup databases and schemas
 	@echo "🏗️ Setting up databases..."
@@ -139,7 +149,6 @@ run-all: run-all-scenarios ## Alias for run-all-scenarios
 run-all-scenarios: ## Run all scenarios
 	@echo "🚀 Running all scenarios..."
 	@echo "📋 Environment: PROJECT_ID=$(PROJECT_ID), INSTANCE_ID=$(INSTANCE_ID), DB_COUNT=$(DB_COUNT)"
-	@$(MAKE) setup
 	@scenarios=$$(ls scenarios/ | grep -E '^(scenario|example)-'); \
 	if [ -z "$$scenarios" ]; then \
 		echo "❌ No scenarios found in scenarios/ directory"; \
@@ -147,10 +156,14 @@ run-all-scenarios: ## Run all scenarios
 	fi; \
 	echo "📝 Found scenarios: $$scenarios"; \
 	for scenario in $$scenarios; do \
+		echo "▶️ Setting up clean environment for $$scenario"; \
+		SCENARIO=$$scenario $(MAKE) setup; \
 		echo "▶️ Running $$scenario"; \
 		SCENARIO=$$scenario $(MAKE) test-scenario || { echo "❌ Failed running scenario $$scenario"; exit 1; }; \
 		echo "🔍 Validating $$scenario database state..."; \
 		SCENARIO=$$scenario $(MAKE) validate-scenario || { echo "❌ Failed validating scenario $$scenario"; exit 1; }; \
+		echo "🧹 Cleaning up databases after $$scenario"; \
+		$(MAKE) clean-databases; \
 		echo "✅ Scenario $$scenario completed successfully"; \
 	done
 	@echo "✅ All scenarios completed"
