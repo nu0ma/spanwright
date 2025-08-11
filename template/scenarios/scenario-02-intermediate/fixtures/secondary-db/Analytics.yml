@@ -1,0 +1,6 @@
+# Minimal Analytics fixture for testfixtures
+- AnalyticsID: "analytics-002"
+  UserID: "user-002"
+  EventType: "page_view"
+  PageURL: "/test-page"
+  Timestamp: "2024-01-01T00:00:00Z"
