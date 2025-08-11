@@ -25,7 +25,7 @@ test.describe('Simple Basic Test', () => {
     const validation1 = validateDatabaseState('example-01-basic-setup', 'primary');
     expect(validation1).toBe(true);
 
-    const validation2 = validateDatabaseState("example-01-basic-setup",'secondary');
+    const validation2 = validateDatabaseState('example-01-basic-setup', 'secondary');
     expect(validation2).toBe(true);
 
     console.log(`✅ Database validation passed for process ${dbConfig.processId}`);
