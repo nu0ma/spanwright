@@ -96,7 +96,6 @@ async function getInteractiveConfiguration(): Promise<DatabaseConfig> {
 
     validateSchemaPath(primarySchemaPath, 'Primary schema path');
 
-
     const config: DatabaseConfig = {
       count: dbCount as '1' | '2',
       primaryDbName,
@@ -115,7 +114,6 @@ async function getInteractiveConfiguration(): Promise<DatabaseConfig> {
       const secondarySchemaPath = sanitizeInput(secondarySchemaPathInput);
 
       validateSchemaPath(secondarySchemaPath, 'Secondary schema path');
-
 
       config.secondaryDbName = secondaryDbName;
       config.secondarySchemaPath = secondarySchemaPath;
