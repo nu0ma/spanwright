@@ -46,7 +46,7 @@ test.describe('scenario-03-advanced', () => {
     // Advanced test simulating performance scenarios
     const startTime = Date.now();
     
-    await page.goto('https://example.com');
+    await page.goto('http://example.com');
     await page.waitForLoadState('networkidle');
     
     const loadTime = Date.now() - startTime;
