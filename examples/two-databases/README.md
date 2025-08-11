@@ -8,8 +8,8 @@ Cloud Spanner database E2E testing environment
 # Initial setup
 make init
 
-# Run samples
-make run-all-examples
+# Run all scenarios
+make run-all-scenarios
 
 # Create new test
 make new-scenario SCENARIO=scenario-01-my-test
@@ -20,7 +20,7 @@ make new-scenario SCENARIO=scenario-01-my-test
 | Command | Description |
 |---------|-------------|
 | `make init` | Initial setup |
-| `make run-all-examples` | Run samples |
+| `make run-all-examples` | Alias for run-all-scenarios |
 | `make run-all-scenarios` | Run all scenarios |
 | `make new-scenario SCENARIO=<name>` | Create new scenario |
 | `make test-e2e` | Playwright E2E test |

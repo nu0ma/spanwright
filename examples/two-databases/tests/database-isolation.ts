@@ -13,9 +13,14 @@ export interface DatabaseConfig {
  */
 export function getDatabaseConfig(): DatabaseConfig {
   const processId = process.pid;
+
+  // Use environment variables if available (CI environment)
+  const primaryDbId = process.env.PRIMARY_DB_ID || `primary-db-${processId}`;
+  const secondaryDbId = process.env.SECONDARY_DB_ID || `secondary-db-${processId}`;
+
   return {
     processId,
-    primaryDbId: `primary-db-${processId}`,
-    secondaryDbId: `secondary-db-${processId}`,
+    primaryDbId,
+    secondaryDbId,
   };
 }
