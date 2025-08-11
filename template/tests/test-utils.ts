@@ -63,20 +63,11 @@ export function validateDatabaseState(scenario: string, database: 'primary' | 's
   }
   
   if (!existsSync(validationFile)) {
-    console.log(`⚠️ No validation file found: ${validationFile}`);
-    return true; // Skip validation if file doesn't exist
+    return true;
   }
 
   const { projectId, instanceId, databaseId: targetDatabaseId, emulatorHost } = config;
   
-  console.log(`🔍 Validating ${database} database:`, {
-    project: projectId,
-    instance: instanceId,
-    database: targetDatabaseId,
-    emulatorHost,
-    validationFile
-  });
-
   const spalidateArgs = [
     '--project', projectId,
     '--instance', instanceId,
@@ -85,38 +76,16 @@ export function validateDatabaseState(scenario: string, database: 'primary' | 's
     validationFile
   ];
   
-  const spalidateCmd = `spalidate ${spalidateArgs.join(' ')}`;
-  console.log(`🔍 Executing: ${spalidateCmd}`);
-  console.log(`🌐 SPANNER_EMULATOR_HOST: ${emulatorHost}`);
-
   try {
-    const result = execFileSync('spalidate', spalidateArgs, { 
+    execFileSync('spalidate', spalidateArgs, { 
       encoding: 'utf-8',
       env: { ...process.env, SPANNER_EMULATOR_HOST: emulatorHost },
-      timeout: 30000, // 30 second timeout
-      maxBuffer: 1024 * 1024 // 1MB buffer for long output
+      timeout: 30000,
+      maxBuffer: 1024 * 1024
     });
     
-    console.log(`✅ Validation passed for ${database} database`);
-    console.log(`📋 Validation output:\n${result}`);
     return true;
   } catch (error: any) {
-    // Build detailed error message with all spalidate output
-    const errorDetails = [
-      `❌ Validation failed for ${database} database`,
-      `📋 Command: ${spalidateCmd}`,
-      `🌐 Emulator host: ${emulatorHost}`,
-      `📄 Validation file: ${validationFile}`,
-      ``,
-      `🔍 VALIDATION DETAILED OUTPUT:
-${error.stdout || 'No stdout'}`,
-      ``,
-      `⚠️ ERROR OUTPUT:
-${error.stderr || 'No stderr'}`,
-      ``,
-      `💥 Error message: ${error.message}`
-    ].join('\n');
-    
-    throw new Error(errorDetails);
+    throw new Error(`❌ Database validation failed: ${error.message}`);
   }
 }
