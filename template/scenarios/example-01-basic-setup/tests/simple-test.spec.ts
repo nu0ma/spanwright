@@ -11,12 +11,12 @@ test.describe('example-01-basic-setup', () => {
   test('Database Validation', async () => {
     const dbConfig = getDatabaseConfig();
     
-    const primaryValid = validateDatabaseState('example-01-basic-setup', 'primary', dbConfig.primaryDbId);
+    const primaryValid = validateDatabaseState('primary', dbConfig.primaryDbId);
     expect(primaryValid).toBe(true);
     
     const dbCount = parseInt(process.env.DB_COUNT || '2');
     if (dbCount === 2) {
-      const secondaryValid = validateDatabaseState('example-01-basic-setup', 'secondary', dbConfig.secondaryDbId);
+      const secondaryValid = validateDatabaseState('secondary', dbConfig.secondaryDbId);
       expect(secondaryValid).toBe(true);
     }
   });

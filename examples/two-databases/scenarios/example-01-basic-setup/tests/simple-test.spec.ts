@@ -27,10 +27,10 @@ test.describe('Simple Basic Test', () => {
     const dbConfig = getDatabaseConfig();
 
     // Use the environment variable database IDs instead of process-specific ones
-    const validation1 = validateDatabaseState('example-01-basic-setup', 'primary');
+    const validation1 = validateDatabaseState('primary');
     expect(validation1).toBe(true);
 
-    const validation2 = validateDatabaseState('example-01-basic-setup', 'secondary');
+    const validation2 = validateDatabaseState('secondary');
     expect(validation2).toBe(true);
 
     console.log(`✅ Database validation passed for process ${dbConfig.processId}`);
