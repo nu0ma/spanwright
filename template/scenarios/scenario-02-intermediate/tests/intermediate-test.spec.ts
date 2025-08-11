@@ -12,7 +12,7 @@ test.describe('scenario-02-intermediate', () => {
 
   test('Intermediate Page Test', async ({ page }) => {
     // Intermediate page test with more complex interactions
-    await page.goto('https://example.com');
+    await page.goto('http://example.com');
     await expect(page).toHaveTitle(/Example/);
     
     // Additional intermediate test steps
