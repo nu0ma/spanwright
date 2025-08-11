@@ -3,7 +3,7 @@
 
 tables:
   UserLogs:
-    count: 2
+    count: 1
     columns:
       LogID: "log-002"
       UserID: "user-002"
@@ -12,7 +12,7 @@ tables:
       UserAgent: "Intermediate Test Agent"
   
   Analytics:
-    count: 2
+    count: 1
     columns:
       AnalyticsID: "analytics-002"
       UserID: "user-002"

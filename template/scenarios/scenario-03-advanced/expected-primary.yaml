@@ -3,18 +3,18 @@
 
 tables:
   Users:
-    count: 3
+    count: 1
     columns:
-      UserID: "user-004"
+      UserID: "user-003"
       Name: "Advanced Test User"
       Email: "advanced-user@example.com"
       Status: 1
   
   Products:
-    count: 3
+    count: 1
     columns:
-      ProductID: "product-004"
+      ProductID: "product-003"
       Name: "Advanced Test Product"
-      Price: 10000
+      Price: 1000
       CategoryID: "category-003"
       IsActive: true

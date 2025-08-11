@@ -1,16 +1,6 @@
-- table: Products
-  records:
-    - ProductID: product-002
-      Name: Intermediate Test Product
-      Price: 2500
-      CategoryID: category-002
-      IsActive: true
-      CreatedAt: "2024-06-01T10:00:00.000Z"
-      UpdatedAt: "2024-06-01T10:00:00.000Z"
-    - ProductID: product-003
-      Name: Premium Test Product
-      Price: 5000
-      CategoryID: category-002
-      IsActive: true
-      CreatedAt: "2024-06-01T11:00:00.000Z"
-      UpdatedAt: "2024-06-01T11:00:00.000Z"
+# Minimal Products fixture for testfixtures
+- ProductID: "product-002"
+  Name: "Intermediate Test Product"
+  Price: 2500
+  CategoryID: "category-002"
+  IsActive: true

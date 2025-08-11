@@ -3,7 +3,7 @@
 
 tables:
   Users:
-    count: 2
+    count: 1
     columns:
       UserID: "user-002"
       Name: "Intermediate Test User"
@@ -11,7 +11,7 @@ tables:
       Status: 1
   
   Products:
-    count: 2
+    count: 1
     columns:
       ProductID: "product-002"
       Name: "Intermediate Test Product"

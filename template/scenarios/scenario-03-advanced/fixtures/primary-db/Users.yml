@@ -1,20 +1,6 @@
-- table: Users
-  records:
-    - UserID: user-004
-      Name: Advanced Test User
-      Email: advanced-user@example.com
-      Status: 1
-      CreatedAt: "2024-07-01T10:00:00.000Z"
-      UpdatedAt: "2024-07-01T10:00:00.000Z"
-    - UserID: user-005
-      Name: Premium User
-      Email: premium-user@example.com
-      Status: 2
-      CreatedAt: "2024-07-01T11:00:00.000Z"
-      UpdatedAt: "2024-07-01T11:00:00.000Z"
-    - UserID: user-006
-      Name: Enterprise User
-      Email: enterprise-user@example.com
-      Status: 3
-      CreatedAt: "2024-07-01T12:00:00.000Z"
-      UpdatedAt: "2024-07-01T12:00:00.000Z"
+# Minimal Users fixture for testfixtures
+- UserID: "user-003"
+  Name: "Advanced Test User"
+  Email: "advanced-user@example.com"
+  Status: 1
+  CreatedAt: "2024-01-01T00:00:00Z"

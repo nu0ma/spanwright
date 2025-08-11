@@ -75,10 +75,10 @@ clean: ## Clean up containers and artifacts
 clean-databases: ## Clean/reset databases for fresh scenario runs
 	@echo "🧹 Resetting databases for fresh scenario execution..."
 	@echo "🔄 Resetting primary database $(PRIMARY_DB_ID)..."
-	@SPANNER_PROJECT_ID=$(PROJECT_ID) SPANNER_INSTANCE_ID=$(INSTANCE_ID) SPANNER_DATABASE_ID=$(PRIMARY_DB_ID) SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench reset --directory="$(PRIMARY_SCHEMA_PATH)" --schema_file="001_initial_schema.sql"
+	@SPANNER_PROJECT_ID=$(PROJECT_ID) SPANNER_INSTANCE_ID=$(INSTANCE_ID) SPANNER_DATABASE_ID=$(PRIMARY_DB_ID) SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench drop
 ifeq ($(DB_COUNT),2)
 	@echo "🔄 Resetting secondary database $(SECONDARY_DB_ID)..."
-	@SPANNER_PROJECT_ID=$(PROJECT_ID) SPANNER_INSTANCE_ID=$(INSTANCE_ID) SPANNER_DATABASE_ID=$(SECONDARY_DB_ID) SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench reset --directory="$(SECONDARY_SCHEMA_PATH)" --schema_file="001_initial_schema.sql"
+	@SPANNER_PROJECT_ID=$(PROJECT_ID) SPANNER_INSTANCE_ID=$(INSTANCE_ID) SPANNER_DATABASE_ID=$(SECONDARY_DB_ID) SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench drop
 endif
 	@echo "✅ Database reset completed"
 
@@ -157,7 +157,7 @@ run-all-scenarios: ## Run all scenarios
 	echo "📝 Found scenarios: $$scenarios"; \
 	for scenario in $$scenarios; do \
 		echo "▶️ Setting up clean environment for $$scenario"; \
-		$(MAKE) setup; \
+		SCENARIO=$$scenario $(MAKE) setup; \
 		echo "▶️ Running $$scenario"; \
 		SCENARIO=$$scenario $(MAKE) test-scenario || { echo "❌ Failed running scenario $$scenario"; exit 1; }; \
 		echo "🔍 Validating $$scenario database state..."; \
