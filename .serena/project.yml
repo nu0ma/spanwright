@@ -66,5 +66,3 @@ excluded_tools: []
 initial_prompt: ""
 
 project_name: "spanwright"
-
-web_dashboard: false
