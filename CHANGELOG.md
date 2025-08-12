@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0](https://github.com/nu0ma/spanwright/compare/v2.3.1...v2.4.0) (2025-08-11)
+
+
+### Features
+
+* add support for 3 E2E test scenarios with proper database isolation ([#127](https://github.com/nu0ma/spanwright/issues/127)) ([6b4ba91](https://github.com/nu0ma/spanwright/commit/6b4ba9190ae97192cd710a834eac824cddcb3944))
+* make fixture directory paths dynamic using database variables ([#122](https://github.com/nu0ma/spanwright/issues/122)) ([e4a238c](https://github.com/nu0ma/spanwright/commit/e4a238c402e9d212380bfe760082000f7a5aad65))
+* simplify validateDatabaseState by removing scenario parameter ([#133](https://github.com/nu0ma/spanwright/issues/133)) ([9efe0fd](https://github.com/nu0ma/spanwright/commit/9efe0fdcf414355720bae0d6d028a655c6a6b56d))
+
+
+### Bug Fixes
+
+* example logging ([#132](https://github.com/nu0ma/spanwright/issues/132)) ([80920f5](https://github.com/nu0ma/spanwright/commit/80920f5f5223fbed6a67652710f7245f74c5759c))
+* remove absolute path warnings and update serena config ([#117](https://github.com/nu0ma/spanwright/issues/117)) ([294d48f](https://github.com/nu0ma/spanwright/commit/294d48f6209945a6c9dd0f788eb499a901a5a727))
+* remove unused import in simple-test.spec.ts ([#124](https://github.com/nu0ma/spanwright/issues/124)) ([0862b16](https://github.com/nu0ma/spanwright/commit/0862b169f0c57e76f7e62e8a0e1c6e05a32c75d1))
+* update examples/two-databases to match current template ([#135](https://github.com/nu0ma/spanwright/issues/135)) ([25ae2a6](https://github.com/nu0ma/spanwright/commit/25ae2a6f74b07cef8fb049ea0504580dceed4518))
+* waiting spanner emulator start ([#129](https://github.com/nu0ma/spanwright/issues/129)) ([31e19e4](https://github.com/nu0ma/spanwright/commit/31e19e4d207eb899233fe432699dc2b09c303502))
+
 ## [2.3.1](https://github.com/nu0ma/spanwright/compare/v2.3.0...v2.3.1) (2025-08-02)
 
 
