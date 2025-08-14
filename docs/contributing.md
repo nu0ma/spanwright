@@ -23,6 +23,7 @@ Thank you for your interest in contributing to Spanwright! This comprehensive gu
 Before contributing, ensure you have the following tools installed:
 
 - **Node.js** >= 22.0.0
+- **pnpm** >= 9.0.0
 - **Docker** (for Spanner emulator)
 - **Go** >= 1.24.5 (for testing generated projects)
 - **wrench** (Spanner migration tool): `go install github.com/cloudspannerecosystem/wrench@latest`
@@ -45,13 +46,13 @@ Before contributing, ensure you have the following tools installed:
 
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
 # Build the CLI
-npm run build
+pnpm run build
 
 # Verify setup
-npm test
+pnpm test
 ```
 
 ## Development Setup
@@ -60,25 +61,25 @@ npm test
 
 ```bash
 # Build TypeScript CLI
-npm run build
+pnpm run build
 
 # Watch mode for development
-npm run dev
+pnpm run dev
 
 # Clean build artifacts
-npm run clean
+pnpm run clean
 
 # Run comprehensive E2E tests
-npm test
+pnpm test
 
 # Run unit tests only
-npm run test:unit
+pnpm run test:unit
 
 # Lint code
-npm run lint
+pnpm run lint
 
 # Format code
-npm run format
+pnpm run format
 ```
 
 ### Environment Configuration
@@ -153,8 +154,8 @@ git rebase upstream/main
    - Update documentation
 
 4. **Test Thoroughly**
-   - Run unit tests: `npm run test:unit`
-   - Run E2E tests: `npm test`
+   - Run unit tests: `pnpm run test:unit`
+   - Run E2E tests: `pnpm test`
    - Test on different operating systems if possible
 
 5. **Submit for Review**
@@ -188,7 +189,7 @@ describe('validateDatabaseName', () => {
 - Verify file generation and templating
 - Validate generated project structure
 
-#### E2E Tests (`npm test`)
+#### E2E Tests (`pnpm test`)
 - Create complete projects using the CLI
 - Run generated project workflows
 - Verify database operations work correctly
@@ -210,16 +211,16 @@ describe('validateDatabaseName', () => {
 
 ```bash
 # Quick unit tests
-npm run test:unit
+pnpm run test:unit
 
 # Comprehensive E2E testing
-npm test
+pnpm test
 
 # Test specific files
-npm test -- --grep "configuration"
+pnpm test -- --grep "configuration"
 
 # Test with coverage
-npm run test:coverage
+pnpm run test:coverage
 ```
 
 ## Code Style Guidelines
@@ -331,13 +332,13 @@ interface TemplateVars {
 
 ```bash
 # Validate template syntax
-npm run template:validate
+pnpm run template:validate
 
 # Test template generation
-npm run template:test
+pnpm run template:test
 
 # Full E2E template testing
-npm test
+pnpm test
 ```
 
 ## Documentation

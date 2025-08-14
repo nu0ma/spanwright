@@ -560,7 +560,7 @@ Tests pass locally but fail in CI
 # .github/workflows/test.yml
 - name: Install dependencies
   run: |
-    npm ci
+    pnpm install --frozen-lockfile
     # Increase timeout for slower CI environments
     export EMULATOR_TIMEOUT=60000
     make init
@@ -621,7 +621,7 @@ systeminfo  # Windows
 
 # Version information
 node --version
-npm --version
+pnpm --version
 docker --version
 go version
 
@@ -631,7 +631,7 @@ make validate
 
 # Error logs
 docker logs spanner-emulator
-npm test 2>&1 | tee test.log
+pnpm test 2>&1 | tee test.log
 ```
 
 ### Support Channels
@@ -684,7 +684,7 @@ Container fails to start with error: [error message]
 
 3. **Keep tools updated:**
    ```bash
-   npm update
+   pnpm update
    go install github.com/cloudspannerecosystem/wrench@latest
    ```
 
