@@ -23,7 +23,7 @@ Thank you for your interest in contributing to Spanwright! This document provide
 
 ### Prerequisites
 - Node.js >= 22.0.0
-- pnpm >= 8.0.0
+- pnpm >= 9.0.0
 - Docker (for Spanner emulator)
 - Go (for testing generated projects)
 - wrench (Spanner migration tool)

@@ -10,7 +10,7 @@ Spanwright requires several external tools to function properly. Follow this gui
 
 - **Operating System**: macOS, Linux, or Windows (with WSL2)
 - **Node.js**: 22.0.0 or higher
-- **pnpm**: 8.0.0 or higher
+- **pnpm**: 9.0.0 or higher
 - **Docker**: For running Cloud Spanner emulator
 - **Go**: 1.24.5 or higher (for database tools)
 - **Git**: For version control
@@ -56,7 +56,7 @@ After installing Node.js, install pnpm:
 npm install -g pnpm
 
 # Verify installation
-pnpm --version  # Should show 8.x.x or higher
+pnpm --version  # Should show 9.x.x or higher
 ```
 
 ### Docker Installation
@@ -250,7 +250,7 @@ After installing all prerequisites, verify your setup:
 ```bash
 # Check versions
 node --version    # >= 22.0.0
-pnpm --version    # >= 8.0.0
+pnpm --version    # >= 9.0.0
 docker --version  # Any recent version
 go version        # >= 1.24.5
 wrench --version  # Latest
