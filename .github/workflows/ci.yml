@@ -126,7 +126,8 @@ jobs:
       run: |
         # Install CLI from built files
         pnpm install -g .
-        spanwright --help || echo "CLI help not available yet"
+        # Verify CLI is accessible via npx
+        npx spanwright --help || echo "CLI help not available yet"
         
     - name: Test project generation with real CLI
       run: |
@@ -140,7 +141,7 @@ jobs:
             SPANWRIGHT_SECONDARY_DB_NAME=test-secondary \
             SPANWRIGHT_SECONDARY_SCHEMA_PATH=/tmp/test-schemas/secondary \
             CI=true \
-            spanwright test-project
+            npx spanwright test-project
         
         # Verify project structure was created
         if [ ! -d "test-project" ]; then
@@ -251,7 +252,7 @@ jobs:
             SPANWRIGHT_SECONDARY_DB_NAME=test-secondary \
             SPANWRIGHT_SECONDARY_SCHEMA_PATH=/tmp/e2e-schemas/secondary \
             CI=true \
-            spanwright test-e2e-project
+            npx spanwright test-e2e-project
         
         cd test-e2e-project
         echo "📁 Generated project structure:"
