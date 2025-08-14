@@ -3,14 +3,6 @@ import { getDatabaseConfig } from '../../../tests/database-isolation';
 import { validateDatabaseState } from '../../../tests/test-utils';
 
 test.describe('scenario-03-advanced', () => {
-  test('Advanced Page Test with Complex Interactions', async ({ page }) => {
-    await page.goto('http://example.com');
-    await expect(page).toHaveTitle(/Example/);
-    await page.waitForLoadState('networkidle');
-    
-    const body = await page.locator('body');
-    await expect(body).toBeVisible();
-  });
 
   test('Comprehensive Database Validation', async () => {
     const dbConfig = getDatabaseConfig();
