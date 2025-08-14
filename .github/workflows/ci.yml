@@ -124,10 +124,8 @@ jobs:
         
     - name: Test CLI installation
       run: |
-        # Install CLI from built files
-        pnpm install -g .
-        # Verify CLI is accessible via npx
-        npx spanwright --help || echo "CLI help not available yet"
+        # Test CLI directly with node
+        node dist/index.js --help
         
     - name: Test project generation with real CLI
       run: |
@@ -141,7 +139,7 @@ jobs:
             SPANWRIGHT_SECONDARY_DB_NAME=test-secondary \
             SPANWRIGHT_SECONDARY_SCHEMA_PATH=/tmp/test-schemas/secondary \
             CI=true \
-            npx spanwright test-project
+            node ../dist/index.js test-project
         
         # Verify project structure was created
         if [ ! -d "test-project" ]; then
@@ -212,10 +210,10 @@ jobs:
     - name: Build CLI
       run: pnpm run build
       
-    - name: Install CLI globally
+    - name: Verify CLI build
       run: |
-        # Install CLI from built files
-        pnpm install -g .
+        # Test CLI directly with node
+        node dist/index.js --help
         
     - name: Create test schemas for E2E project
       run: |
@@ -252,7 +250,7 @@ jobs:
             SPANWRIGHT_SECONDARY_DB_NAME=test-secondary \
             SPANWRIGHT_SECONDARY_SCHEMA_PATH=/tmp/e2e-schemas/secondary \
             CI=true \
-            npx spanwright test-e2e-project
+            node ../dist/index.js test-e2e-project
         
         cd test-e2e-project
         echo "📁 Generated project structure:"
