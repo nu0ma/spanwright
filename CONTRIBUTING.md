@@ -10,15 +10,20 @@ Thank you for your interest in contributing to Spanwright! This document provide
    git clone https://github.com/YOUR-USERNAME/spanwright.git
    cd spanwright
    ```
-3. **Install dependencies**:
+3. **Install pnpm** (if not already installed):
    ```bash
-   npm install
+   npm install -g pnpm
+   ```
+4. **Install dependencies**:
+   ```bash
+   pnpm install
    ```
 
 ## Development Setup
 
 ### Prerequisites
 - Node.js >= 22.0.0
+- pnpm >= 8.0.0
 - Docker (for Spanner emulator)
 - Go (for testing generated projects)
 - wrench (Spanner migration tool)
@@ -27,13 +32,13 @@ Thank you for your interest in contributing to Spanwright! This document provide
 
 ```bash
 # Build the CLI
-npm run build
+pnpm run build
 
 # Watch mode for development
-npm run dev
+pnpm run dev
 
 # Run E2E tests
-npm test
+pnpm test
 ```
 
 ## Project Structure
@@ -54,7 +59,7 @@ npm test
 When modifying templates:
 1. **Always test** before committing:
    ```bash
-   npm test
+   pnpm test
    ```
 
 ### Testing

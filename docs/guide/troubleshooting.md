@@ -560,7 +560,7 @@ Tests pass locally but fail in CI
 # .github/workflows/test.yml
 - name: Install dependencies
   run: |
-    npm ci
+    pnpm install --frozen-lockfile
     # Increase timeout for slower CI environments
     export EMULATOR_TIMEOUT=60000
     make init

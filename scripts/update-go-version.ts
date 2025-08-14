@@ -71,8 +71,8 @@ function updateGoVersion(newVersion: string) {
 
   console.log(`\n🎉 Successfully updated Go version in ${updatedFiles} files`);
   console.log(`\n📋 Next steps:`);
-  console.log(`   1. Run: npm run build`);
-  console.log(`   2. Run: npm test`);
+  console.log(`   1. Run: pnpm run build`);
+  console.log(`   2. Run: pnpm test`);
   console.log(`   3. Commit changes if everything works`);
   console.log(`\n💡 Note: GitHub workflows now read from .tool-versions file`);
 }
@@ -81,7 +81,7 @@ function updateGoVersion(newVersion: string) {
 const newVersion = process.argv[2];
 if (!newVersion) {
   console.error('❌ Please provide a Go version');
-  console.error('Usage: npm run update-go-version 1.24.3');
+  console.error('Usage: pnpm run update-go-version 1.24.3');
   process.exit(1);
 }
 

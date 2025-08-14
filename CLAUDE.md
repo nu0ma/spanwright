@@ -5,22 +5,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Development Commands
 
 ### Core Development
-- `npm run build` - Build TypeScript CLI to dist/
-- `npm run dev` - Watch mode for development
-- `npm run clean` - Remove build artifacts
-- `npm test` - Show E2E testing information
+- `pnpm run build` - Build TypeScript CLI to dist/
+- `pnpm run dev` - Watch mode for development
+- `pnpm run clean` - Remove build artifacts
+- `pnpm test` - Show E2E testing information
 
 
 ### Version Management
-- `npm run update-go-version <version>` - Update Go version across all configuration files and templates
+- `pnpm run update-go-version <version>` - Update Go version across all configuration files and templates
 
 ## Development Workflow
 
 1. **Edit templates** in `template/` directory
-2. **Build and test** with `npm run build && npm test`
+2. **Build and test** with `pnpm run build && pnpm test`
 3. **Commit changes** after tests pass
 
-⚠️ **IMPORTANT**: Before committing changes, run `npm test` to ensure the E2E workflow continues to function correctly.
+⚠️ **IMPORTANT**: Before committing changes, run `pnpm test` to ensure the E2E workflow continues to function correctly.
 
 
 ## Architecture Overview
@@ -161,11 +161,11 @@ To update the Go version across all configuration files and templates:
 
 ```bash
 # Update Go version to 1.24.3
-npm run update-go-version 1.24.3
+pnpm run update-go-version 1.24.3
 
 # Validate and test changes
-npm run template:validate
-npm test
+pnpm run template:validate
+pnpm test
 ```
 
 ### Automated Version Updates
@@ -174,7 +174,7 @@ The project includes automation for Go version updates:
 
 #### 1. **Local CLI Script**
 - **Script**: `scripts/update-go-version.ts`
-- **Usage**: `npm run update-go-version <version>`
+- **Usage**: `pnpm run update-go-version <version>`
 - **Updates**: All Go version references in templates and CI/CD files
 - **Validation**: Automatic template validation after updates
 
@@ -195,17 +195,17 @@ The automation updates Go version references in:
 
 1. **Run update script**:
    ```bash
-   npm run update-go-version 1.24.3
+   pnpm run update-go-version 1.24.3
    ```
 
 2. **Validate changes**:
    ```bash
-   npm run template:validate
+   pnpm run template:validate
    ```
 
 3. **Run E2E tests**:
    ```bash
-   npm test
+   pnpm test
    ```
 
 4. **Commit changes** after validation passes

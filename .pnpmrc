@@ -1,0 +1,9 @@
+# pnpm configuration for Spanwright
+# 互換性のためのhoisting設定
+shamefully-hoist=true
+
+# Peer dependency の厳密チェックを緩和
+strict-peer-dependencies=false
+
+# Fast install mode
+use-lockfile=true
