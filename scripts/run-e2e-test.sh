@@ -111,7 +111,7 @@ create_project_with_cli() {
     # Build CLI first
     log_info "Building CLI..."
     cd "$PROJECT_ROOT"
-    if ! npm run build; then
+    if ! pnpm run build; then
         log_error "CLI build failed"
         exit 1
     fi

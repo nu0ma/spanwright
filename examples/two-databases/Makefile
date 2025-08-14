@@ -60,7 +60,7 @@ check-spalidate: ## Check spalidate availability
 
 setup-playwright: ## Setup Playwright
 	@echo "🎭 Setting up Playwright..."
-	@npm install
+	@pnpm install
 	@npx playwright install
 	@echo "✅ Playwright setup complete"
 
