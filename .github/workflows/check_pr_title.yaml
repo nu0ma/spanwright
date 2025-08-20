@@ -16,7 +16,7 @@ jobs:
         run: |
           echo "PR title: '${{ github.event.pull_request.title }}'"
           TITLE="${{ github.event.pull_request.title }}"
-          if ! echo "$TITLE" | grep -Eq '^(feat|fix|docs|chore|refactor|test|perf)(\(.+\))?: '; then
+          if ! echo "$TITLE" | grep -Eq '^(Revert|feat|fix|docs|chore|refactor|test|perf)(\(.+\))?: '; then
             echo "❌ PR title must start with a Conventional Commit prefix like 'feat:', 'fix:', etc."
             exit 1
           fi
