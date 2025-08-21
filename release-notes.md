@@ -7,6 +7,8 @@
 * feat: change release flow and use OIDC by @nu0ma in https://github.com/nu0ma/spanwright/pull/142
 * chore(main): release 2.5.0 by @nu0ma in https://github.com/nu0ma/spanwright/pull/143
 * fix: correct target_commitish to main in release workflow by @nu0ma in https://github.com/nu0ma/spanwright/pull/145
+* Release v2.5.1 by @github-actions[bot] in https://github.com/nu0ma/spanwright/pull/146
+* chore: remove unused PR title check workflow by @nu0ma in https://github.com/nu0ma/spanwright/pull/147
 
 
-**Full Changelog**: https://github.com/nu0ma/spanwright/compare/v2.4.0...v2.5.1
+**Full Changelog**: https://github.com/nu0ma/spanwright/compare/v2.4.0...v2.5.2
