@@ -9,6 +9,7 @@
 * fix: correct target_commitish to main in release workflow by @nu0ma in https://github.com/nu0ma/spanwright/pull/145
 * Release v2.5.1 by @github-actions[bot] in https://github.com/nu0ma/spanwright/pull/146
 * chore: remove unused PR title check workflow by @nu0ma in https://github.com/nu0ma/spanwright/pull/147
+* fix: remove NPM_TOKEN to enable trusted publishing with OIDC by @nu0ma in https://github.com/nu0ma/spanwright/pull/149
 
 
-**Full Changelog**: https://github.com/nu0ma/spanwright/compare/v2.4.0...v2.5.2
+**Full Changelog**: https://github.com/nu0ma/spanwright/compare/v2.4.0...v2.5.3
