@@ -37,6 +37,12 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.version }}" ]; then
             VERSION="${{ github.event.inputs.version }}"
+            # Validate version format
+            if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "❌ Invalid semver format: $VERSION"
+              echo "Expected format: X.Y.Z (e.g., 1.2.3)"
+              exit 1
+            fi
           else
             VERSION=$(node -p "require('./package.json').version")
           fi
@@ -53,19 +59,35 @@ jobs:
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
       
+      - name: Setup pnpm
+        if: steps.tag-check.outputs.exists == 'false'
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+          
       - name: Setup Node.js
         if: steps.tag-check.outputs.exists == 'false'
-        uses: actions/setup-node@v3.9.1
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           registry-url: 'https://registry.npmjs.org'
+          cache: 'pnpm'
       
-      - name: Ensure npm 11.5.1 or later is installed
+      - name: Ensure npm 10.0.0 or later is installed
         if: steps.tag-check.outputs.exists == 'false'
         run: |
           NPM_VERSION=$(npm -v)
           echo "Current npm version: $NPM_VERSION"
-          if ! npx semver -r ">=11.5.1" "$NPM_VERSION"; then
+          REQUIRED_VERSION="10.0.0"
+          if ! node -e "
+            const current = '$NPM_VERSION'.split('.').map(Number);
+            const required = '$REQUIRED_VERSION'.split('.').map(Number);
+            for (let i = 0; i < 3; i++) {
+              if (current[i] > required[i]) process.exit(0);
+              if (current[i] < required[i]) process.exit(1);
+            }
+            process.exit(0);
+          "; then
             echo "npm version $NPM_VERSION is too old. Installing latest npm..."
             npm install -g npm@latest
             echo "Updated npm version: $(npm -v)"
@@ -73,20 +95,32 @@ jobs:
       
       - name: Install dependencies
         if: steps.tag-check.outputs.exists == 'false'
-        run: npm ci
+        run: pnpm install --frozen-lockfile
       
       - name: Build package
         if: steps.tag-check.outputs.exists == 'false'
-        run: npm run build
+        run: pnpm run build
+      
+      - name: Verify build output
+        if: steps.tag-check.outputs.exists == 'false'
+        run: |
+          if [ ! -f "dist/index.js" ]; then
+            echo "❌ Build failed - dist/index.js not found"
+            exit 1
+          fi
+          echo "✅ Build verification successful"
       
       - name: Publish to npm with provenance
         if: steps.tag-check.outputs.exists == 'false'
         run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       
       - name: Create GitHub Release with tag
         id: create-release
         if: steps.tag-check.outputs.exists == 'false'
         run: |
+          BRANCH="${{ github.event.pull_request.base.ref || github.ref_name }}"
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             RELEASE_URL=$(gh release create "v${{ steps.package.outputs.version }}" \
               --title "v${{ steps.package.outputs.version }}" \
@@ -115,6 +149,19 @@ jobs:
           - 📦 npm package: https://www.npmjs.com/package/${{ steps.package.outputs.name }}/v/${{ steps.package.outputs.version }}
           - 🏷️ GitHub Release: ${{ steps.create-release.outputs.url }}
           - 🔗 Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        env:
+          GH_TOKEN: ${{ github.token }}
+      
+      - name: Comment on PR - Tag Exists
+        if: |
+          always() && 
+          github.event_name == 'pull_request' && 
+          steps.tag-check.outputs.exists == 'true'
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --body "⚠️ **Release skipped**: Tag v${{ steps.package.outputs.version }} already exists
+          
+          Please check the existing release or update the version in package.json."
         env:
           GH_TOKEN: ${{ github.token }}
       
