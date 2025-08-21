@@ -73,21 +73,12 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           cache: 'pnpm'
       
-      - name: Ensure npm 10.0.0 or later is installed
+      - name: Ensure npm 11.5.1 or later is installed
         if: steps.tag-check.outputs.exists == 'false'
         run: |
           NPM_VERSION=$(npm -v)
           echo "Current npm version: $NPM_VERSION"
-          REQUIRED_VERSION="10.0.0"
-          if ! node -e "
-            const current = '$NPM_VERSION'.split('.').map(Number);
-            const required = '$REQUIRED_VERSION'.split('.').map(Number);
-            for (let i = 0; i < 3; i++) {
-              if (current[i] > required[i]) process.exit(0);
-              if (current[i] < required[i]) process.exit(1);
-            }
-            process.exit(0);
-          "; then
+          if ! npx semver -r ">=11.5.1" "$NPM_VERSION"; then
             echo "npm version $NPM_VERSION is too old. Installing latest npm..."
             npm install -g npm@latest
             echo "Updated npm version: $(npm -v)"
@@ -113,8 +104,6 @@ jobs:
       - name: Publish to npm with provenance
         if: steps.tag-check.outputs.exists == 'false'
         run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       
       - name: Create GitHub Release with tag
         id: create-release
