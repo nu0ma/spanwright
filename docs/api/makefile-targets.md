@@ -20,14 +20,30 @@ make help
 Spanwright E2E Testing Framework
 ================================
 
+build                Build Go tools
 check-spalidate      Check spalidate availability
 check-tools          Check required tools
-clean               Clean up containers and artifacts
-help                Show this help
-init                Initialize project and check prerequisites
+clean-databases      Clean/reset databases for fresh scenario runs
+clean                Clean up containers and artifacts
+dev                  Development mode - setup and watch
+help                 Show this help
+init                 Initialize project and check prerequisites
+new-scenario         Create new scenario (SCENARIO=name required)
 run-all-scenarios    Run all scenarios
-start               Start Spanner emulator
-stop                Stop Spanner emulator
+run-all              Alias for run-all-scenarios
+setup-playwright     Setup Playwright
+setup-primary        Setup primary database
+setup-secondary      Setup secondary database
+setup                Setup databases and schemas
+start                Start Spanner emulator
+stop                 Stop Spanner emulator
+test-e2e             Run Playwright E2E tests
+test-report          Open test report
+test-scenario        Run specific scenario test
+validate-db          Validate all databases for current scenario
+validate-scenario    Validate scenario database state
+validate             Validate configuration and schemas
+wait_for_spanner     Wait for Spanner emulator to be ready
 ```
 
 ### `make init`
