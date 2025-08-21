@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0](https://github.com/nu0ma/spanwright/compare/v2.4.0...v2.5.0) (2025-08-21)
+
+
+### Features
+
+* change release flow ([#142](https://github.com/nu0ma/spanwright/issues/142)) ([e02d1fd](https://github.com/nu0ma/spanwright/commit/e02d1fdb9a0949dc4367cacf708d2cdb8bf11a66))
+
+
+### Bug Fixes
+
+* update release-please config for pnpm ([#138](https://github.com/nu0ma/spanwright/issues/138)) ([077aaa7](https://github.com/nu0ma/spanwright/commit/077aaa7e77a09b9abdfbcab2cdff4984876afc50))
+
 ## [2.4.0](https://github.com/nu0ma/spanwright/compare/v2.3.1...v2.4.0) (2025-08-11)
 
 
