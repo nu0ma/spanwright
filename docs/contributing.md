@@ -22,7 +22,7 @@ Thank you for your interest in contributing to Spanwright! This comprehensive gu
 
 Before contributing, ensure you have the following tools installed:
 
-- **Node.js** >= 22.0.0
+- **Node.js** >= 22.15.1
 - **pnpm** >= 9.0.0
 - **Docker** (for Spanner emulator)
 - **Go** >= 1.24.5 (for testing generated projects)
