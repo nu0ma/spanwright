@@ -20,13 +20,30 @@ make help
 Spanwright E2E Testing Framework
 ================================
 
+build                Build Go tools
 check-spalidate      Check spalidate availability
 check-tools          Check required tools
-clean               Clean up containers and artifacts
-help                Show this help
-init                Initialize project and check prerequisites
-start               Start Spanner emulator
-stop                Stop Spanner emulator
+clean-databases      Clean/reset databases for fresh scenario runs
+clean                Clean up containers and artifacts
+dev                  Development mode - setup and watch
+help                 Show this help
+init                 Initialize project and check prerequisites
+new-scenario         Create new scenario (SCENARIO=name required)
+run-all-scenarios    Run all scenarios
+run-all              Alias for run-all-scenarios
+setup-playwright     Setup Playwright
+setup-primary        Setup primary database
+setup-secondary      Setup secondary database
+setup                Setup databases and schemas
+start                Start Spanner emulator
+stop                 Stop Spanner emulator
+test-e2e             Run Playwright E2E tests
+test-report          Open test report
+test-scenario        Run specific scenario test
+validate-db          Validate all databases for current scenario
+validate-scenario    Validate scenario database state
+validate             Validate configuration and schemas
+wait_for_spanner     Wait for Spanner emulator to be ready
 ```
 
 ### `make init`
@@ -122,7 +139,7 @@ make setup-primary
 5. Injects seed data from current scenario
 
 ### `make setup-secondary`
-Setup only the secondary database (when `DB_COUNT=1`).
+Setup only the secondary database (when `DB_COUNT=2`).
 
 ```bash
 make setup-secondary
@@ -130,7 +147,7 @@ make setup-secondary
 
 **Process:**
 - Same as `setup-primary` but for secondary database
-- Only runs when `DB_COUNT=1` in environment
+- Only runs when `DB_COUNT=2` in environment
 
 ## Testing
 
@@ -207,7 +224,7 @@ make validate-scenario SCENARIO=example-01-basic-setup
 
 **Files Required:**
 - `scenarios/{SCENARIO}/expected-primary.yaml`
-- `scenarios/{SCENARIO}/expected-secondary.yaml` (when `DB_COUNT=1`)
+- `scenarios/{SCENARIO}/expected-secondary.yaml` (when `DB_COUNT=2`)
 
 ### `make validate-db`
 Alias for `validate-scenario` using current environment.
@@ -253,7 +270,7 @@ make validate
 **Checks:**
 - `.env` file exists
 - `PRIMARY_SCHEMA_PATH` is set and directory exists
-- `SECONDARY_SCHEMA_PATH` validation (when `DB_COUNT=1`)
+- `SECONDARY_SCHEMA_PATH` validation (when `DB_COUNT=2`)
 
 ### `make build`
 Build Go tools manually.
@@ -304,7 +321,7 @@ make dev
 | `INSTANCE_ID` | `test-instance` | Spanner instance ID |
 | `PRIMARY_DB_ID` | `primary-db` | Primary database ID |
 | `SECONDARY_DB_ID` | `secondary-db` | Secondary database ID |
-| `DB_COUNT=1) |
+| `DB_COUNT` | `2` | Number of databases (1 or 2) |
 | `SCENARIO` | `example-01-basic-setup` | Default scenario name |
 
 ### Docker Configuration

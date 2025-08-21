@@ -26,7 +26,7 @@ Create a new project with dual database configuration:
 
 ```bash
 # Set up environment for dual databases
-export SPANWRIGHT_DB_COUNT=1
+export SPANWRIGHT_DB_COUNT=2
 export SPANWRIGHT_PRIMARY_DB_NAME=user-service-db
 export SPANWRIGHT_PRIMARY_SCHEMA_PATH=./schemas/users
 export SPANWRIGHT_SECONDARY_DB_NAME=product-service-db
@@ -131,10 +131,10 @@ CREATE TABLE CartItems (
 
 Create directory structure:
 ```bash
-mkdir -p scenarios/scenario-01-user-registration/{fixtures/primary,fixtures/secondary,tests}
+mkdir -p scenarios/scenario-01-user-registration/{fixtures/user-service-db,fixtures/product-service-db,tests}
 ```
 
-**Seed Data** (`scenarios/scenario-01-user-registration/fixtures/primary/Categories.yml`):
+**Seed Data** (`scenarios/scenario-01-user-registration/fixtures/product-service-db/Categories.yml`):
 ```yaml
 - CategoryID: "cat-electronics"
   Name: "Electronics"
@@ -249,7 +249,7 @@ tables:
 
 #### Scenario 2: Product Search and Cart
 
-**Seed Data** (`scenarios/scenario-02-product-search/fixtures/secondary/Products.yml`):
+**Seed Data** (`scenarios/scenario-02-product-search/fixtures/product-service-db/Products.yml`):
 ```yaml
 - ProductID: "prod-iphone-15"
   CategoryID: "cat-smartphones"

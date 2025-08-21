@@ -5,7 +5,7 @@ Get up and running with Spanwright in 5 minutes. This guide will walk you throug
 ## Before You Start
 
 Make sure you have the [prerequisites installed](./installation):
-- Node.js 22.0.0+
+- Node.js 22.15.1+
 - Docker  
 - Go 1.24.5+
 - wrench CLI tool
