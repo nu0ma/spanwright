@@ -143,7 +143,7 @@ npx spanwright my-project --non-interactive
 
 | Variable | Description | Valid Values |
 |----------|-------------|--------------|
-| `SPANWRIGHT_DB_COUNT=1` |
+| `SPANWRIGHT_DB_COUNT` | Number of databases | `1` or `2` |
 | `SPANWRIGHT_PRIMARY_DB_NAME` | Primary DB name | Alphanumeric + hyphens/underscores |
 | `SPANWRIGHT_PRIMARY_SCHEMA_PATH` | Primary schema directory | Valid directory path |
 | `SPANWRIGHT_SECONDARY_DB_NAME` | Secondary DB name | Alphanumeric + hyphens/underscores |

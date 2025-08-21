@@ -26,7 +26,7 @@ docker logs spanner-emulator
 
 **Symptom:**
 ```
-Error: This package requires Node.js >= 22.0.0
+Error: This package requires Node.js >= 22.15.1
 ```
 
 **Solution:**

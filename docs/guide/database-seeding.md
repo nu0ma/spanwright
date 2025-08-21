@@ -220,22 +220,86 @@ make seed-secondary SCENARIO=example-01-basic-setup
 
 ### Loading Order
 
-The seed injector loads fixtures alphabetically by filename:
-1. `Orders.yml`
-2. `Products.yml`  
-3. `Users.yml`
+The seed injector uses intelligent table dependency ordering:
 
-Control loading order with prefixes:
+#### Built-in Dependency Order
+```go
+// Preferred loading order (built into seed-injector)
+1. Users         # Parent tables first
+2. Products      # Independent entities  
+3. Orders        # Tables with foreign keys
+4. OrderItems    # Child/junction tables
+5. Analytics     # Analytics and log tables
+6. UserLogs      # Event tables
+```
+
+#### Alphabetical Fallback
+For tables not in the preferred list, files are loaded alphabetically:
 ```
 fixtures/
-├── 01_Users.yml           # Load first
-├── 02_Products.yml        # Load second
-└── 03_Orders.yml          # Load third
+├── Categories.yml         # Alphabetical: C
+├── Inventory.yml         # Alphabetical: I  
+└── Suppliers.yml         # Alphabetical: S
 ```
 
-## Performance Optimization
+#### Manual Override with Prefixes
+Override automatic ordering with numerical prefixes:
+```
+fixtures/
+├── 01_Users.yml          # Force first
+├── 02_Products.yml       # Force second
+└── 03_Orders.yml         # Force third
+```
 
-### Batch Operations
+#### Missing Table Handling
+The seed injector automatically skips fixtures for non-existent tables:
+```bash
+📄 Found fixture for table: Users
+📄 Found fixture for table: Products  
+⚠️ Skipping fixture for non-existent table: Analytics
+```
+
+## Advanced Features
+
+### Automatic Retry Logic
+
+The seed injector includes built-in retry functionality for reliability:
+
+```bash
+# Automatic retries for:
+🌱 Injecting seed data using testfixtures...
+🔄 Retrying database connection (attempt 2/3)...
+🔄 Retrying fixture loading (attempt 1/3)...
+✅ Seed data injection completed successfully
+```
+
+**Retry Scenarios:**
+- Network connection failures
+- Database connection timeouts  
+- Temporary Spanner unavailability
+- Resource exhaustion errors
+
+### Security Validation
+
+All inputs are validated for security:
+
+```bash
+# Database ID validation
+✅ Valid: "primary-db"
+❌ Invalid: "db'; DROP TABLE Users; --"
+
+# Table name validation  
+✅ Valid: "Users"
+❌ Invalid: "../../../etc/passwd"
+
+# Path traversal protection
+✅ Valid: "./fixtures/Users.yml"
+❌ Invalid: "../../sensitive/data.yml"
+```
+
+### Performance Optimization
+
+#### Batch Operations
 
 The Go seed injector automatically batches operations:
 
@@ -244,14 +308,18 @@ The Go seed injector automatically batches operations:
 // - Groups INSERT operations by table
 // - Uses Spanner batch APIs
 // - Pools connections for reuse
+// - Validates table existence before loading
 ```
 
-### Connection Pooling
+#### Connection Pooling
+
+Optimized for production workloads:
 
 ```bash
-# Environment tuning for large datasets
-export SPANNER_MAX_CONNECTIONS=10
-export SPANNER_BATCH_SIZE=100
+# Internal connection management
+🔄 Creating pooled Spanner connection...
+📊 Connection pool: 5/10 active connections
+🔄 Reusing existing database connection
 ```
 
 ## Troubleshooting

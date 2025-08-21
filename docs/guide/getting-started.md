@@ -2,14 +2,14 @@
 
 ## Installation
 
-Spanwright requires Node.js 22.0.0 or higher and a few external tools.
+Spanwright requires Node.js 22.15.1 or higher and a few external tools.
 
 ### Prerequisites
 
 Install these tools first:
 
 ```bash
-# Node.js (>= 22.0.0)
+# Node.js (>= 22.15.1)
 node --version
 
 # Docker (for Spanner emulator)

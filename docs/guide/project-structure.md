@@ -7,33 +7,47 @@ Understanding the generated project structure helps you organize tests effective
 ```
 your-project/
 ├── Makefile                    # 🔧 Workflow automation
-├── .env                        # 🔐 Environment configuration  
+├── .env                        # 🔐 Environment configuration (generated)
 ├── package.json               # 📦 Node.js dependencies
 ├── playwright.config.ts       # 🎭 Playwright configuration
 ├── tsconfig.json              # 📝 TypeScript settings
 ├── go.mod                     # 🐹 Go module definition
-├── schema/                    # 🗄️ Database schemas
 ├── cmd/                       # 🛠️ Go CLI tools
+│   └── seed-injector/         # Data seeding tool
 ├── internal/                  # 📚 Go internal packages  
+│   └── spanwright/           # Core Spanwright functionality
 ├── scenarios/                 # 🧪 Test scenarios
-└── tests/                     # 🔬 Test infrastructure
+│   └── example-01-basic-setup/ # Example scenario
+├── tests/                     # 🔬 Test infrastructure
+└── expected-*.yaml.template   # Database validation templates
 ```
 
-## Schema Directory
+## Schema Management
 
-Database schema files that define your Spanner tables:
+Database schema files are organized in directories you specify during project creation:
 
 ```
-schema/
+# For single database projects
+./schema/
 ├── 001_initial_schema.sql     # Core tables (Users, etc.)
 ├── 002_products_schema.sql    # Product-related tables
 └── 003_analytics_schema.sql   # Analytics tables
+
+# For multi-database projects
+./schemas/
+├── users/                     # Primary database schemas
+│   ├── 001_users.sql
+│   └── 002_auth.sql
+└── products/                  # Secondary database schemas
+    ├── 001_products.sql
+    └── 002_inventory.sql
 ```
 
 **Key Features:**
-- **Sequential Application** - Files applied in alphabetical order
+- **Sequential Application** - Files applied in alphabetical order via wrench
 - **Multiple Files** - Organize schemas by domain/feature
 - **SQL Format** - Standard Spanner DDL statements
+- **Configurable Paths** - Set via `PRIMARY_SCHEMA_PATH` and `SECONDARY_SCHEMA_PATH`
 
 ## Go Tools (`cmd/`)
 

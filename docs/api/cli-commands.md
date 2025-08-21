@@ -107,14 +107,8 @@ make run-all-scenarios
 # Run specific scenario
 make run-scenario SCENARIO=example-01-basic-setup
 
-# List available scenarios
-make list-scenarios
-
 # Run only Playwright tests (without seeding/validation)
 make test-e2e
-
-# Run Playwright tests with UI
-make test-e2e-ui
 
 # Generate test report
 make test-report
@@ -130,10 +124,7 @@ make help
 make clean
 
 # Build Go tools
-make build-go
-
-# Run linting
-make lint
+make build
 ```
 
 ## Advanced Usage
