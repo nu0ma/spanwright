@@ -91,7 +91,7 @@ async function createProject(): Promise<void> {
     console.log('📋 Next steps:');
     console.log(`  cd ${projectName}`);
     console.log('  make init           # Initial setup');
-    console.log('  make run-all-examples  # Run samples');
+    console.log('  make run-all-scenarios  # Run samples');
     console.log('');
     console.log('🔧 Create new test scenario:');
     console.log('  make new-scenario SCENARIO=scenario-01-my-test');
