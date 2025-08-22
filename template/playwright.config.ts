@@ -40,8 +40,8 @@ export default defineConfig({
   },
 
   /* Global setup and teardown for shared database management */
-  globalSetup: require.resolve('./tests/global-setup'),
-  globalTeardown: require.resolve('./tests/global-teardown'),
+  globalSetup: './tests/global-setup.ts',
+  globalTeardown: './tests/global-teardown.ts',
 
   /* Configure projects for major browsers */
   projects: [
