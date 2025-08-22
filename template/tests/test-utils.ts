@@ -1,6 +1,7 @@
 import { execFileSync } from 'child_process';
-import { existsSync } from 'fs';
+import { existsSync, readdirSync, statSync } from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 /**
  * Simple test utilities
@@ -51,8 +52,19 @@ export function mockValidateDatabase(databaseId: string): ValidationResult[] {
 }
 
 export function validateDatabaseState(database: 'primary' | 'secondary', databaseId?: string): boolean {
-  const validationFile = path.join(process.cwd(), `expected-${database}.yaml`);
-  const config   = {
+  const stack = new Error().stack;
+  const scenarioMatch = stack?.match(/scenarios\/([^/]+)\/tests/);
+  if (!scenarioMatch) {
+    throw new Error("Scenario not found");
+  }
+
+  const scenario = scenarioMatch[1];
+  const validationFile = path.join(process.cwd(), 'scenarios', scenario, `expected-${database}.yaml`);
+  if (!existsSync(validationFile)) {
+    throw new Error(`Expected file not found: ${validationFile}`);
+  }
+  
+  const config  = {
     projectId: process.env.PROJECT_ID || 'test-project',
     instanceId: process.env.INSTANCE_ID || 'test-instance',
     databaseId: databaseId || (database === 'primary' 
@@ -61,10 +73,6 @@ export function validateDatabaseState(database: 'primary' | 'secondary', databas
     emulatorHost: process.env.SPANNER_EMULATOR_HOST || 'localhost:9010'
   }
   
-  if (!existsSync(validationFile)) {
-    return true;
-  }
-
   const { projectId, instanceId, databaseId: targetDatabaseId, emulatorHost } = config;
   
   const spalidateArgs = [
@@ -83,8 +91,18 @@ export function validateDatabaseState(database: 'primary' | 'secondary', databas
       maxBuffer: 1024 * 1024
     });
     
+    console.log(`✅ Database validation passed for ${database}: ${validationFile}`);
     return true;
   } catch (error: any) {
-    throw new Error(`❌ Database validation failed: ${error.message}`);
+    const errorDetails = [
+      `❌ Database validation failed for ${database} database`,
+      `Validation file: ${validationFile}`,
+      `Command: spalidate ${spalidateArgs.join(' ')}`,
+      `Database ID: ${targetDatabaseId}`,
+      `Emulator: ${emulatorHost}`,
+       error.stdout
+    ];
+    
+    throw new Error(errorDetails.join('\n'));
   }
 }
