@@ -103,10 +103,6 @@ export function validateDatabaseState(database: 'primary' | 'secondary', databas
        error.stdout
     ];
     
-    if (error.stdout) {
-      errorDetails.push('STDOUT:', error.stdout);
-    }
-    
     throw new Error(errorDetails.join('\n'));
   }
 }
