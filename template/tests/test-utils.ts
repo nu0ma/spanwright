@@ -52,18 +52,19 @@ export function mockValidateDatabase(databaseId: string): ValidationResult[] {
 }
 
 export function validateDatabaseState(database: 'primary' | 'secondary', databaseId?: string): boolean {
-  let validationFile = path.join(process.cwd(), `expected-${database}.yaml`); // デフォルト
-  
   const stack = new Error().stack;
   const scenarioMatch = stack?.match(/scenarios\/([^/]+)\/tests/);
-  if (scenarioMatch) {
-    const scenario = scenarioMatch[1];
-    const scenarioFile = path.join(process.cwd(), 'scenarios', scenario, `expected-${database}.yaml`);
-    if (existsSync(scenarioFile)) {
-      validationFile = scenarioFile;
-    }
+  if (!scenarioMatch) {
+    throw new Error("Scenario not found. Please set SPANWRIGHT_SCENARIO environment variable.");
   }
-  const config   = {
+
+  const scenario = scenarioMatch[1];
+  const validationFile = path.join(process.cwd(), 'scenarios', scenario, `expected-${database}.yaml`);
+  if (!existsSync(validationFile)) {
+    throw new Error(`Expected file not found: ${validationFile}`);
+  }
+  
+  const config  = {
     projectId: process.env.PROJECT_ID || 'test-project',
     instanceId: process.env.INSTANCE_ID || 'test-instance',
     databaseId: databaseId || (database === 'primary' 
@@ -72,10 +73,6 @@ export function validateDatabaseState(database: 'primary' | 'secondary', databas
     emulatorHost: process.env.SPANNER_EMULATOR_HOST || 'localhost:9010'
   }
   
-  if (!existsSync(validationFile)) {
-    throw new Error(`Missing expected file: ${validationFile}`);
-  }
-
   const { projectId, instanceId, databaseId: targetDatabaseId, emulatorHost } = config;
   
   const spalidateArgs = [
