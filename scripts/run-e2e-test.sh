@@ -163,9 +163,9 @@ test_make_commands() {
         log_warn "Make help command failed, but continuing..."
     fi
     
-    # Test prerequisite check
-    if ! make check-tools; then
-        log_error "Make check-tools failed"
+    # Test start command (includes tool checking)
+    if ! make start; then
+        log_error "Make start failed"
         exit 1
     fi
     
@@ -179,12 +179,12 @@ run_full_e2e_tests() {
     cd "$TEST_PROJECT_PATH"
     
     # Run all scenarios - this includes emulator setup, schema creation, seeding, and Playwright tests
-    if ! make run-all-scenarios; then
+    if ! make test; then
         log_error "E2E pipeline failed"
         # Skip interactive report generation in CI environment
         if [ -z "$CI" ]; then
             log_warn "E2E tests failed, attempting to generate report..."
-            make test-report || true
+            npx playwright show-report || true
         else
             log_warn "E2E tests failed (skipping interactive report in CI environment)"
         fi
