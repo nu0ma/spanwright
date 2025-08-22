@@ -96,21 +96,15 @@ export function validateDatabaseState(database: 'primary' | 'secondary', databas
   } catch (error: any) {
     const errorDetails = [
       `❌ Database validation failed for ${database} database`,
-      `📁 Validation file: ${validationFile}`,
-      `🔧 Command: spalidate ${spalidateArgs.join(' ')}`,
-      `📊 Database ID: ${targetDatabaseId}`,
-      `🌐 Emulator: ${emulatorHost}`,
-      ''
+      `Validation file: ${validationFile}`,
+      `Command: spalidate ${spalidateArgs.join(' ')}`,
+      `Database ID: ${targetDatabaseId}`,
+      `Emulator: ${emulatorHost}`,
+       error.stdout
     ];
     
     if (error.stdout) {
-      errorDetails.push('📤 STDOUT:', error.stdout);
-    }
-    if (error.stderr) {
-      errorDetails.push('📤 STDERR:', error.stderr);
-    }
-    if (error.code !== undefined) {
-      errorDetails.push(`🔢 Exit code: ${error.code}`);
+      errorDetails.push('STDOUT:', error.stdout);
     }
     
     throw new Error(errorDetails.join('\n'));
