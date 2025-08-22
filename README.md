@@ -78,10 +78,6 @@ make clean                     # Clean build artifacts
 make help                      # Show all available commands
 ```
 
-## Documentation
-
-📚 **[Full Documentation](https://nu0ma.github.io/spanwright)** - Comprehensive guides, tutorials, and API reference
-
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and contribution guidelines.
