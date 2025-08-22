@@ -56,11 +56,13 @@ npm run format
 
 ## Version Management
 ```bash
-# Update Go version across all templates and configs
-npm run update-go-version <version>
+# Check current Go version
+cat .tool-versions | grep go
 
-# Example: Update to Go 1.24.3
-npm run update-go-version 1.24.3
+# Manually update Go version in:
+# - .tool-versions
+# - .mise.toml 
+# - template/go.mod.template
 ```
 
 ## Testing Generated Projects
