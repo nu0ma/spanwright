@@ -38,9 +38,6 @@ npm run test:unit:coverage
 
 ### 4. Template Validation (if template changes)
 ```bash
-# If Go version was updated
-npm run update-go-version <version>
-
 # Test generated project works
 npx spanwright ci-test-project
 cd ci-test-project
