@@ -62,7 +62,7 @@ export function validateDatabaseState(database: 'primary' | 'secondary', databas
   }
   
   if (!existsSync(validationFile)) {
-    return true;
+    throw new Error(`Missing expected file: ${validationFile}`);
   }
 
   const { projectId, instanceId, databaseId: targetDatabaseId, emulatorHost } = config;
