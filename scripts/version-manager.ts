@@ -2,7 +2,7 @@
 
 import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
-import { VersionConfig, VersionLocation, VersionUpdateResult, VersionUpdateTarget } from '../types/version-config';
+import { VersionConfig, VersionLocation, VersionUpdateResult } from '../types/version-config';
 import { loadVersionConfig, clearVersionConfigCache } from './version-config-loader';
 
 const VERSION_LOCATIONS: VersionLocation[] = [
