@@ -55,7 +55,7 @@ export function validateDatabaseState(database: 'primary' | 'secondary', databas
   const stack = new Error().stack;
   const scenarioMatch = stack?.match(/scenarios\/([^/]+)\/tests/);
   if (!scenarioMatch) {
-    throw new Error("Scenario not found. Please set SPANWRIGHT_SCENARIO environment variable.");
+    throw new Error("Scenario not found");
   }
 
   const scenario = scenarioMatch[1];
