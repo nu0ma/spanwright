@@ -1,0 +1,168 @@
+name: Update Versions
+
+on:
+  workflow_dispatch:
+    inputs:
+      component:
+        description: 'Component to update'
+        required: true
+        type: choice
+        options: ['go', 'node', 'pnpm', 'dependencies', 'all']
+        default: 'all'
+      version:
+        description: 'Specific version (for runtime updates only)'
+        required: false
+        type: string
+      dependency_name:
+        description: 'Dependency name (for dependency updates only)'
+        required: false
+        type: string
+      dependency_version:
+        description: 'Dependency version (for dependency updates only)'
+        required: false
+        type: string
+      dependency_scope:
+        description: 'Dependency scope (for dependency updates only)'
+        required: false
+        type: choice
+        options: ['go', 'cli', 'template']
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-versions:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.tool-versions'
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: '.tool-versions'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build project
+        run: pnpm run build
+
+      - name: Validate current versions
+        run: pnpm run validate-versions
+
+      - name: Update runtime version
+        if: ${{ github.event.inputs.component != 'dependencies' && github.event.inputs.component != 'all' && github.event.inputs.version }}
+        run: pnpm run update-version ${{ github.event.inputs.component }} ${{ github.event.inputs.version }}
+
+      - name: Update dependency
+        if: ${{ github.event.inputs.component == 'dependencies' && github.event.inputs.dependency_name && github.event.inputs.dependency_version && github.event.inputs.dependency_scope }}
+        run: pnpm run update-dependency ${{ github.event.inputs.dependency_name }} ${{ github.event.inputs.dependency_version }} ${{ github.event.inputs.dependency_scope }}
+
+      - name: Update all versions
+        if: ${{ github.event.inputs.component == 'all' }}
+        run: |
+          echo "🔄 Updating all versions from versions.json..."
+          pnpm run update-all-versions
+
+      - name: Validate updated versions
+        run: pnpm run validate-versions
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet; then
+            echo "changes=false" >> $GITHUB_OUTPUT
+            echo "No changes detected"
+          else
+            echo "changes=true" >> $GITHUB_OUTPUT
+            echo "Changes detected"
+            git diff --name-only
+          fi
+
+      - name: Create Pull Request
+        if: steps.changes.outputs.changes == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: |
+            chore: update versions
+            
+            - Component: ${{ github.event.inputs.component || 'all' }}
+            - Triggered by: ${{ github.event_name }}
+            - Updated files automatically validated
+          title: 'chore: update versions (${{ github.event.inputs.component || 'all' }})'
+          body: |
+            ## Version Update Summary
+            
+            This PR updates versions based on the following configuration:
+            
+            **Trigger**: Manual workflow dispatch
+            **Component**: ${{ github.event.inputs.component || 'all' }}
+            
+            ### Changes Made
+            
+            ${{ github.event.inputs.version && format('- Runtime version: {0} → {1}', github.event.inputs.component, github.event.inputs.version) || '' }}
+            ${{ github.event.inputs.dependency_name && format('- Dependency: {0} → {1} ({2})', github.event.inputs.dependency_name, github.event.inputs.dependency_version, github.event.inputs.dependency_scope) || '' }}
+            
+            ### Validation Status
+            
+            ✅ All version consistency checks passed
+            ✅ Tests completed successfully
+            ✅ Build completed successfully
+            
+            ### Files Updated
+            
+            The following files were automatically updated and validated:
+            
+            ```
+            $(git diff --name-only HEAD~1)
+            ```
+            
+            ### Next Steps
+            
+            1. Review the changes in this PR
+            2. Verify that all version updates are appropriate
+            3. Merge if everything looks correct
+            
+            This PR was created automatically by the version update workflow.
+          branch: chore/update-versions-${{ github.run_number }}
+          delete-branch: true
+          
+      - name: Output summary
+        if: always()
+        run: |
+          echo "## Version Update Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Workflow**: ${{ github.workflow }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Trigger**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Component**: ${{ github.event.inputs.component || 'all' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Changes**: ${{ steps.changes.outputs.changes }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.changes.outputs.changes }}" == "true" ]; then
+            echo "### Files Changed" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            git diff --name-only >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "No changes were made." >> $GITHUB_STEP_SUMMARY
+          fi

@@ -14,6 +14,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Version Management
 - `pnpm run update-go-version <version>` - Update Go version across all configuration files and templates
 
+#### Enhanced Version Management System
+- `pnpm run update-version <runtime> <version>` - Update runtime versions (go, node, pnpm)
+- `pnpm run update-dependency <name> <version> <scope>` - Update dependencies (scope: go, cli, template)
+- `pnpm run update-all-versions` - Update all versions from versions.json
+- `pnpm run validate-versions` - Validate version consistency across all files
+- `pnpm run test-version-management` - Run comprehensive version management tests
+
+The system uses a centralized `versions.json` file as the single source of truth for all version information.
+
 ## Development Workflow
 
 1. **Edit templates** in `template/` directory

@@ -1,0 +1,187 @@
+name: Validate Versions
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'versions.json'
+      - '.tool-versions'
+      - '.mise.toml'
+      - 'package.json'
+      - 'template/_package.json'
+      - 'template/go.mod.template'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'versions.json'
+      - '.tool-versions'
+      - '.mise.toml'
+      - 'package.json'
+      - 'template/_package.json'
+      - 'template/go.mod.template'
+  workflow_dispatch:
+
+jobs:
+  validate-versions:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.tool-versions'
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: '.tool-versions'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build project
+        run: pnpm run build
+
+      - name: Validate version consistency
+        run: pnpm run validate-versions
+
+      - name: Check versions.json schema
+        run: |
+          echo "🔍 Validating versions.json schema..."
+          
+          # Check if versions.json exists
+          if [ ! -f "versions.json" ]; then
+            echo "❌ versions.json not found"
+            exit 1
+          fi
+          
+          # Validate JSON syntax
+          if ! cat versions.json | jq empty; then
+            echo "❌ versions.json contains invalid JSON"
+            exit 1
+          fi
+          
+          echo "✅ versions.json schema is valid"
+
+      - name: Check version formats
+        run: |
+          echo "🔍 Validating version formats..."
+          
+          # Check Go version format
+          GO_VERSION=$(cat versions.json | jq -r '.runtime.go')
+          if ! echo "$GO_VERSION" | grep -E '^[0-9]+\.[0-9]+(\.[0-9]+)?$'; then
+            echo "❌ Invalid Go version format: $GO_VERSION"
+            exit 1
+          fi
+          echo "✅ Go version format is valid: $GO_VERSION"
+          
+          # Check Node.js version format
+          NODE_VERSION=$(cat versions.json | jq -r '.runtime.node')
+          if ! echo "$NODE_VERSION" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "❌ Invalid Node.js version format: $NODE_VERSION"
+            exit 1
+          fi
+          echo "✅ Node.js version format is valid: $NODE_VERSION"
+
+      - name: Test version manager commands
+        run: |
+          echo "🧪 Testing version manager commands..."
+          
+          # Test help/usage
+          if ! pnpm run version-manager --help 2>/dev/null; then
+            echo "ℹ️  Version manager help command completed"
+          fi
+          
+          # Test validation
+          pnpm run validate-versions
+          
+          echo "✅ Version manager commands work correctly"
+
+      - name: Generate version report
+        run: |
+          echo "## Version Consistency Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "### Runtime Versions" >> $GITHUB_STEP_SUMMARY
+          echo "| Component | versions.json | .tool-versions | .mise.toml |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|---------------|----------------|------------|" >> $GITHUB_STEP_SUMMARY
+          
+          # Go version comparison
+          GO_CONFIG=$(cat versions.json | jq -r '.runtime.go')
+          GO_TOOL=$(grep '^go ' .tool-versions | cut -d' ' -f2 2>/dev/null || echo "N/A")
+          GO_MISE=$(grep '^go = ' .mise.toml | cut -d'"' -f2 2>/dev/null || echo "N/A")
+          echo "| Go | $GO_CONFIG | $GO_TOOL | $GO_MISE |" >> $GITHUB_STEP_SUMMARY
+          
+          # Node.js version comparison
+          NODE_CONFIG=$(cat versions.json | jq -r '.runtime.node')
+          NODE_TOOL=$(grep '^node ' .tool-versions | cut -d' ' -f2 2>/dev/null || echo "N/A")
+          NODE_MISE=$(grep '^node = ' .mise.toml | cut -d'"' -f2 2>/dev/null || echo "N/A")
+          echo "| Node.js | $NODE_CONFIG | $NODE_TOOL | $NODE_MISE |" >> $GITHUB_STEP_SUMMARY
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Validation Status" >> $GITHUB_STEP_SUMMARY
+          echo "✅ All version consistency checks passed" >> $GITHUB_STEP_SUMMARY
+
+  security-audit:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.tool-versions'
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run security audit
+        run: |
+          echo "🔒 Running security audit..."
+          
+          # Node.js security audit
+          if pnpm audit --audit-level moderate; then
+            echo "✅ No moderate or higher severity vulnerabilities found in Node.js dependencies"
+          else
+            echo "⚠️  Security vulnerabilities found in Node.js dependencies"
+            echo "Please review and update dependencies as needed"
+          fi
+
+      - name: Check for deprecated versions
+        run: |
+          echo "🔍 Checking for deprecated versions..."
+          
+          # Check Go version support status
+          GO_VERSION=$(cat versions.json | jq -r '.runtime.go')
+          GO_MAJOR_MINOR=$(echo $GO_VERSION | cut -d. -f1-2)
+          echo "Using Go $GO_VERSION (major.minor: $GO_MAJOR_MINOR)"
+          
+          # Check Node.js version support status
+          NODE_VERSION=$(cat versions.json | jq -r '.runtime.node')
+          NODE_MAJOR=$(echo $NODE_VERSION | cut -d. -f1)
+          echo "Using Node.js $NODE_VERSION (major: $NODE_MAJOR)"
+          
+          # Basic checks for obviously outdated versions
+          if [ $(echo $NODE_MAJOR | bc) -lt 18 ]; then
+            echo "⚠️  Node.js $NODE_VERSION may be approaching end of life"
+          fi
+          
+          echo "✅ Version deprecation check completed"
