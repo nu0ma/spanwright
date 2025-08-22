@@ -3,6 +3,7 @@
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { loadVersionConfig } from './version-config-loader';
+import { VersionConfig } from '../types/version-config';
 
 interface ValidationResult {
   success: boolean;
@@ -46,7 +47,7 @@ export async function validateAllVersions(): Promise<ValidationResult> {
   return result;
 }
 
-async function validateRuntimeVersions(config: any, result: ValidationResult): Promise<void> {
+async function validateRuntimeVersions(config: VersionConfig, result: ValidationResult): Promise<void> {
   console.log('🔍 Validating runtime versions...');
 
   // Check .tool-versions
@@ -65,7 +66,7 @@ async function validateRuntimeVersions(config: any, result: ValidationResult): P
   await validateTemplatePackageJsonEngines(config, result);
 }
 
-async function validateToolVersions(config: any, result: ValidationResult): Promise<void> {
+async function validateToolVersions(config: VersionConfig, result: ValidationResult): Promise<void> {
   const filePath = '.tool-versions';
   const fullPath = join(process.cwd(), filePath);
   
@@ -105,7 +106,7 @@ async function validateToolVersions(config: any, result: ValidationResult): Prom
   }
 }
 
-async function validateMiseConfig(config: any, result: ValidationResult): Promise<void> {
+async function validateMiseConfig(config: VersionConfig, result: ValidationResult): Promise<void> {
   const filePath = '.mise.toml';
   const fullPath = join(process.cwd(), filePath);
   
@@ -143,7 +144,7 @@ async function validateMiseConfig(config: any, result: ValidationResult): Promis
   }
 }
 
-async function validateGoMod(config: any, result: ValidationResult): Promise<void> {
+async function validateGoMod(config: VersionConfig, result: ValidationResult): Promise<void> {
   const filePath = 'template/go.mod.template';
   const fullPath = join(process.cwd(), filePath);
   
@@ -183,7 +184,7 @@ async function validateGoMod(config: any, result: ValidationResult): Promise<voi
   }
 }
 
-async function validatePackageJsonEngines(config: any, result: ValidationResult): Promise<void> {
+async function validatePackageJsonEngines(config: VersionConfig, result: ValidationResult): Promise<void> {
   const filePath = 'package.json';
   const fullPath = join(process.cwd(), filePath);
   
@@ -213,7 +214,7 @@ async function validatePackageJsonEngines(config: any, result: ValidationResult)
   }
 }
 
-async function validateTemplatePackageJsonEngines(config: any, result: ValidationResult): Promise<void> {
+async function validateTemplatePackageJsonEngines(config: VersionConfig, result: ValidationResult): Promise<void> {
   const filePath = 'template/_package.json';
   const fullPath = join(process.cwd(), filePath);
   
@@ -238,7 +239,7 @@ async function validateTemplatePackageJsonEngines(config: any, result: Validatio
   }
 }
 
-async function validateDependencyVersions(config: any, result: ValidationResult): Promise<void> {
+async function validateDependencyVersions(config: VersionConfig, result: ValidationResult): Promise<void> {
   console.log('🔍 Validating dependency versions...');
 
   // Check Go dependencies in go.mod.template
@@ -251,7 +252,7 @@ async function validateDependencyVersions(config: any, result: ValidationResult)
   await validateTemplateDependencies(config, result);
 }
 
-async function validateGoModDependencies(config: any, result: ValidationResult): Promise<void> {
+async function validateGoModDependencies(config: VersionConfig, result: ValidationResult): Promise<void> {
   const filePath = 'template/go.mod.template';
   const fullPath = join(process.cwd(), filePath);
   
@@ -282,7 +283,7 @@ async function validateGoModDependencies(config: any, result: ValidationResult):
   }
 }
 
-async function validateCliDependencies(config: any, result: ValidationResult): Promise<void> {
+async function validateCliDependencies(config: VersionConfig, result: ValidationResult): Promise<void> {
   const filePath = 'package.json';
   const fullPath = join(process.cwd(), filePath);
   
@@ -313,7 +314,7 @@ async function validateCliDependencies(config: any, result: ValidationResult): P
   }
 }
 
-async function validateTemplateDependencies(config: any, result: ValidationResult): Promise<void> {
+async function validateTemplateDependencies(config: VersionConfig, result: ValidationResult): Promise<void> {
   const filePath = 'template/_package.json';
   const fullPath = join(process.cwd(), filePath);
   

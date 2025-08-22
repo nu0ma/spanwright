@@ -37,8 +37,6 @@ export interface VersionPattern {
   description: string;
 }
 
-export type VersionUpdateTarget = 'go' | 'node' | 'pnpm' | 'dependency';
-
 export interface VersionUpdateResult {
   success: boolean;
   updatedFiles: string[];
