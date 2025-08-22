@@ -17,7 +17,7 @@ DOCKER_IMAGE ?= gcr.io/cloud-spanner-emulator/emulator
 DOCKER_CONTAINER_NAME ?= spanner-emulator
 DOCKER_SPANNER_PORT ?= 9010
 
-.PHONY: help init start stop setup test
+.PHONY: help init start stop setup test test-scenario
 
 help: ## Show available commands
 	@echo "Spanwright E2E Testing Framework"
@@ -101,7 +101,6 @@ endif
 
 test: ## Run complete E2E test workflow
 	@echo "🚀 Running complete E2E test workflow..."
-	@$(MAKE) start >/dev/null 2>&1
 	@scenarios=$$(ls scenarios/ | grep -E '^(scenario|example)-'); \
 	if [ -z "$$scenarios" ]; then \
 		echo "❌ No scenarios found"; exit 1; \
@@ -111,28 +110,7 @@ test: ## Run complete E2E test workflow
 	for scenario in $$scenarios; do \
 		total=$$((total + 1)); \
 		echo ""; \
-		echo "═══════════════════════════════════════════════════════════"; \
-		echo "🧪 SCENARIO: $$scenario"; \
-		echo "═══════════════════════════════════════════════════════════"; \
-		if SCENARIO=$$scenario $(MAKE) setup >/dev/null 2>&1 && \
-		   SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) \
-		   PROJECT_ID=$(PROJECT_ID) INSTANCE_ID=$(INSTANCE_ID) \
-		   PRIMARY_DB_ID=$(PRIMARY_DB_ID) SECONDARY_DB_ID=$(SECONDARY_DB_ID) \
-		   DB_COUNT=$(DB_COUNT) npx playwright test --grep $$scenario && \
-		   ([ ! -f "scenarios/$$scenario/expected-primary.yaml" ] || \
-		    SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) spalidate \
-		    --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(PRIMARY_DB_ID) \
-		    scenarios/$$scenario/expected-primary.yaml) && \
-		   ([ $(DB_COUNT) -ne 2 ] || [ ! -f "scenarios/$$scenario/expected-secondary.yaml" ] || \
-		    SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) spalidate \
-		    --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(SECONDARY_DB_ID) \
-		    scenarios/$$scenario/expected-secondary.yaml) && \
-		   (SPANNER_PROJECT_ID=$(PROJECT_ID) SPANNER_INSTANCE_ID=$(INSTANCE_ID) \
-		    SPANNER_DATABASE_ID=$(PRIMARY_DB_ID) SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) \
-		    wrench truncate >/dev/null 2>&1 || true) && \
-		   ([ $(DB_COUNT) -eq 2 ] && SPANNER_PROJECT_ID=$(PROJECT_ID) SPANNER_INSTANCE_ID=$(INSTANCE_ID) \
-		    SPANNER_DATABASE_ID=$(SECONDARY_DB_ID) SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) \
-		    wrench truncate >/dev/null 2>&1 || true); then \
+		if $(MAKE) test-scenario SCENARIO=$$scenario; then \
 			echo "✅ $$scenario: PASSED"; \
 			passed=$$((passed + 1)); \
 		else \
@@ -148,11 +126,44 @@ test: ## Run complete E2E test workflow
 	echo "Passed: $$passed scenarios"; \
 	echo "Failed: $$failed scenarios"; \
 	echo ""; \
-	docker stop $(DOCKER_CONTAINER_NAME) >/dev/null 2>&1 || true; \
-	docker rm $(DOCKER_CONTAINER_NAME) >/dev/null 2>&1 || true; \
 	if [ $$failed -gt 0 ]; then \
 		echo "❌ Some scenarios failed"; \
 		exit 1; \
 	else \
 		echo "✅ All scenarios passed"; \
 	fi
+
+test-scenario: ## Run E2E test for a specific scenario (use SCENARIO=scenario-name)
+	@if [ -z "$(SCENARIO)" ]; then \
+		echo "❌ SCENARIO parameter is required"; \
+		echo "Usage: make test-scenario SCENARIO=example-01-basic-setup"; \
+		exit 1; \
+	fi
+	@if [ ! -d "scenarios/$(SCENARIO)" ]; then \
+		echo "❌ Scenario '$(SCENARIO)' not found"; \
+		echo "Available scenarios:"; \
+		@ls scenarios/ | grep -E '^(scenario|example)-' || echo "  No scenarios found"; \
+		exit 1; \
+	fi
+	@echo "🧪 Running E2E test for scenario: $(SCENARIO)"
+	@echo "═══════════════════════════════════════════════════════════"
+	@$(MAKE) start >/dev/null 2>&1
+	@echo "🏗️ Setting up scenario..."
+	@SCENARIO=$(SCENARIO) $(MAKE) setup >/dev/null 2>&1 || { echo "❌ Setup failed"; exit 1; }
+	@echo "🎭 Running Playwright tests (includes database validation)..."
+	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) \
+	 PROJECT_ID=$(PROJECT_ID) INSTANCE_ID=$(INSTANCE_ID) \
+	 PRIMARY_DB_ID=$(PRIMARY_DB_ID) SECONDARY_DB_ID=$(SECONDARY_DB_ID) \
+	 DB_COUNT=$(DB_COUNT) npx playwright test --grep $(SCENARIO) || { echo "❌ Playwright tests failed"; exit 1; }
+	@echo "🧹 Cleaning up..."
+	@SPANNER_PROJECT_ID=$(PROJECT_ID) SPANNER_INSTANCE_ID=$(INSTANCE_ID) \
+	 SPANNER_DATABASE_ID=$(PRIMARY_DB_ID) SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) \
+	 wrench truncate >/dev/null 2>&1 || true
+	@if [ $(DB_COUNT) -eq 2 ]; then \
+		SPANNER_PROJECT_ID=$(PROJECT_ID) SPANNER_INSTANCE_ID=$(INSTANCE_ID) \
+		SPANNER_DATABASE_ID=$(SECONDARY_DB_ID) SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) \
+		wrench truncate >/dev/null 2>&1 || true; \
+	fi
+	@docker stop $(DOCKER_CONTAINER_NAME) >/dev/null 2>&1 || true
+	@docker rm $(DOCKER_CONTAINER_NAME) >/dev/null 2>&1 || true
+	@echo "✅ Scenario $(SCENARIO) completed successfully"
