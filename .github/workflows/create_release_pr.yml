@@ -72,5 +72,5 @@ jobs:
           body-path: release-notes.md
           commit-message: "chore: release v${{ env.VERSION }}"
           labels: |
-            Type: Release
+            Release
           assignees: ${{ github.actor }}
