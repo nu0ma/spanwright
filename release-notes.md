@@ -35,8 +35,11 @@
 * refactor(template): remove unused getDatabaseConfig and inline DB config by @nu0ma in https://github.com/nu0ma/spanwright/pull/192
 * feat: optimize CI performance with caching and streamlined installation by @nu0ma in https://github.com/nu0ma/spanwright/pull/193
 * ci: remove duplicate TypeScript check by @nu0ma in https://github.com/nu0ma/spanwright/pull/194
+* Release v2.6.0 by @github-actions[bot] in https://github.com/nu0ma/spanwright/pull/195
+* fix: resolve shell glob expansion in release workflow by @nu0ma in https://github.com/nu0ma/spanwright/pull/197
+* fix: improve release workflow and auto-labeling system by @nu0ma in https://github.com/nu0ma/spanwright/pull/199
 
 ## New Contributors
 * @renovate[bot] made their first contribution in https://github.com/nu0ma/spanwright/pull/156
 
-**Full Changelog**: https://github.com/nu0ma/spanwright/compare/v2.5.3...v2.6.0
+**Full Changelog**: https://github.com/nu0ma/spanwright/compare/v2.5.3...v2.6.1
