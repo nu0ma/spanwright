@@ -148,58 +148,53 @@ Each scenario contains:
 - **Docker**: Spanner emulator hosting
 - **spalidate**: Database validation tool (https://github.com/nu0ma/spalidate)
 - **Node.js**: >=22.0.0 for CLI, >=16.0.0 for generated projects
-- **Go**: Version managed via `.tool-versions` and `.mise.toml` for consistency
-- **mise** (optional): For local development version management
+- **Go/Node version management**: Managed via `.tool-versions` (single source of truth)
+- **mise**: Can read `.tool-versions` for local and CI version management
 
 ## Version Management
 
-### Go Version Management
+### Version Management
 
-The project uses version management tools for consistent Go versions:
-
-- `.tool-versions` - Universal tool version file (used by GitHub Actions)  
-- `.mise.toml` - Mise tool configuration
-
-Manual updates to these files ensure version consistency across local and CI environments.
+The project uses `.tool-versions` as the single source of truth for tool versions (Go, Node.js). Update `.tool-versions` to synchronize versions across local and CI environments. Both `mise` and `asdf` can consume `.tool-versions`.
 
 
 ### Local Development with Version Management
-
-The project now uses `.tool-versions` and `.mise.toml` for consistent Go version management:
 
 #### Using mise (recommended)
 ```bash
 # Install mise if not already installed
 curl https://mise.run | sh
 
-# Install the Go version specified in .mise.toml
+# Install tool versions from .tool-versions
 mise install
 
-# Use mise-managed Go
+# Use mise-managed tools respecting .tool-versions
 mise use
 ```
 
 #### Using asdf
 ```bash
-# Install Go plugin if not already installed
-asdf plugin add golang
+# Install plugins as needed
+asdf plugin add golang || true
+asdf plugin add nodejs || true
 
-# Install the Go version specified in .tool-versions
+# Install tool versions from .tool-versions
 asdf install
 
-# Set local Go version
-asdf local golang $(cat .tool-versions | grep go | cut -d' ' -f2)
+# (Optional) set local versions from .tool-versions
+asdf local golang $(grep '^go ' .tool-versions | awk '{print $2}')
+asdf local nodejs $(grep -E '^(node|nodejs) ' .tool-versions | awk '{print $2}')
 ```
 
 #### Manual Installation
-Check `.tool-versions` for the current Go version and install it manually.
+If not using mise/asdf, manually install the versions pinned in `.tool-versions`.
 
 ### GitHub Actions Version Management
 
-GitHub workflows automatically read the Go version from `.tool-versions`:
-- No hardcoded versions in workflow files
-- Single source of truth for Go version across local and CI environments
-- Automatic version synchronization when `.tool-versions` is updated
+GitHub workflows read tool versions from `.tool-versions` (Go, Node.js):
+- Avoid hardcoding versions in workflow files when possible
+- Single source of truth across local and CI environments
+- Automatic synchronization when `.tool-versions` is updated
 
 ## AI Assistant Guidelines
 

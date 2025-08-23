@@ -51,6 +51,11 @@
   "bugs": {
     "url": "https://github.com/nu0ma/spanwright/issues"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  },
   "devDependencies": {
     "@types/node": "^24.0.10",
     "@eslint/js": "9.34.0",
