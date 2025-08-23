@@ -10,7 +10,6 @@ import {
   copyDirectory,
   processTemplateFiles,
   replaceProjectNameInGoFiles,
-  removeSecondaryDbFiles,
   writeFileContent,
   renameFixtureDirectories,
 } from '../file-operations'
@@ -118,11 +117,6 @@ $ spanwright --help`,
       const envPath = path.join(projectPath, FILE_PATTERNS.ENV)
       writeFileContent(envPath, envContent)
 
-      // Remove unnecessary files for single DB configuration
-      if (config.count === '1') {
-        logger.info(MESSAGES.INFO.REMOVING_FILES)
-        removeSecondaryDbFiles(projectPath)
-      }
 
       // Show completion message
       logger.log('')

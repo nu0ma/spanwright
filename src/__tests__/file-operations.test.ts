@@ -13,7 +13,6 @@ import {
   replaceInFile,
   processTemplateFiles,
   replaceProjectNameInGoFiles,
-  removeSecondaryDbFiles,
 } from '../file-operations';
 import { FileSystemError, SecurityError } from '../errors';
 import { FILE_PATTERNS } from '../constants';
@@ -844,58 +843,6 @@ describe('File Operations Module', () => {
         'package my-project',
         'utf8'
       );
-    });
-  });
-
-  describe('removeSecondaryDbFiles', () => {
-    it('should remove secondary database files', () => {
-      const projectPath = '/test/project';
-      mockFs.unlinkSync.mockReturnValue(undefined);
-
-      removeSecondaryDbFiles(projectPath);
-
-      expect(mockFs.unlinkSync).toHaveBeenCalledTimes(3);
-    });
-
-    it('should handle missing files gracefully', () => {
-      const projectPath = '/test/project';
-      const error = new Error('File not found') as any;
-      error.code = 'ENOENT';
-      mockFs.unlinkSync.mockImplementation(() => {
-        throw error;
-      });
-
-      expect(() => removeSecondaryDbFiles(projectPath)).not.toThrow();
-    });
-
-    it('should handle partial file existence', () => {
-      const projectPath = '/test/project';
-
-      // Mock first file to succeed, others to fail with ENOENT
-      let callCount = 0;
-      mockFs.unlinkSync.mockImplementation(() => {
-        callCount++;
-        if (callCount > 1) {
-          const error = new Error('File not found') as any;
-          error.code = 'ENOENT';
-          throw error;
-        }
-      });
-
-      expect(() => removeSecondaryDbFiles(projectPath)).not.toThrow();
-      expect(mockFs.unlinkSync).toHaveBeenCalledTimes(3);
-    });
-
-    it('should throw FileSystemError if file deletion fails', () => {
-      const projectPath = '/test/project';
-
-      mockFs.existsSync.mockReturnValue(true);
-      mockFs.unlinkSync.mockImplementation(() => {
-        throw new Error('Permission denied');
-      });
-
-      expect(() => removeSecondaryDbFiles(projectPath)).toThrow(FileSystemError);
-      expect(() => removeSecondaryDbFiles(projectPath)).toThrow('Failed to delete file:');
     });
   });
 });

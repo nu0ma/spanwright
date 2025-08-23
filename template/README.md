@@ -9,10 +9,8 @@ Cloud Spanner database E2E testing environment
 make init
 
 # Run all scenarios
-make run-all-scenarios
+make test
 
-# Create new test
-make new-scenario SCENARIO=scenario-01-my-test
 ```
 
 ## Main Commands
@@ -20,21 +18,8 @@ make new-scenario SCENARIO=scenario-01-my-test
 | Command | Description |
 |---------|-------------|
 | `make init` | Initial setup |
-| `make run-all-examples` | Alias for run-all-scenarios |
-| `make run-all-scenarios` | Run all scenarios |
-| `make new-scenario SCENARIO=<name>` | Create new scenario |
-| `make test-e2e` | Playwright E2E test |
+| `make test` | Run all scenarios |
 | `make help` | Detailed help |
-
-## Connection Information
-
-Connection information when emulator is running:
-
-```bash
-export SPANNER_EMULATOR_HOST=localhost:9010
-# Project: test-project
-# Instance: test-instance
-```
 
 ## Configuration
 
@@ -44,14 +29,4 @@ Configure database count and schema paths in `.env` file:
 DB_COUNT=2                                    # 1 or 2
 PRIMARY_DB_SCHEMA_PATH=/path/to/schema1       # Required
 SECONDARY_DB_SCHEMA_PATH=/path/to/schema2     # Only for 2DB setup
-```
-
-## Scenario Structure
-
-```
-scenarios/example-01-basic-setup/
-├── expected-primary.yaml          # Expected values for Primary DB
-├── expected-secondary.yaml        # Expected values for Secondary DB (2DB setup)
-├── seed-data/                     # Seed data
-└── tests/                         # Playwright E2E tests
 ```

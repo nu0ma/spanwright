@@ -360,22 +360,3 @@ export function replaceProjectNameInGoFiles(projectPath: string, projectName: st
 
   processDirectory(projectPath);
 }
-
-export function removeSecondaryDbFiles(projectPath: string): void {
-  // Only validate relative paths to avoid issues with absolute paths in tests
-  if (!path.isAbsolute(projectPath)) {
-    validatePath(process.cwd(), projectPath, 'removeSecondaryDbFiles');
-  }
-
-  const exampleDir = path.join(projectPath, 'scenarios', 'example-01-basic-setup');
-
-  const filesToRemove = [
-    path.join(exampleDir, 'expected-secondary.yaml'),
-    path.join(exampleDir, 'seed-data', 'secondary-seed.json'),
-    path.join(projectPath, 'expected-secondary.yaml.template'),
-  ];
-
-  for (const file of filesToRemove) {
-    safeFileDelete(file);
-  }
-}
