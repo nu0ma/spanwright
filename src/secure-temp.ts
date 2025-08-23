@@ -3,6 +3,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { promisify } from 'util';
 import crypto from 'crypto';
+import { logger } from './logger';
 
 const fsPromises = fs.promises;
 
@@ -26,7 +27,7 @@ function registerCleanupHandlers(): void {
         await handler();
       } catch (error) {
         // Suppress errors during cleanup to avoid interrupting other handlers
-        console.error('Cleanup handler error:', error);
+        logger.error('Cleanup handler error:', error);
       }
     }
   };
@@ -90,7 +91,7 @@ export async function withTempDir<T>(
       await fsPromises.rm(tempDir, { recursive: true, force: true });
     } catch (error) {
       // Log but don't throw - the operation succeeded even if cleanup failed
-      console.error('Failed to clean up temp directory:', tempDir, error);
+      logger.error('Failed to clean up temp directory:', tempDir, error);
     }
 
     // Remove from cleanup handlers since we already cleaned up

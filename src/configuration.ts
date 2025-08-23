@@ -2,6 +2,7 @@ import * as readline from 'readline';
 import { ENV_VARS, DEFAULTS, MESSAGES } from './constants';
 import { ConfigurationError } from './errors';
 import { validateDatabaseCount, validateSchemaPath, sanitizeInput } from './validation';
+import { logger } from './logger';
 
 export interface DatabaseConfig {
   count: '1' | '2';
@@ -60,11 +61,11 @@ function getNonInteractiveConfiguration(): DatabaseConfig {
     throw new ConfigurationError(MESSAGES.ERRORS.ENV_DB_COUNT_INVALID, ENV_VARS.DB_COUNT);
   }
 
-  console.log(` Non-interactive mode: Creating project with ${dbCount} database(s)`);
-  console.log(`   Primary DB: ${primaryDbName} (${primarySchemaPath})`);
+  logger.info(`Non-interactive mode: Creating project with ${dbCount} database(s)`);
+  logger.info(`Primary DB: ${primaryDbName} (${primarySchemaPath})`);
 
   if (dbCount === '2') {
-    console.log(`   Secondary DB: ${secondaryDbName} (${secondarySchemaPath})`);
+    logger.info(`Secondary DB: ${secondaryDbName} (${secondarySchemaPath})`);
   }
 
   return {
