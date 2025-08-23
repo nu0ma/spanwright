@@ -43,9 +43,9 @@ func main() {
 	}
 
 	// Execute seed injection with retry logic
-	log.Printf("🌱 Injecting seed data using testfixtures...")
-	log.Printf("📁 Fixture directory: %s", *fixtureDir)
-	log.Printf("🎯 Target: %s/%s/%s", config.ProjectID, config.InstanceID, *databaseID)
+	log.Printf("Injecting seed data using testfixtures...")
+	log.Printf("Fixture directory: %s", *fixtureDir)
+	log.Printf("Target: %s/%s/%s", config.ProjectID, config.InstanceID, *databaseID)
 
 	if err := injectSeedData(config.ProjectID, config.InstanceID, *databaseID, *fixtureDir); err != nil {
 		log.Fatalf("Seed injection failed: %v", err)
@@ -197,7 +197,7 @@ func getFixtureFilesInOrder(fixtureDir string, availableTables map[string]bool) 
 				
 				if availableTables[tableName] {
 					yamlFiles = append(yamlFiles, name)
-					log.Printf("📄 Found fixture for table: %s", tableName)
+					log.Printf("Found fixture for table: %s", tableName)
 				} else {
 					log.Printf("⚠️ Skipping fixture for non-existent table: %s", tableName)
 				}

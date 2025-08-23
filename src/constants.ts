@@ -78,11 +78,11 @@ export const MESSAGES = {
   },
   INFO: {
     STARTING_SETUP: '🚀 Starting Spanner E2E Test Framework setup',
-    CREATING_DIRECTORY: '📁 Creating project directory...',
-    COPYING_TEMPLATES: '📦 Copying template files...',
-    CONFIGURING_GO: '🔧 Configuring Go modules...',
-    CREATING_ENV: '⚙️  Creating environment configuration file...',
-    REMOVING_FILES: '🗑️  Removing unnecessary files (Single DB configuration)...',
+    CREATING_DIRECTORY: ' Creating project directory...',
+    COPYING_TEMPLATES: ' Copying template files...',
+    CONFIGURING_GO: ' Configuring Go modules...',
+    CREATING_ENV: ' Creating environment configuration file...',
+    REMOVING_FILES: ' Removing unnecessary files (Single DB configuration)...',
     COMPLETED: '✅ Project creation completed!',
   },
   USAGE: {
