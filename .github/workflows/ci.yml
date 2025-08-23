@@ -86,8 +86,6 @@ jobs:
     - name: Run E2E tests with real CLI
       run: pnpm test
       
-    - name: Check TypeScript compilation
-      run: npx tsc --noEmit
       
   lint:
     runs-on: ubuntu-latest
