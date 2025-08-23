@@ -3,6 +3,7 @@ import * as path from 'path';
 import { APP_NAME, APP_DESCRIPTION, GITHUB_URL, CLI_FLAGS, MESSAGES } from './constants';
 import { safeExit } from './errors';
 import { isFlag } from './validation';
+import { logger } from './logger';
 
 // CLI parsing and display utilities
 
@@ -34,9 +35,9 @@ export function showVersion(): never {
 
   try {
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-    console.log(packageJson.version);
+    logger.log(packageJson.version);
   } catch {
-    console.error('Error reading version from package.json');
+    logger.error('Error reading version from package.json');
   }
 
   safeExit(0);
@@ -68,14 +69,14 @@ Non-interactive mode environment variables:
 For more information, visit: ${GITHUB_URL}
 `;
 
-  console.log(helpText);
+  logger.log(helpText);
   safeExit(0);
 }
 
 export function showUsageError(): never {
-  console.error(MESSAGES.ERRORS.NO_PROJECT_NAME);
-  console.log(MESSAGES.USAGE.BASIC);
-  console.log(MESSAGES.USAGE.HELP_SUGGESTION);
+  logger.error(MESSAGES.ERRORS.NO_PROJECT_NAME);
+  logger.log(MESSAGES.USAGE.BASIC);
+  logger.log(MESSAGES.USAGE.HELP_SUGGESTION);
   safeExit(1);
 }
 

@@ -8,7 +8,7 @@ import * as path from 'path';
  * Cleans up isolated database environments and optionally stops emulator
  */
 async function globalTeardown(config: FullConfig) {
-  console.log('🧹 Starting global test teardown...');
+  console.log('Starting global test teardown...');
   
   try {
     // Clean up worker database configurations
@@ -17,13 +17,13 @@ async function globalTeardown(config: FullConfig) {
       const configFiles = fs.readdirSync(testResultsDir)
         .filter(file => file.startsWith('worker-') && file.endsWith('-config.json'));
       
-      console.log(`🗑️ Cleaning up ${configFiles.length} worker configurations...`);
+      console.log(`Cleaning up ${configFiles.length} worker configurations...`);
       
       for (const configFile of configFiles) {
         const configPath = path.join(testResultsDir, configFile);
         try {
           const workerConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-          console.log(`🔧 Cleaned up worker ${workerConfig.workerId} (databases: ${workerConfig.primaryDbId}, ${workerConfig.secondaryDbId})`);
+          console.log(`Cleaned up worker ${workerConfig.workerId} (databases: ${workerConfig.primaryDbId}, ${workerConfig.secondaryDbId})`);
           
           // Remove the config file
           fs.unlinkSync(configPath);
@@ -44,7 +44,7 @@ async function globalTeardown(config: FullConfig) {
         console.warn('⚠️ Failed to stop emulator:', error.message);
       }
     } else {
-      console.log('🔄 Leaving Spanner emulator running (set STOP_EMULATOR_AFTER_TESTS=true to stop)');
+      console.log('Leaving Spanner emulator running (set STOP_EMULATOR_AFTER_TESTS=true to stop)');
     }
     
     // Database connections are automatically cleaned up by seed-injector

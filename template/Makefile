@@ -145,6 +145,7 @@ test-scenario: ## Run E2E test for a specific scenario (use SCENARIO=scenario-na
 		@ls scenarios/ | grep -E '^(scenario|example)-' || echo "  No scenarios found"; \
 		exit 1; \
 	fi
+	@echo "═══════════════════════════════════════════════════════════"
 	@echo "Running E2E test for scenario: $(SCENARIO)"
 	@echo "═══════════════════════════════════════════════════════════"
 	@$(MAKE) start >/dev/null 2>&1

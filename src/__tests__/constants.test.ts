@@ -150,28 +150,28 @@ describe('Constants Module', () => {
   describe('MESSAGES', () => {
     describe('ERRORS', () => {
       it('should have error messages', () => {
-        expect(MESSAGES.ERRORS.NO_PROJECT_NAME).toBe('❌ Please specify a project name');
-        expect(MESSAGES.ERRORS.INVALID_DB_COUNT).toBe('❌ Please enter 1 or 2');
-        expect(MESSAGES.ERRORS.ENV_DB_COUNT_INVALID).toBe('❌ SPANWRIGHT_DB_COUNT must be 1 or 2');
+        expect(MESSAGES.ERRORS.NO_PROJECT_NAME).toBe('Please specify a project name');
+        expect(MESSAGES.ERRORS.INVALID_DB_COUNT).toBe('Please enter 1 or 2');
+        expect(MESSAGES.ERRORS.ENV_DB_COUNT_INVALID).toBe('SPANWRIGHT_DB_COUNT must be 1 or 2');
       });
 
       it('should have directory exists error function', () => {
         expect(typeof MESSAGES.ERRORS.DIRECTORY_EXISTS).toBe('function');
-        expect(MESSAGES.ERRORS.DIRECTORY_EXISTS('test')).toBe('❌ Directory "test" already exists');
+        expect(MESSAGES.ERRORS.DIRECTORY_EXISTS('test')).toBe('Directory "test" already exists');
       });
     });
 
     describe('INFO', () => {
       it('should have info messages', () => {
-        expect(MESSAGES.INFO.STARTING_SETUP).toBe('🚀 Starting Spanner E2E Test Framework setup');
-        expect(MESSAGES.INFO.CREATING_DIRECTORY).toBe(' Creating project directory...');
-        expect(MESSAGES.INFO.COPYING_TEMPLATES).toBe(' Copying template files...');
-        expect(MESSAGES.INFO.CONFIGURING_GO).toBe(' Configuring Go modules...');
-        expect(MESSAGES.INFO.CREATING_ENV).toBe(' Creating environment configuration file...');
+        expect(MESSAGES.INFO.STARTING_SETUP).toBe('Starting Spanner E2E Test Framework setup');
+        expect(MESSAGES.INFO.CREATING_DIRECTORY).toBe('Creating project directory...');
+        expect(MESSAGES.INFO.COPYING_TEMPLATES).toBe('Copying template files...');
+        expect(MESSAGES.INFO.CONFIGURING_GO).toBe('Configuring Go modules...');
+        expect(MESSAGES.INFO.CREATING_ENV).toBe('Creating environment configuration file...');
         expect(MESSAGES.INFO.REMOVING_FILES).toBe(
-          ' Removing unnecessary files (Single DB configuration)...'
+          'Removing unnecessary files (Single DB configuration)...'
         );
-        expect(MESSAGES.INFO.COMPLETED).toBe('✅ Project creation completed!');
+        expect(MESSAGES.INFO.COMPLETED).toBe('Project creation completed!');
       });
     });
 
@@ -231,20 +231,20 @@ describe('Constants Module', () => {
   describe('Message Function Testing', () => {
     it('should generate directory exists message with different names', () => {
       expect(MESSAGES.ERRORS.DIRECTORY_EXISTS('my-project')).toBe(
-        '❌ Directory "my-project" already exists'
+        'Directory "my-project" already exists'
       );
       expect(MESSAGES.ERRORS.DIRECTORY_EXISTS('test-app')).toBe(
-        '❌ Directory "test-app" already exists'
+        'Directory "test-app" already exists'
       );
-      expect(MESSAGES.ERRORS.DIRECTORY_EXISTS('')).toBe('❌ Directory "" already exists');
+      expect(MESSAGES.ERRORS.DIRECTORY_EXISTS('')).toBe('Directory "" already exists');
     });
 
     it('should handle special characters in directory names', () => {
       expect(MESSAGES.ERRORS.DIRECTORY_EXISTS('project-with-dashes')).toBe(
-        '❌ Directory "project-with-dashes" already exists'
+        'Directory "project-with-dashes" already exists'
       );
       expect(MESSAGES.ERRORS.DIRECTORY_EXISTS('project_with_underscores')).toBe(
-        '❌ Directory "project_with_underscores" already exists'
+        'Directory "project_with_underscores" already exists'
       );
     });
   });

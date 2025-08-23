@@ -1,5 +1,7 @@
 // Custom error types for better error handling
 
+import { logger } from './logger';
+
 export class SpanwrightError extends Error {
   constructor(
     message: string,
@@ -53,16 +55,16 @@ export class SecurityError extends SpanwrightError {
 // Error handling utility
 export function handleError(error: unknown): never {
   if (error instanceof SpanwrightError) {
-    console.error(error.message);
+    logger.error(error.message);
     process.exit(1);
   }
 
   if (error instanceof Error) {
-    console.error('❌ An error occurred:', error.message);
+    logger.error('An error occurred:', error.message);
     process.exit(1);
   }
 
-  console.error('❌ An unknown error occurred');
+  logger.error('An unknown error occurred');
   process.exit(1);
 }
 

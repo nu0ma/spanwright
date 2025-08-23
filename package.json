@@ -9,11 +9,6 @@
     "dist",
     "template"
   ],
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild"
-    ]
-  },
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "build": "tsc",
@@ -73,5 +68,8 @@
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
+  },
+  "dependencies": {
+    "consola": "^3.2.3"
   }
 }

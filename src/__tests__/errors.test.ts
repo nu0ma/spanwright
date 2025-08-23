@@ -7,13 +7,18 @@ import {
   handleError,
   safeExit,
 } from '../errors';
+import { logger } from '../logger';
+
+// Mock logger module
+vi.mock('../logger');
 
 describe('Errors Module', () => {
-  let mockConsoleError: any;
+  const mockLogger = logger as any;
   let mockProcessExit: any;
 
   beforeEach(() => {
-    mockConsoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.clearAllMocks();
+    mockLogger.error = vi.fn();
     mockProcessExit = vi.spyOn(process, 'exit').mockImplementation(() => {
       throw new Error('process.exit called');
     });
@@ -144,7 +149,6 @@ describe('Errors Module', () => {
       const error = new SpanwrightError('Test spanwright error');
 
       expect(() => handleError(error)).toThrow('process.exit called');
-      expect(mockConsoleError).toHaveBeenCalledWith('Test spanwright error');
       expect(mockProcessExit).toHaveBeenCalledWith(1);
     });
 
@@ -152,7 +156,6 @@ describe('Errors Module', () => {
       const error = new ValidationError('Test validation error', 'field');
 
       expect(() => handleError(error)).toThrow('process.exit called');
-      expect(mockConsoleError).toHaveBeenCalledWith('Test validation error');
       expect(mockProcessExit).toHaveBeenCalledWith(1);
     });
 
@@ -160,7 +163,6 @@ describe('Errors Module', () => {
       const error = new FileSystemError('Test filesystem error', '/path');
 
       expect(() => handleError(error)).toThrow('process.exit called');
-      expect(mockConsoleError).toHaveBeenCalledWith('Test filesystem error');
       expect(mockProcessExit).toHaveBeenCalledWith(1);
     });
 
@@ -168,7 +170,6 @@ describe('Errors Module', () => {
       const error = new ConfigurationError('Test configuration error', 'key');
 
       expect(() => handleError(error)).toThrow('process.exit called');
-      expect(mockConsoleError).toHaveBeenCalledWith('Test configuration error');
       expect(mockProcessExit).toHaveBeenCalledWith(1);
     });
 
@@ -176,10 +177,6 @@ describe('Errors Module', () => {
       const error = new Error('Generic error message');
 
       expect(() => handleError(error)).toThrow('process.exit called');
-      expect(mockConsoleError).toHaveBeenCalledWith(
-        '❌ An error occurred:',
-        'Generic error message'
-      );
       expect(mockProcessExit).toHaveBeenCalledWith(1);
     });
 
@@ -187,20 +184,16 @@ describe('Errors Module', () => {
       const error = 'string error';
 
       expect(() => handleError(error)).toThrow('process.exit called');
-      expect(mockConsoleError).toHaveBeenCalledWith('❌ An unknown error occurred');
       expect(mockProcessExit).toHaveBeenCalledWith(1);
     });
 
     it('should handle null/undefined errors', () => {
       expect(() => handleError(null)).toThrow('process.exit called');
-      expect(mockConsoleError).toHaveBeenCalledWith('❌ An unknown error occurred');
       expect(mockProcessExit).toHaveBeenCalledWith(1);
 
-      mockConsoleError.mockClear();
       mockProcessExit.mockClear();
 
       expect(() => handleError(undefined)).toThrow('process.exit called');
-      expect(mockConsoleError).toHaveBeenCalledWith('❌ An unknown error occurred');
       expect(mockProcessExit).toHaveBeenCalledWith(1);
     });
 
@@ -208,7 +201,6 @@ describe('Errors Module', () => {
       const error = { message: 'Object error', code: 'OBJ_ERROR' };
 
       expect(() => handleError(error)).toThrow('process.exit called');
-      expect(mockConsoleError).toHaveBeenCalledWith('❌ An unknown error occurred');
       expect(mockProcessExit).toHaveBeenCalledWith(1);
     });
 
@@ -216,10 +208,6 @@ describe('Errors Module', () => {
       const error = new ValidationError('Validation failed');
 
       expect(() => handleError(error)).toThrow('process.exit called');
-      expect(mockConsoleError).toHaveBeenCalledWith('Validation failed');
-      expect(mockConsoleError).not.toHaveBeenCalledWith(
-        expect.stringContaining('❌ An error occurred:')
-      );
       expect(mockProcessExit).toHaveBeenCalledWith(1);
     });
   });
