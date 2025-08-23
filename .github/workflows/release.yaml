@@ -18,7 +18,7 @@ jobs:
     if: |
       (github.event_name == 'pull_request' && 
        github.event.pull_request.merged == true &&
-       contains(github.event.pull_request.labels.*.name, 'Type: Release')) ||
+       contains(github.event.pull_request.labels.*.name, 'Release')) ||
       github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
