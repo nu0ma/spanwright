@@ -115,10 +115,14 @@ jobs:
               --target "${{ github.sha }}" \
               --generate-notes)
           else
+            # Save PR body to file to handle multiline content and avoid shell globbing
+            cat > pr-body.md << 'EOF'
+          ${{ github.event.pull_request.body }}
+          EOF
             RELEASE_URL=$(gh release create "v${{ steps.package.outputs.version }}" \
               --title "v${{ steps.package.outputs.version }}" \
               --target "${{ github.sha }}" \
-              --notes "${{ github.event.pull_request.body }}")
+              --notes-file pr-body.md)
           fi
           echo "url=$RELEASE_URL" >> $GITHUB_OUTPUT
         env:
