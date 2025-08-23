@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { getDatabaseConfig } from '../../../tests/database-isolation';
+import { getDatabaseConfig } from '../../../tests/db-config';
 import { validateDatabaseState } from '../../../tests/test-utils';
 
 test.describe('scenario-02-intermediate', () => {
