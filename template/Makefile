@@ -35,7 +35,7 @@ init: ## Initialize project and install dependencies
 	@echo "✅ All tools available"
 	@echo "Setting up Playwright..."
 	@pnpm install
-	@npx playwright install
+	@npx playwright install --with-deps chromium
 	@echo "✅ Project initialized successfully"
 
 start: ## Start Spanner emulator and validate tools
