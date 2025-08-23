@@ -2,19 +2,12 @@
   "name": "spanwright",
   "version": "2.5.3",
   "description": "CLI tool to generate Cloud Spanner E2E testing framework projects with Go database tools and Playwright browser automation",
-  "main": "dist/index.js",
   "bin": {
     "spanwright": "dist/index.js"
   },
   "files": [
     "dist",
-    "template",
-    "README.md",
-    "LICENSE",
-    "CLAUDE.md",
-    "CHANGELOG.md",
-    "CONTRIBUTING.md",
-    "SECURITY.md"
+    "template"
   ],
   "scripts": {
     "preinstall": "npx only-allow pnpm",
@@ -22,21 +15,13 @@
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
     "prepublishOnly": "pnpm run clean && pnpm run build",
-    "test": "pnpm run e2e",
+    "test": "pnpm run test:unit && pnpm run test:e2e",
     "test:unit": "vitest run",
-    "test:unit:watch": "vitest",
-    "test:unit:coverage": "vitest run --coverage",
-    "test:unit:ui": "vitest --ui",
-    "test:all": "pnpm run test:unit && pnpm run e2e",
+    "test:e2e": "./scripts/run-e2e-test.sh",
     "format": "prettier --write \"src/**/*.ts\" \"scripts/**/*.ts\"",
     "prepare": "pnpm run build",
-    "e2e": "./scripts/run-e2e-test.sh",
-    "lint:eslint": "eslint . --ext .ts,.tsx,.js,.jsx",
-    "lint:prettier": "prettier --check .",
-    "lint": "pnpm run lint:eslint && pnpm run lint:prettier",
-    "fix:eslint": "pnpm run lint:eslint -- --fix",
-    "fix:prettier": "pnpm run lint:prettier -- --write",
-    "fix": "pnpm run fix:eslint && pnpm run fix:prettier"
+    "lint:eslint": "eslint --cache .",
+    "lint": "pnpm run lint:eslint"
   },
   "keywords": [
     "spanner",
@@ -61,11 +46,8 @@
   "bugs": {
     "url": "https://github.com/nu0ma/spanwright/issues"
   },
-  "preferGlobal": true,
-  "dependencies": {
-    "@types/node": "^24.0.10"
-  },
   "devDependencies": {
+    "@types/node": "^24.0.10",
     "@eslint/js": "9.30.1",
     "@types/js-yaml": "4.0.9",
     "@typescript-eslint/eslint-plugin": "8.35.1",
