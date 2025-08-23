@@ -71,19 +71,19 @@ export const VALIDATION_PATTERNS = {
 // Messages
 export const MESSAGES = {
   ERRORS: {
-    NO_PROJECT_NAME: '❌ Please specify a project name',
-    DIRECTORY_EXISTS: (name: string) => `❌ Directory "${name}" already exists`,
-    INVALID_DB_COUNT: '❌ Please enter 1 or 2',
-    ENV_DB_COUNT_INVALID: '❌ SPANWRIGHT_DB_COUNT must be 1 or 2',
+    NO_PROJECT_NAME: 'Please specify a project name',
+    DIRECTORY_EXISTS: (name: string) => `Directory "${name}" already exists`,
+    INVALID_DB_COUNT: 'Please enter 1 or 2',
+    ENV_DB_COUNT_INVALID: 'SPANWRIGHT_DB_COUNT must be 1 or 2',
   },
   INFO: {
-    STARTING_SETUP: '🚀 Starting Spanner E2E Test Framework setup',
-    CREATING_DIRECTORY: ' Creating project directory...',
-    COPYING_TEMPLATES: ' Copying template files...',
-    CONFIGURING_GO: ' Configuring Go modules...',
-    CREATING_ENV: ' Creating environment configuration file...',
-    REMOVING_FILES: ' Removing unnecessary files (Single DB configuration)...',
-    COMPLETED: '✅ Project creation completed!',
+    STARTING_SETUP: 'Starting Spanner E2E Test Framework setup',
+    CREATING_DIRECTORY: 'Creating project directory...',
+    COPYING_TEMPLATES: 'Copying template files...',
+    CONFIGURING_GO: 'Configuring Go modules...',
+    CREATING_ENV: 'Creating environment configuration file...',
+    REMOVING_FILES: 'Removing unnecessary files (Single DB configuration)...',
+    COMPLETED: 'Project creation completed!',
   },
   USAGE: {
     BASIC: 'Usage: npx spanwright my-project',

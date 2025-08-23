@@ -4,6 +4,7 @@ import { getConfiguration, generateEnvironmentContent, DatabaseConfig } from '..
 import { ENV_VARS, DEFAULTS, MESSAGES } from '../constants';
 import { ConfigurationError, ValidationError } from '../errors';
 import { validateDatabaseCount, validateSchemaPath, sanitizeInput } from '../validation';
+import { logger } from '../logger';
 
 // Mock the validation module
 vi.mock('../validation', () => ({
@@ -17,13 +18,16 @@ vi.mock('readline', () => ({
   createInterface: vi.fn(),
 }));
 
+// Mock logger module
+vi.mock('../logger');
+
 describe('Configuration Module', () => {
-  let mockConsoleLog: any;
+  const mockLogger = logger as any;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Mock console methods after clearing
-    mockConsoleLog = vi.spyOn(console, 'log').mockImplementation(() => {});
+    // Mock logger methods
+    mockLogger.info = vi.fn();
 
     // Reset environment variables
     delete process.env[ENV_VARS.DB_COUNT];
@@ -58,8 +62,8 @@ describe('Configuration Module', () => {
       });
 
       expect(validateDatabaseCount).toHaveBeenCalledWith('1');
-      expect(mockConsoleLog).toHaveBeenCalledWith(
-        ' Non-interactive mode: Creating project with 1 database(s)'
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Non-interactive mode: Creating project with 1 database(s)'
       );
     });
 
@@ -122,14 +126,14 @@ describe('Configuration Module', () => {
         secondarySchemaPath: '/custom/secondary/schema',
       });
 
-      expect(mockConsoleLog).toHaveBeenCalledWith(
-        ' Non-interactive mode: Creating project with 2 database(s)'
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Non-interactive mode: Creating project with 2 database(s)'
       );
-      expect(mockConsoleLog).toHaveBeenCalledWith(
-        '   Primary DB: custom-primary (/custom/primary/schema)'
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Primary DB: custom-primary (/custom/primary/schema)'
       );
-      expect(mockConsoleLog).toHaveBeenCalledWith(
-        '   Secondary DB: custom-secondary (/custom/secondary/schema)'
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Secondary DB: custom-secondary (/custom/secondary/schema)'
       );
     });
 
@@ -146,11 +150,11 @@ describe('Configuration Module', () => {
         secondarySchemaPath: undefined,
       });
 
-      expect(mockConsoleLog).toHaveBeenCalledWith(
-        ` Non-interactive mode: Creating project with ${DEFAULTS.DB_COUNT} database(s)`
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        `Non-interactive mode: Creating project with ${DEFAULTS.DB_COUNT} database(s)`
       );
-      expect(mockConsoleLog).toHaveBeenCalledWith(
-        `   Primary DB: ${DEFAULTS.PRIMARY_DB_NAME} (${DEFAULTS.PRIMARY_SCHEMA_PATH})`
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        `Primary DB: ${DEFAULTS.PRIMARY_DB_NAME} (${DEFAULTS.PRIMARY_SCHEMA_PATH})`
       );
     });
 
@@ -164,7 +168,7 @@ describe('Configuration Module', () => {
       expect(result.count).toBe('1');
       expect(result.secondaryDbName).toBeUndefined();
       expect(result.secondarySchemaPath).toBeUndefined();
-      expect(mockConsoleLog).not.toHaveBeenCalledWith(expect.stringContaining('Secondary DB:'));
+      expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('Secondary DB:'));
     });
 
     it('should handle dual database configuration', async () => {
@@ -177,7 +181,7 @@ describe('Configuration Module', () => {
       expect(result.count).toBe('2');
       expect(result.secondaryDbName).toBe(DEFAULTS.SECONDARY_DB_NAME);
       expect(result.secondarySchemaPath).toBe(DEFAULTS.SECONDARY_SCHEMA_PATH);
-      expect(mockConsoleLog).toHaveBeenCalledWith(expect.stringContaining('Secondary DB:'));
+      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Secondary DB:'));
     });
 
     it('should throw ConfigurationError for invalid database count', async () => {
