@@ -18,7 +18,7 @@ export function runCommand(command: string, args: string[] = []): string {
 
 // Run make command
 export function runMake(target: string): string {
-  return runCommand('/usr/bin/make', [target]);
+  return runCommand('make', [target]);
 }
 
 // Validate database ID format
