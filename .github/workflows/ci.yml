@@ -12,7 +12,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  test:
+  e2e:
     runs-on: ubuntu-latest
     
     strategy:
@@ -23,16 +23,8 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
       
-    - name: Setup pnpm
-      uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
-      with:
-        version: 10.15.0
-        
-    - name: Setup Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'pnpm'
+    - name: Setup Node.js and pnpm
+      uses: ./.github/actions/setup-node-pnpm
         
     - name: Read Go version
       id: go-version
@@ -65,29 +57,35 @@ jobs:
     - name: Verify Go tools
       run: |
         export PATH=$PATH:~/go/bin
-        echo "Verifying wrench..."
-        wrench --help > /dev/null || echo "wrench verification completed"
-        echo "Verifying spalidate..." 
-        spalidate --help > /dev/null || echo "spalidate verification completed"
+        wrench --version && spalidate --version
         echo "✅ Go tools ready"
         
-    - name: Install dependencies
-      run: pnpm install --frozen-lockfile
-      
     - name: Build project
       run: pnpm run build
       
     - name: Run unit tests
       run: pnpm run test:unit
       
+    - name: Cache Playwright browsers
+      uses: actions/cache@v4
+      id: cache-playwright
+      with:
+        path: |
+          ~/.cache/ms-playwright
+        key: ${{ runner.os }}-playwright-chromium-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-playwright-chromium-
+
     - name: Install Playwright with system dependencies
+      if: steps.cache-playwright.outputs.cache-hit != 'true'
       run: npx playwright install --with-deps chromium
+      
+    - name: Install Playwright (cache hit)
+      if: steps.cache-playwright.outputs.cache-hit == 'true'
+      run: npx playwright install-deps chromium
       
     - name: Run E2E tests with real CLI
       run: pnpm test
-      
-    - name: Check TypeScript compilation
-      run: npx tsc --noEmit
       
   lint:
     runs-on: ubuntu-latest
@@ -96,44 +94,22 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
       
-    - name: Setup pnpm
-      uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
-      with:
-        version: 10.15.0
-        
-    - name: Setup Node.js
-      uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-      with:
-        node-version: '22.x'
-        cache: 'pnpm'
-        
-    - name: Install dependencies
-      run: pnpm install --frozen-lockfile
+    - name: Setup Node.js and pnpm
+      uses: ./.github/actions/setup-node-pnpm
       
     - name: Run linting
       run: pnpm run lint
       
-  build-test:
+  build:
     runs-on: ubuntu-latest
     
     steps:
     - name: Checkout code
       uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
       
-    - name: Setup pnpm
-      uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
-      with:
-        version: 10.15.0
-        
-    - name: Setup Node.js
-      uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-      with:
-        node-version: '22.x'
-        cache: 'pnpm'
-        
-    - name: Install dependencies
-      run: pnpm install --frozen-lockfile
-      
+    - name: Setup Node.js and pnpm
+      uses: ./.github/actions/setup-node-pnpm
+
     - name: Build project
       run: pnpm run build
       
@@ -188,4 +164,4 @@ jobs:
           echo "✅ Found: $file"
         done
         
-        echo "✅ All essential files verified"
+        echo "✅ Generated project successfully"
