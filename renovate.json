@@ -4,5 +4,8 @@
     "config:best-practices",
     ":dependencyDashboard"
   ],
-  "schedule": ["on saturday"]
+  "schedule": ["on saturday"],
+  "vulnerabilityAlerts": {
+    "schedule": ["at any time"]
+  }
 }
