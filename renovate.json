@@ -3,5 +3,6 @@
   "extends": [
     "config:best-practices",
     ":dependencyDashboard"
-  ]
+  ],
+  "schedule": ["on saturday"]
 }
