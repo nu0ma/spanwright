@@ -51,9 +51,9 @@ jobs:
         path: |
           ~/.cache/go-build
           ~/go/bin
-        key: ${{ runner.os }}-go-binaries-wrench-spalidate-v1
+        key: ${{ runner.os }}-go${{ steps.go-version.outputs.version }}-binaries-wrench-spalidate-v1
         restore-keys: |
-          ${{ runner.os }}-go-binaries-
+          ${{ runner.os }}-go${{ steps.go-version.outputs.version }}-binaries-
         
     - name: Install Go tools
       if: steps.cache-go-binaries.outputs.cache-hit != 'true'
