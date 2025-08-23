@@ -36,22 +36,6 @@ Generated projects use:
 - **[spalidate](https://github.com/nu0ma/spalidate)** - Database state validation
 - **[Cloud Spanner Go Client](https://cloud.google.com/go/spanner)** - Official Google client
 
-## Technology Stack
-
-### Go
-- **cloud.google.com/go/spanner** - Official Cloud Spanner SDK
-- **github.com/go-testfixtures/testfixtures/v3** - YAML-based database fixtures
-- **github.com/googleapis/go-sql-spanner** - SQL interface for Spanner
-
-### TypeScript/Node.js
-- **@playwright/test** - E2E testing framework
-- **@types/node** - TypeScript definitions
-- **typescript** - Type-safe JavaScript
-
-### External Tools
-- **wrench** - Spanner schema migration tool
-- **Docker** - Container runtime for emulator
-
 ## Prerequisites
 
 - **Node.js** >= 22.0.0
