@@ -47,7 +47,7 @@
     "url": "https://github.com/nu0ma/spanwright/issues"
   },
   "devDependencies": {
-    "@types/node": "^24.0.10",
+    "@types/node": "^24.3.0",
     "@eslint/js": "9.30.1",
     "@types/js-yaml": "4.0.9",
     "@typescript-eslint/eslint-plugin": "8.35.1",
