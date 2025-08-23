@@ -1,6 +1,0 @@
-# Minimal Analytics fixture for testfixtures
-- AnalyticsID: "analytics-003"
-  UserID: "user-003"
-  EventType: "advanced_feature_use"
-  PageURL: "/advanced"
-  Timestamp: "2024-01-01T00:00:00Z"
