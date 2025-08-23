@@ -79,7 +79,6 @@ export function validateDatabaseState(database: 'primary' | 'secondary', databas
     '--project', projectId,
     '--instance', instanceId,
     '--database', targetDatabaseId,
-    '--verbose',
     validationFile
   ];
   

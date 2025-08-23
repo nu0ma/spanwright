@@ -60,7 +60,7 @@ function getNonInteractiveConfiguration(): DatabaseConfig {
     throw new ConfigurationError(MESSAGES.ERRORS.ENV_DB_COUNT_INVALID, ENV_VARS.DB_COUNT);
   }
 
-  console.log(`🤖 Non-interactive mode: Creating project with ${dbCount} database(s)`);
+  console.log(` Non-interactive mode: Creating project with ${dbCount} database(s)`);
   console.log(`   Primary DB: ${primaryDbName} (${primarySchemaPath})`);
 
   if (dbCount === '2') {

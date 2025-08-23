@@ -59,7 +59,7 @@ describe('Configuration Module', () => {
 
       expect(validateDatabaseCount).toHaveBeenCalledWith('1');
       expect(mockConsoleLog).toHaveBeenCalledWith(
-        '🤖 Non-interactive mode: Creating project with 1 database(s)'
+        ' Non-interactive mode: Creating project with 1 database(s)'
       );
     });
 
@@ -123,7 +123,7 @@ describe('Configuration Module', () => {
       });
 
       expect(mockConsoleLog).toHaveBeenCalledWith(
-        '🤖 Non-interactive mode: Creating project with 2 database(s)'
+        ' Non-interactive mode: Creating project with 2 database(s)'
       );
       expect(mockConsoleLog).toHaveBeenCalledWith(
         '   Primary DB: custom-primary (/custom/primary/schema)'
@@ -147,7 +147,7 @@ describe('Configuration Module', () => {
       });
 
       expect(mockConsoleLog).toHaveBeenCalledWith(
-        `🤖 Non-interactive mode: Creating project with ${DEFAULTS.DB_COUNT} database(s)`
+        ` Non-interactive mode: Creating project with ${DEFAULTS.DB_COUNT} database(s)`
       );
       expect(mockConsoleLog).toHaveBeenCalledWith(
         `   Primary DB: ${DEFAULTS.PRIMARY_DB_NAME} (${DEFAULTS.PRIMARY_SCHEMA_PATH})`

@@ -98,7 +98,7 @@ endif
 	@echo "✅ Database reset completed"
 
 setup: ## Setup databases and schemas
-	@echo "🏗️ Setting up databases..."
+	@echo "Setting up databases..."
 	@$(MAKE) start
 	@$(MAKE) setup-primary
 ifeq ($(DB_COUNT),2)
@@ -107,13 +107,13 @@ endif
 	@echo "✅ Database setup complete"
 
 setup-primary: ## Setup primary database
-	@echo "🔶 Setting up primary database..."
-	@echo "📡 Creating Spanner instance $(INSTANCE_ID)..."
+	@echo "Setting up primary database..."
+	@echo "Creating Spanner instance $(INSTANCE_ID)..."
 	@SPANNER_PROJECT_ID=$(PROJECT_ID) SPANNER_INSTANCE_ID=$(INSTANCE_ID) SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench instance create 2>/dev/null || echo "  ℹ️  Instance $(INSTANCE_ID) already exists or has been created"
-	@echo "🗄️ Creating empty database $(PRIMARY_DB_ID)..."
+	@echo "Creating empty database $(PRIMARY_DB_ID)..."
 	@mkdir -p ./tmp && echo "-- Empty schema for database creation" > ./tmp/schema.sql
 	@SPANNER_PROJECT_ID=$(PROJECT_ID) SPANNER_INSTANCE_ID=$(INSTANCE_ID) SPANNER_DATABASE_ID=$(PRIMARY_DB_ID) SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench create --directory="$$(pwd)/tmp" --schema_file=schema.sql 2>/dev/null || echo "  ℹ️  Database $(PRIMARY_DB_ID) already exists or has been created"
-	@echo "🔄 Applying individual schema files from $(PRIMARY_SCHEMA_PATH)..."
+	@echo "Applying individual schema files from $(PRIMARY_SCHEMA_PATH)..."
 	@for file in "$(PRIMARY_SCHEMA_PATH)"/*.sql; do \
 		if [ -f "$$file" ]; then \
 			echo "  📄 Applying: $$file"; \
@@ -121,18 +121,18 @@ setup-primary: ## Setup primary database
 		fi; \
 	 done
 	@echo "✅ Schema application completed for primary database"
-	@echo "🔧 Setting up Go modules..."
+	@echo "Setting up Go modules..."
 	@go mod tidy >/dev/null 2>&1
-	@echo "🌱 Seeding primary database..."
+	@echo "Seeding primary database..."
 	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) go run cmd/seed-injector/main.go --database-id $(PRIMARY_DB_ID) --fixture-dir "$$(pwd)/scenarios/$(SCENARIO)/fixtures/$(PRIMARY_DB_ID)" || { echo "❌ Failed to seed primary database"; exit 1; }
 	@echo "✅ Primary database ready"
 
 setup-secondary: ## Setup secondary database
-	@echo "☁️ Setting up secondary database..."
-	@echo "🗄️ Creating empty database $(SECONDARY_DB_ID)..."
+	@echo "Setting up secondary database..."
+	@echo "Creating empty database $(SECONDARY_DB_ID)..."
 	@mkdir -p ./tmp && echo "-- Empty schema for database creation" > ./tmp/schema.sql
 	@SPANNER_PROJECT_ID=$(PROJECT_ID) SPANNER_INSTANCE_ID=$(INSTANCE_ID) SPANNER_DATABASE_ID=$(SECONDARY_DB_ID) SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) wrench create --directory="$$(pwd)/tmp" --schema_file=schema.sql 2>/dev/null || echo "  ℹ️  Database $(SECONDARY_DB_ID) already exists or has been created"
-	@echo "🔄 Applying individual schema files from $(SECONDARY_SCHEMA_PATH)..."
+	@echo "Applying individual schema files from $(SECONDARY_SCHEMA_PATH)..."
 	@for file in "$(SECONDARY_SCHEMA_PATH)"/*.sql; do \
 		if [ -f "$$file" ]; then \
 			echo "  📄 Applying: $$file"; \
@@ -140,9 +140,9 @@ setup-secondary: ## Setup secondary database
 		fi; \
 	 done
 	@echo "✅ Schema application completed for secondary database"
-	@echo "🔧 Setting up Go modules..."
+	@echo "Setting up Go modules..."
 	@go mod tidy >/dev/null 2>&1
-	@echo "🌱 Seeding secondary database..."
+	@echo "Seeding secondary database..."
 	@SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) go run cmd/seed-injector/main.go --database-id $(SECONDARY_DB_ID) --fixture-dir "$$(pwd)/scenarios/$(SCENARIO)/fixtures/$(SECONDARY_DB_ID)" || { echo "❌ Failed to seed secondary database"; exit 1; }
 	@echo "✅ Secondary database ready"
 
@@ -218,14 +218,14 @@ validate-scenario: ## Validate scenario database state
 	@if ! docker ps | grep -q $(DOCKER_CONTAINER_NAME); then echo "❌ Emulator not running for validation"; exit 1; fi
 	@if [ -f "scenarios/$(SCENARIO)/expected-primary.yaml" ]; then \
 		echo "🔍 Validating primary database for $(SCENARIO)..."; \
-		SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) spalidate --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(PRIMARY_DB_ID) --verbose scenarios/$(SCENARIO)/expected-primary.yaml || { echo "❌ Primary database validation failed for $(SCENARIO)"; exit 1; }; \
+		SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) spalidate --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(PRIMARY_DB_ID) scenarios/$(SCENARIO)/expected-primary.yaml || { echo "❌ Primary database validation failed for $(SCENARIO)"; exit 1; }; \
 	else \
 		echo "⚠️ No primary validation file found for $(SCENARIO)"; \
 	fi
 ifeq ($(DB_COUNT),2)
 	@if [ -f "scenarios/$(SCENARIO)/expected-secondary.yaml" ]; then \
 		echo "🔍 Validating secondary database for $(SCENARIO)..."; \
-		SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) spalidate --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(SECONDARY_DB_ID) --verbose scenarios/$(SCENARIO)/expected-secondary.yaml || { echo "❌ Secondary database validation failed for $(SCENARIO)"; exit 1; }; \
+		SPANNER_EMULATOR_HOST=localhost:$(DOCKER_SPANNER_PORT) spalidate --project $(PROJECT_ID) --instance $(INSTANCE_ID) --database $(SECONDARY_DB_ID) scenarios/$(SCENARIO)/expected-secondary.yaml || { echo "❌ Secondary database validation failed for $(SCENARIO)"; exit 1; }; \
 	else \
 		echo "⚠️ No secondary validation file found for $(SCENARIO)"; \
 	fi
