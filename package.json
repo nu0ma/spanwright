@@ -70,6 +70,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
-    "consola": "^3.2.3"
+    "consola": "^3.2.3",
+    "gunshi": "^0.10.1"
   }
 }
