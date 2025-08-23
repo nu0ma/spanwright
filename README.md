@@ -17,7 +17,7 @@ cd your-project-name
 make init
 
 # Run all test scenarios
-make run-all-scenarios
+make test
 ```
 
 ## Features
@@ -64,23 +64,19 @@ your-project-name/
 
 ```bash
 # Project setup
-make init                       # Install dependencies
+make init                       # Initialize project and install dependencies
 make start                      # Start Spanner emulator
-make setup-all                  # Apply schema migrations
+make setup                      # Setup databases and schemas
 
 # Testing
-make run-all-scenarios         # Run all test scenarios
-make test-e2e                  # Run Playwright tests only
-make list-scenarios            # Show available scenarios
+make test                       # Run complete E2E test workflow
+make test-scenario SCENARIO=name  # Run E2E test for a specific scenario
 
-# Development
-make clean                     # Clean build artifacts
-make help                      # Show all available commands
+# Utilities
+make stop                       # Stop Spanner emulator
+make help                       # Show available commands
 ```
 
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and contribution guidelines.
 
 ## License
 
