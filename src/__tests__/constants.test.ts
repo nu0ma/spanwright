@@ -164,12 +164,12 @@ describe('Constants Module', () => {
     describe('INFO', () => {
       it('should have info messages', () => {
         expect(MESSAGES.INFO.STARTING_SETUP).toBe('🚀 Starting Spanner E2E Test Framework setup');
-        expect(MESSAGES.INFO.CREATING_DIRECTORY).toBe('📁 Creating project directory...');
-        expect(MESSAGES.INFO.COPYING_TEMPLATES).toBe('📦 Copying template files...');
-        expect(MESSAGES.INFO.CONFIGURING_GO).toBe('🔧 Configuring Go modules...');
-        expect(MESSAGES.INFO.CREATING_ENV).toBe('⚙️  Creating environment configuration file...');
+        expect(MESSAGES.INFO.CREATING_DIRECTORY).toBe(' Creating project directory...');
+        expect(MESSAGES.INFO.COPYING_TEMPLATES).toBe(' Copying template files...');
+        expect(MESSAGES.INFO.CONFIGURING_GO).toBe(' Configuring Go modules...');
+        expect(MESSAGES.INFO.CREATING_ENV).toBe(' Creating environment configuration file...');
         expect(MESSAGES.INFO.REMOVING_FILES).toBe(
-          '🗑️  Removing unnecessary files (Single DB configuration)...'
+          ' Removing unnecessary files (Single DB configuration)...'
         );
         expect(MESSAGES.INFO.COMPLETED).toBe('✅ Project creation completed!');
       });

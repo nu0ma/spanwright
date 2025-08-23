@@ -226,12 +226,12 @@ show_summary() {
     local elapsed_time=$(get_elapsed_time)
     
     echo "======================================================================"
-    log_info "🧪 Real CLI E2E Test Results Summary"
+    log_info "Real CLI E2E Test Results Summary"
     echo "======================================================================"
     log_info "Execution time: $elapsed_time"
     
     if [ "$success" = "true" ]; then
-        log_info "🎉 Real CLI E2E tests completed successfully!"
+        log_info "Real CLI E2E tests completed successfully!"
         echo ""
         log_info "✅ Verified:"
         log_info "  - Actual CLI project generation"
@@ -241,22 +241,22 @@ show_summary() {
         log_info "  - Database schema setup"
         log_info "  - Playwright browser tests"
         echo ""
-        log_info "📊 Generated files:"
+        log_info "Generated files:"
         log_info "  - Test project: $TEST_PROJECT_PATH"
         log_info "  - Test results: $TEST_PROJECT_PATH/test-results/"
     else
-        log_error "💥 Real CLI E2E test failed"
+        log_error "Real CLI E2E test failed"
         if [ -n "$error_msg" ]; then
             log_error "Error details: $error_msg"
         fi
         echo ""
-        log_info "🔧 Troubleshooting:"
+        log_info "Troubleshooting:"
         log_info "  1. Ensure Docker Desktop is running"
         log_info "  2. Ensure wrench is installed"
         log_info "  3. Ensure ports 9010, 9020 are not in use"
         log_info "  4. Check schema files in /tmp/ci-schemas/"
         echo ""
-        log_info "🔍 Manual testing:"
+        log_info "Manual testing:"
         log_info "  npx ts-node scripts/setup-ci-schemas.ts"
         log_info "  # Set environment variables"
         log_info "  npx spanwright test-project"
