@@ -7,7 +7,7 @@ import {
   showUsageError,
   isNonInteractiveMode,
 } from '../cli';
-import { CLI_FLAGS, MESSAGES } from '../constants';
+import { CLI_FLAGS } from '../constants';
 
 // Mock dependencies
 vi.mock('fs');
