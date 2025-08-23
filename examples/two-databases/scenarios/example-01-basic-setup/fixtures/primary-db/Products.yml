@@ -1,6 +1,0 @@
-# Minimal Products fixture for testfixtures
-- ProductID: "product-001"
-  Name: "E2E Test Product"
-  Price: 1000
-  CategoryID: "category-001"
-  IsActive: true

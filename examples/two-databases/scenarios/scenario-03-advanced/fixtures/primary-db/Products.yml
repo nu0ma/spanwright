@@ -1,6 +1,0 @@
-# Minimal Products fixture for testfixtures
-- ProductID: "product-003"
-  Name: "Advanced Test Product"
-  Price: 1000
-  CategoryID: "category-003"
-  IsActive: true

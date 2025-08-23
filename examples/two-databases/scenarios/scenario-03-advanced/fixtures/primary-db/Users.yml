@@ -1,5 +1,0 @@
-# Minimal Users fixture for testfixtures
-- UserID: "user-003"
-  Name: "Advanced Test User"
-  Email: "advanced-user@example.com"
-  Status: 1
