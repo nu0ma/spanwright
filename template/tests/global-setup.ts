@@ -1,5 +1,3 @@
-import { runMake } from './test-utils';
-
 /**
  * Simplified global setup for Playwright tests
  * Relies on Makefile to manage the Spanner emulator setup
