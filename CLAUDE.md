@@ -16,6 +16,18 @@ pnpm run build
 pnpm test
 ```
 
+### Usage Examples
+```bash
+# Create a new E2E test project (interactive mode)
+npx spanwright my-project
+
+# Non-interactive mode with environment variables
+export SPANWRIGHT_DB_COUNT=1
+export SPANWRIGHT_PRIMARY_DB_NAME=test-db
+export SPANWRIGHT_PRIMARY_SCHEMA_PATH=./schema
+npx spanwright my-project --non-interactive
+```
+
 ### Development Commands
 
 #### Build & Development
@@ -67,11 +79,16 @@ dist/
 
 ## Architecture Overview
 
-Spanwright is a **project generator** that creates Cloud Spanner E2E testing frameworks. It combines multiple technologies:
+Spanwright is a **project generator** that creates Cloud Spanner E2E testing frameworks with comprehensive tooling and automation.
 
 ### Two-Part Architecture
-1. **Generator** (`src/index.ts`): Interactive CLI that creates projects
-2. **Template** (`template/`): Complete project scaffold with Go tools, Playwright tests, and Make workflows
+1. **Generator** (TypeScript CLI): Interactive project creation tool with configuration options
+2. **Template** (Complete project scaffold): Go database tools + Playwright tests + Make workflows
+
+### Configuration Modes
+- **Interactive Mode (Default)**: Guided setup with prompts for database configuration
+- **Non-Interactive Mode**: Environment variable configuration for automation
+- **CI/CD Integration**: Full automation support with environment-driven setup
 
 ### Technology Stack
 - **TypeScript**: CLI generator and Playwright test framework
@@ -82,9 +99,11 @@ Spanwright is a **project generator** that creates Cloud Spanner E2E testing fra
 ### Key Components
 
 #### CLI Generator (`src/`)
-- Interactive project creation with database configuration
-- Template file copying and customization
-- Dynamic `.env` file generation based on DB count (1 or 2)
+- **Interactive/Non-interactive modes**: Flexible project creation
+- **Security-first file operations**: Path validation and secure template processing
+- **Database configuration**: Support for 1 or 2 Spanner databases
+- **Template customization**: Dynamic `.env` generation and file processing
+- **Environment variable support**: Full CI/CD automation capabilities
 
 #### Go Database Tools (`template/cmd/`)
 - `seed-injector/`: SQL-based data seeding with direct DML execution
@@ -111,21 +130,20 @@ Spanwright is a **project generator** that creates Cloud Spanner E2E testing fra
 ```
 template/
 ├── Makefile                    # Workflow automation with spalidate integration
-├── cmd/                        # Go CLI tools
-│   └── seed-injector/         # Data seeding
-├── internal/                   # Go internal packages
-│   ├── config/               # Configuration management
-│   ├── db/                   # Database interfaces
-│   └── retry/                # Retry logic
-├── scenarios/                  # Test scenarios
-│   └── example-01-basic-setup/
-│       ├── fixtures/          # Minimal YAML fixture files for testfixtures
-│       └── tests/             # Playwright E2E tests with inline validation
+├── cmd/seed-injector/         # Go CLI tool for database seeding
+├── internal/spanwright/        # Go internal packages
+│   ├── config/               # Environment validation and database configuration
+│   ├── db/                   # Spanner client interfaces and pooled connections
+│   └── retry/                # Resilient operation patterns
+├── scenarios/                  # Test scenarios (customizable templates)
+│   ├── example-01-basic-setup/    # Basic single-table tests
+│   ├── scenario-02-intermediate/  # Multi-table relationships
+│   └── scenario-03-advanced/      # Complex business logic
 ├── tests/                      # Test infrastructure
-│   ├── global-setup.ts        # Simple emulator startup
-│   ├── database-isolation.ts  # Process-based DB management
-│   └── utils/
-│       └── sql-validator.ts   # Direct SQL validation utility
+│   ├── global-setup.ts        # Emulator startup and configuration
+│   ├── global-teardown.ts     # Cleanup utilities
+│   ├── db-config.ts          # Database configuration utilities
+│   └── test-utils.ts         # Test helper functions
 └── playwright.config.ts       # Playwright configuration
 ```
 
@@ -150,16 +168,24 @@ Go tools use pooled connections for performance:
 
 ## Testing Strategy
 
-### Scenario-Based Testing
+### Test Scenarios
+Generated projects include three example scenarios that serve as templates:
+- **example-01-basic-setup**: Basic database operations and validation
+- **scenario-02-intermediate**: Multi-table relationships and complex queries  
+- **scenario-03-advanced**: Complex business logic and cross-database operations
+
+**Note**: These are templates for customization. Users should replace them with scenarios specific to their application's business logic.
+
+### Scenario-Based Testing Structure
 Each scenario contains:
-1. **Minimal Seed Data**: Essential records only via YAML fixtures (`fixtures/*.yml`)
-2. **Inline Tests** (`tests/*.spec.ts`): Browser automation with embedded validation
-3. **Direct SQL Validation**: Simple database state checks
+1. **YAML fixtures**: Minimal seed data for testing (`fixtures/*.yml`)
+2. **Expected state files**: Database validation definitions (`expected-*.yaml`)
+3. **Playwright tests**: Browser automation with inline SQL validation (`tests/*.spec.ts`)
 
 ### Database Configuration
-- Environment-driven database naming (shared across test processes)
-- Current implementation uses shared databases for simplicity
-- Simplified setup without complex worker coordination
+- **Multi-database support**: 1 or 2 Spanner databases per project
+- **Environment-driven configuration**: Via environment variables or interactive prompts
+- **Shared database approach**: Simplified setup without complex worker coordination
 
 ### Validation Flow
 1. Start Spanner emulator (Docker)
@@ -172,14 +198,20 @@ Each scenario contains:
 
 ### Code Conventions
 - **Go**: Standard Go project layout with internal packages
-- **TypeScript**: Strict mode enabled, CommonJS modules
+- **TypeScript**: Strict mode enabled, ES2020 target, CommonJS output
 - **Make**: POSIX-compatible with environment variable integration
+- **Testing**: Vitest for unit tests, custom E2E test runner
+- **Linting**: ESLint with TypeScript rules, Prettier formatting
+- **Coverage**: 85% statements, 90% branches, 95% functions
 
 ### Security Considerations
-- Path traversal validation in config file handling
-- Database ID format validation
-- File size limits for configuration files
-- No secrets in generated templates
+- **Path traversal protection**: All file operations validated
+- **Input validation**: Comprehensive parameter checking
+- **Secure template processing**: Safe string replacement with validation
+- **Temporary file handling**: Secure creation and cleanup
+- **Database ID format validation**: Strict format checking
+- **File size limits**: Configuration file size restrictions
+- **No secrets in templates**: All sensitive data externalized
 
 ### Performance Optimizations
 - Pooled Spanner connections in Go tools
@@ -188,12 +220,13 @@ Each scenario contains:
 - Connection reuse across operations
 
 ### Environment Requirements
-- **wrench**: Spanner schema migration tool
+- **Node.js**: >=22.15.1 for CLI, >=16.0.0 for generated projects
+- **pnpm**: >=10.0.0 for package management
 - **Docker**: Spanner emulator hosting
-- **spalidate**: Database validation tool (https://github.com/nu0ma/spalidate)
-- **Node.js**: >=22.0.0 for CLI, >=16.0.0 for generated projects
-- **Go/Node version management**: Managed via `.tool-versions` (single source of truth)
-- **mise**: Can read `.tool-versions` for local and CI version management
+- **Go**: For database tools (version specified in .tool-versions)
+- **wrench**: Spanner schema migration tool - `go install github.com/cloudspannerecosystem/wrench@latest`
+- **spalidate**: Database validation tool from [github.com/nu0ma/spalidate](https://github.com/nu0ma/spalidate)
+- **Version management**: `.tool-versions` as single source of truth (mise/asdf compatible)
 
 ## Version Management
 
