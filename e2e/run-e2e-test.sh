@@ -74,7 +74,7 @@ setup_ci_schemas() {
     
     # Capture the environment variables from the schema setup
     local setup_output
-    setup_output=$(node dist/e2e/setup-e2e-test-schemas.js 2>&1)
+    setup_output=$(bash e2e/setup-e2e-test-schemas.sh 2>&1)
     local setup_exit_code=$?
     
     # Print the output so we can see what happened
