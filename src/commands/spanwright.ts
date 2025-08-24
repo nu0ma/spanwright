@@ -28,17 +28,14 @@ function isNonInteractiveMode(nonInteractiveFlag: boolean): boolean {
 }
 
 export const spanwrightCommand = {
-  name: 'spanwright',
-  description: 'Generate Cloud Spanner E2E testing framework projects with Go database tools and Playwright browser automation',
   args: {
     projectName: {
       type: 'positional' as const,
       description: 'Name of the project to create',
       validate: async (value?: string) => {
-        // Allow missing here; we'll enforce in run() to avoid subcommand parsing issues
+        // Allow missing here for options
         if (!value) return true
 
-        // Use existing validation logic
         validateProjectName(value)
 
         // Check if directory already exists
