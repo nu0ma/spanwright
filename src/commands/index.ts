@@ -5,7 +5,7 @@ import { handleError } from '../errors';
 import { description, name, version } from '../../package.json';
 
 export async function run(): Promise<void> {
-  const gunshiArgs = ['spanwright', ...process.argv.slice(2)];
+  const gunshiArgs = [name, ...process.argv.slice(2)];
   cli(gunshiArgs, spanwrightCommand, {
     name,
     version,
