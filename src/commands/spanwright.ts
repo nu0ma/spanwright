@@ -101,7 +101,7 @@ $ spanwright --help`,
 
       // Copy template files
       logger.info(MESSAGES.INFO.COPYING_TEMPLATES)
-      const templatePath = path.join(__dirname, '..', '..', '..', 'template')
+      const templatePath = path.join(__dirname, '..', 'template')
       copyDirectory(templatePath, projectPath)
 
       // Process template files
