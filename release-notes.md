@@ -38,8 +38,10 @@
 * Release v2.6.0 by @github-actions[bot] in https://github.com/nu0ma/spanwright/pull/195
 * fix: resolve shell glob expansion in release workflow by @nu0ma in https://github.com/nu0ma/spanwright/pull/197
 * fix: improve release workflow and auto-labeling system by @nu0ma in https://github.com/nu0ma/spanwright/pull/199
+* Release v2.6.1 by @github-actions[bot] in https://github.com/nu0ma/spanwright/pull/200
+* fix: prevent command injection in release workflow by @nu0ma in https://github.com/nu0ma/spanwright/pull/201
 
 ## New Contributors
 * @renovate[bot] made their first contribution in https://github.com/nu0ma/spanwright/pull/156
 
-**Full Changelog**: https://github.com/nu0ma/spanwright/compare/v2.5.3...v2.6.1
+**Full Changelog**: https://github.com/nu0ma/spanwright/compare/v2.5.3...v2.6.2
