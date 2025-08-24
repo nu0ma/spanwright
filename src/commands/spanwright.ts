@@ -5,7 +5,6 @@ import { validateProjectName } from '../validation';
 import { getConfiguration, generateEnvironmentContent } from '../configuration';
 import { handleError } from '../errors';
 import { MESSAGES, FILE_PATTERNS } from '../constants';
-import { description, name } from '../../package.json';
 import { logger } from '../logger';
 import {
   ensureDirectoryExists,
@@ -29,8 +28,8 @@ function isNonInteractiveMode(nonInteractiveFlag: boolean): boolean {
 }
 
 export const spanwrightCommand = {
-  name: name,
-  description: description,
+  name: 'spanwright',
+  description: 'Generate a new E2E testing framework project',
   args: {
     projectName: {
       type: 'positional' as const,
