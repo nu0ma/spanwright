@@ -7,8 +7,11 @@ export default defineConfig({
   target: 'node22',
   clean: true,
   sourcemap: false,
+  minify: 'dce-only',
   treeshake: true,
+  dts: false,
+  unbundle: false,
   unused: true,
-  exports: true,
+  define: { 'import.meta.vitest': 'undefined' },
   onSuccess: 'sort-package-json',
 });

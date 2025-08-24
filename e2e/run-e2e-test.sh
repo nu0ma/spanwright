@@ -125,7 +125,7 @@ create_project_with_cli() {
     
     # Run actual CLI
     log_info "Running actual CLI..."
-    if ! node dist/src/index.js "$TEST_PROJECT_NAME"; then
+    if ! node dist/index.js "$TEST_PROJECT_NAME"; then
         log_error "CLI execution failed"
         exit 1
     fi

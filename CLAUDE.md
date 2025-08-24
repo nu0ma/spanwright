@@ -2,13 +2,57 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Development Commands
+## Build Instructions
 
-### Core Development
-- `pnpm run build` - Build TypeScript CLI to dist/
-- `pnpm run dev` - Watch mode for development
-- `pnpm run clean` - Remove build artifacts
-- `pnpm test` - Show E2E testing information
+### Quick Start
+```bash
+# Install dependencies
+pnpm install
+
+# Build the project
+pnpm run build
+
+# Run tests
+pnpm test
+```
+
+### Development Commands
+
+#### Build & Development
+- `pnpm run build` - Build TypeScript CLI to `dist/` using tsdown
+- `pnpm run dev` - Watch mode for development with auto-rebuild
+- `pnpm run clean` - Remove build artifacts (`dist/` directory)
+- `pnpm run prepare` - Build script (runs automatically on install)
+
+#### Testing
+- `pnpm test` - Run all tests (unit + E2E)
+- `pnpm run test:unit` - Run unit tests with vitest
+- `pnpm run test:e2e` - Run E2E integration tests
+
+#### Code Quality
+- `pnpm run lint` - Run ESLint with caching
+- `pnpm run format` - Format code with Prettier
+
+### Build System Details
+
+#### tsdown Configuration
+The project uses [tsdown](https://tsdown.dev/) for fast TypeScript compilation:
+- **Entry point**: `src/index.ts`
+- **Output**: `dist/` directory (ESM format)
+- **Target**: Node.js 22
+- **Features**: Tree-shaking, unused code elimination, clean builds
+
+#### Build Output Structure
+```
+dist/
+└── src/
+    └── index.js    # Compiled CLI executable
+```
+
+#### Binary Configuration
+- **CLI command**: `spanwright` (points to `dist/src/index.js`)
+- **Package exports**: Main entry at `dist/index.js`
+- **Published files**: `dist/` and `template/` directories
 
 
 

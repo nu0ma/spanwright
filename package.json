@@ -22,14 +22,10 @@
   "license": "MIT",
   "author": "nu0ma",
   "type": "module",
-  "exports": {
-    ".": "./dist/index.js",
-    "./package.json": "./package.json"
-  },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "bin": {
-    "spanwright": "dist/src/index.js"
+    "spanwright": "dist/index.js"
   },
   "files": [
     "dist",

@@ -11,7 +11,15 @@ import { dirname, join } from 'path'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
-const packageJson = JSON.parse(readFileSync(join(__dirname, '../../package.json'), 'utf8'))
+
+let packageJson: { version: string; description: string }
+try {
+  // Try bundled location first (dist/index.js -> package.json)
+  packageJson = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf8'))
+} catch {
+  // Fall back to development location (src/index.ts -> package.json)
+  packageJson = JSON.parse(readFileSync(join(__dirname, '../../package.json'), 'utf8'))
+}
 
 // Start the Gunshi CLI application with a root (default) command.
 // This allows usage like:
