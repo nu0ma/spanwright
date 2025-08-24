@@ -122,7 +122,6 @@ $ spanwright --help`,
       const envPath = path.join(projectPath, FILE_PATTERNS.ENV)
       writeFileContent(envPath, envContent)
 
-
       // Show completion message
       logger.log('')
       logger.success(MESSAGES.INFO.COMPLETED)
