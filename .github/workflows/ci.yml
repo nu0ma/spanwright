@@ -122,7 +122,7 @@ jobs:
     - name: Test CLI installation
       run: |
         # Test CLI directly with node
-        node dist/index.js --help
+        node dist/src/index.js --help
         
     - name: Test project generation with real CLI
       run: |
@@ -136,7 +136,7 @@ jobs:
             SPANWRIGHT_SECONDARY_DB_NAME=test-secondary \
             SPANWRIGHT_SECONDARY_SCHEMA_PATH=/tmp/test-schemas/secondary \
             CI=true \
-            node ../dist/index.js test-project
+            node ../dist/src/index.js test-project
         
         # Verify project structure was created
         if [ ! -d "test-project" ]; then
