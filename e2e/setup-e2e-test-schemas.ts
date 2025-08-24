@@ -179,8 +179,8 @@ CREATE TABLE UserLogs (
   }
 }
 
-// Script execution
-if (process.argv[1] === __filename) {
+// Script execution - ESM compatible
+if (import.meta.url === `file://${process.argv[1]}`) {
   const setup = new CISchemaSetup();
   setup
     .run()

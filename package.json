@@ -3,16 +3,17 @@
   "version": "2.6.2",
   "description": "CLI tool to generate Cloud Spanner E2E testing framework projects with Go database tools and Playwright browser automation",
   "bin": {
-    "spanwright": "dist/index.js"
+    "spanwright": "dist/src/index.js"
   },
   "files": [
     "dist",
     "template"
   ],
+  "type": "module",
   "scripts": {
     "preinstall": "npx only-allow pnpm",
-    "build": "tsc",
-    "dev": "tsc --watch",
+    "build": "tsdown",
+    "dev": "tsdown --watch",
     "clean": "rm -rf dist",
     "prepublishOnly": "pnpm run clean && pnpm run build",
     "test": "pnpm run test:unit && pnpm run test:e2e",
@@ -47,9 +48,9 @@
     "url": "https://github.com/nu0ma/spanwright/issues"
   },
   "devDependencies": {
-    "@types/node": "^24.0.10",
     "@eslint/js": "9.34.0",
     "@types/js-yaml": "4.0.9",
+    "@types/node": "^24.0.10",
     "@typescript-eslint/eslint-plugin": "8.40.0",
     "@typescript-eslint/parser": "8.40.0",
     "@vitest/coverage-v8": "3.2.4",
@@ -62,6 +63,7 @@
     "js-yaml": "4.1.0",
     "prettier": "3.6.2",
     "ts-node": "10.9.2",
+    "tsdown": "^0.14.1",
     "typescript": "5.8.3",
     "vitest": "3.2.4"
   },

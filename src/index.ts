@@ -5,7 +5,13 @@ import { spanwrightCommand } from './commands/spanwright'
 import { handleError } from './errors'
 
 // Get package version
-import packageJson from '../package.json'
+import { readFileSync } from 'fs'
+import { fileURLToPath } from 'url'
+import { dirname, join } from 'path'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+const packageJson = JSON.parse(readFileSync(join(__dirname, '../../package.json'), 'utf8'))
 
 // Start the Gunshi CLI application with a root (default) command.
 // This allows usage like:
