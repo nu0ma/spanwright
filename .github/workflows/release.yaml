@@ -116,7 +116,7 @@ jobs:
               --generate-notes)
           else
             # Save PR body to file safely using environment variable
-            echo "$PR_BODY" > release_notes.md
+            printf '%s\n' "$PR_BODY" > release_notes.md
             RELEASE_URL=$(gh release create "v${{ steps.package.outputs.version }}" \
               --title "v${{ steps.package.outputs.version }}" \
               --target "${{ github.sha }}" \
