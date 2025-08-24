@@ -6,20 +6,6 @@ CLI tool for generating Cloud Spanner E2E testing framework projects with Go dat
 [![CI](https://github.com/nu0ma/spanwright/actions/workflows/ci.yml/badge.svg)](https://github.com/nu0ma/spanwright/actions/workflows/ci.yml)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/nu0ma/spanwright)
 
-## Quick Start
-
-```bash
-# Create a new E2E test project
-npx spanwright your-project-name
-
-# Navigate and initialize
-cd your-project-name
-make init
-
-# Run all test scenarios
-make test
-```
-
 ## Features
 
 - **Scenario-based Testing** - Structured tests with seed data and browser automation
@@ -40,9 +26,6 @@ your-project/
 ├── cmd/seed-injector/          # Go CLI for database seeding
 ├── internal/spanwright/        # Go internal packages (config, db, retry)
 ├── scenarios/                  # Test scenarios with fixtures
-│   ├── example-01-basic-setup/ # Basic single-table tests
-│   ├── scenario-02-intermediate/  # Multi-table relationships
-│   └── scenario-03-advanced/   # Complex business logic
 ├── tests/                      # Test infrastructure
 └── Makefile                   # Workflow automation
 ```
@@ -82,14 +65,14 @@ npx spanwright my-project --non-interactive
 ```
 
 ### Environment Variables Reference
-| Variable | Description | Required | Default |
-|----------|-------------|----------|---------|
-| `SPANWRIGHT_DB_COUNT` | Number of databases (1 or 2) | No | Interactive prompt |
-| `SPANWRIGHT_PRIMARY_DB_NAME` | Primary database name | No | Interactive prompt |
-| `SPANWRIGHT_PRIMARY_SCHEMA_PATH` | Path to primary schema | No | Interactive prompt |
-| `SPANWRIGHT_SECONDARY_DB_NAME` | Secondary database name | For 2-DB setup | Interactive prompt |
-| `SPANWRIGHT_SECONDARY_SCHEMA_PATH` | Path to secondary schema | For 2-DB setup | Interactive prompt |
-| `SPANWRIGHT_NON_INTERACTIVE` | Skip interactive prompts | No | `false` |
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `SPANWRIGHT_DB_COUNT` | Number of databases (1 or 2) | Interactive prompt |
+| `SPANWRIGHT_PRIMARY_DB_NAME` | Primary database name | Interactive prompt |
+| `SPANWRIGHT_PRIMARY_SCHEMA_PATH` | Path to primary schema | Interactive prompt |
+| `SPANWRIGHT_SECONDARY_DB_NAME` | Secondary database name | Interactive prompt |
+| `SPANWRIGHT_SECONDARY_SCHEMA_PATH` | Path to secondary schema | Interactive prompt |
+| `SPANWRIGHT_NON_INTERACTIVE` | Skip interactive prompts | `false` |
 
 ## Usage Examples
 
@@ -113,36 +96,11 @@ npx spanwright multi-tenant-tests
 # Secondary: analytics-db (./schema/analytics)
 ```
 
-### CI/CD Integration
-```bash
-# In your GitHub Actions workflow
-- name: Generate test project
-  run: |
-    export SPANWRIGHT_DB_COUNT=1
-    export SPANWRIGHT_PRIMARY_DB_NAME=ci-test-db
-    export SPANWRIGHT_PRIMARY_SCHEMA_PATH=/tmp/schema
-    export SPANWRIGHT_NON_INTERACTIVE=true
-    npx spanwright ci-test-project
-```
 
 ## Test Scenarios
 
-Generated projects include three example scenarios:
-
-### `example-01-basic-setup`
-- **Purpose**: Basic database operations and simple validation
-- **Use Case**: Single-table CRUD operations
-- **Fixtures**: Minimal Users and Products data
-
-### `scenario-02-intermediate`
-- **Purpose**: Multi-table relationships and complex queries
-- **Use Case**: Data integrity across related tables
-- **Fixtures**: Users, Products with relationships
-
-### `scenario-03-advanced`
-- **Purpose**: Complex business logic and cross-database operations
-- **Use Case**: Multi-database consistency and advanced patterns
-- **Fixtures**: Full dataset with Analytics and UserLogs
+Generated projects include three example scenarios.
+These are example scenarios to demonstrate the framework structure. You should customize or replace them with scenarios specific to your application's business logic and testing requirements.
 
 Each scenario includes:
 - **YAML fixtures** - Minimal seed data for testing
@@ -165,10 +123,6 @@ your-project-name/
 ├── schema/                     # Database schemas (.sql files)
 ├── cmd/seed-injector/         # Go data seeding tool
 ├── scenarios/                  # Test scenarios
-│   └── example-01-basic-setup/
-│       ├── fixtures/          # YAML seed data
-│       ├── expected-*.yaml    # Expected database state
-│       └── tests/             # Playwright E2E tests
 ├── tests/                      # Test infrastructure
 └── playwright.config.ts       # Playwright configuration
 ```
