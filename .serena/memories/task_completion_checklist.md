@@ -42,7 +42,7 @@ npm run test:unit:coverage
 npx spanwright ci-test-project
 cd ci-test-project
 make init
-make run-all-scenarios
+make test
 ```
 
 ### 5. Security Validation

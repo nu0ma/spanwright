@@ -74,7 +74,7 @@ setup_ci_schemas() {
     
     # Capture the environment variables from the schema setup
     local setup_output
-    setup_output=$(npx ts-node e2e/setup-e2e-test-schemas.ts 2>&1)
+    setup_output=$(bash e2e/setup-e2e-test-schemas.sh 2>&1)
     local setup_exit_code=$?
     
     # Print the output so we can see what happened
@@ -260,7 +260,7 @@ show_summary() {
         log_info "  npx ts-node scripts/setup-ci-schemas.ts"
         log_info "  # Set environment variables"
         log_info "  npx spanwright test-project"
-        log_info "  cd test-project && make init && make run-all-scenarios"
+        log_info "  cd test-project && make init && make test"
     fi
     
     echo "======================================================================"

@@ -43,8 +43,7 @@ npx spanwright my-project
 ```bash
 cd my-project
 make init                    # Initial setup
-make run-all-scenarios      # Run all test scenarios
-make new-scenario SCENARIO=test-01  # Create new scenario
+make test     # Run all test scenarios
 ```
 
 ## Testing Strategy
