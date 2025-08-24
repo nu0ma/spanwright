@@ -130,11 +130,6 @@ $ spanwright --help`,
       logger.log('📋 Next steps:')
       logger.log(`  cd ${projectName}`)
       logger.log('  make init           # Initial setup')
-      logger.log('  make run-all-scenarios  # Run samples')
-      logger.log('')
-      logger.log('🔧 Create new test scenario:')
-      logger.log('  make new-scenario SCENARIO=scenario-01-my-test')
-      logger.log('')
       logger.log('📚 Detailed documentation: See README.md')
     } catch (error) {
       handleError(error)
