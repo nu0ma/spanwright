@@ -73,7 +73,7 @@ npx spanwright test-project
 # Initialize and run generated project
 cd test-project
 make init
-make run-all-scenarios
+make test
 ```
 
 ## System Requirements Check

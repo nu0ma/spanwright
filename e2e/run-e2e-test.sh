@@ -260,7 +260,7 @@ show_summary() {
         log_info "  npx ts-node scripts/setup-ci-schemas.ts"
         log_info "  # Set environment variables"
         log_info "  npx spanwright test-project"
-        log_info "  cd test-project && make init && make run-all-scenarios"
+        log_info "  cd test-project && make init && make test"
     fi
     
     echo "======================================================================"

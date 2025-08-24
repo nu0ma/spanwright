@@ -145,7 +145,7 @@ Go tools use pooled connections for performance:
 ### Validation System
 - **Spalidate Integration**: Uses spalidate CLI tool for comprehensive database validation
 - **YAML Configuration**: Expected database state defined in `expected-*.yaml` files
-- **Automated Validation**: Integrated into `run-all-scenarios` workflow
+- **Automated Validation**: Integrated into `test` workflow
 - **Template-based**: Validation files auto-generated from templates
 
 ## Testing Strategy

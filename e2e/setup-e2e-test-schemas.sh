@@ -155,7 +155,7 @@ main() {
         log_info "Next steps:"
         log_info "1. Export the environment variables above"
         log_info "2. Run: npx spanwright ci-test-project"
-        log_info "3. cd ci-test-project && make init && make run-all-scenarios"
+        log_info "3. cd ci-test-project && make init && make test"
         
         return 0
     else
