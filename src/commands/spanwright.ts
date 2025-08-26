@@ -1,6 +1,5 @@
 import * as path from 'path';
 import { promises as fs } from 'fs';
-import { fileURLToPath } from 'url';
 import { validateProjectName } from '../validation';
 import { getConfiguration, generateEnvironmentContent } from '../configuration';
 import { handleError } from '../errors';
@@ -15,8 +14,6 @@ import {
   renameFixtureDirectories,
 } from '../file-operations';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // Utility function to check non-interactive mode
 function isNonInteractiveMode(nonInteractiveFlag: boolean): boolean {
@@ -98,7 +95,7 @@ $ spanwright --help`,
 
       // Copy template files
       logger.info(MESSAGES.INFO.COPYING_TEMPLATES);
-      const templatePath = path.join(__dirname, '..', 'template');
+      const templatePath = path.join(import.meta.dirname, '..', 'template');
       copyDirectory(templatePath, projectPath);
 
       // Process template files
