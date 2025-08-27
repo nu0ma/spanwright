@@ -1,6 +1,6 @@
 {
   "name": "spanwright",
-  "version": "2.6.3",
+  "version": "2.6.4",
   "description": "CLI tool to generate Cloud Spanner E2E testing framework projects with Go database tools and Playwright browser automation",
   "keywords": [
     "spanner",
