@@ -8,5 +8,6 @@
     "schedule": ["at any time"],
     "labels": ["security"],
     "prCreation": "immediate"
-  }
+  },
+  "minimumReleaseAge": "7 days"
 }
