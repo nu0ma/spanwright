@@ -47,7 +47,7 @@
   },
   "dependencies": {
     "consola": "^3.2.3",
-    "gunshi": "^0.10.1"
+    "gunshi": "^0.26.0"
   },
   "devDependencies": {
     "@eslint/js": "9.36.0",
