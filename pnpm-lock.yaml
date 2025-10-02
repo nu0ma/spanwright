@@ -12,8 +12,8 @@ importers:
         specifier: ^3.2.3
         version: 3.4.2
       gunshi:
-        specifier: ^0.10.1
-        version: 0.10.4
+        specifier: ^0.26.0
+        version: 0.26.3
     devDependencies:
       '@eslint/js':
         specifier: 9.36.0
@@ -765,8 +765,8 @@ packages:
   argparse@2.0.1:
     resolution: {integrity: sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==}
 
-  args-tokens@0.12.0:
-    resolution: {integrity: sha512-xWrKvIA8k8z/8X+yvu29oQwBm867i0Rn21KO9BCMtuJ8HiB8TK8ZHCqPLeXabc2FAdRAbOAR/2wMPHqsjXWAaw==}
+  args-tokens@0.20.1:
+    resolution: {integrity: sha512-pQ5R5TsJyx94zsgSCCQ9kzOgUfMmI4bkqNjgSSt2C92mzPCvovoUMMW6HqR+35mHZ0cb1++MD2uAOLm62sGC+Q==}
     engines: {node: '>= 20'}
 
   assertion-error@2.0.1:
@@ -1087,8 +1087,8 @@ packages:
   graphemer@1.4.0:
     resolution: {integrity: sha512-EtKwoO6kxCL9WO5xipiHTZlSzBm7WLT627TqC/uVRd0HKmq8NXyebnNYxDoBi7wt8eTWrUrKXCOVaFq9x1kgag==}
 
-  gunshi@0.10.4:
-    resolution: {integrity: sha512-FhwO+IU821vRRLBpSOXIZetzwtpgQijoFH75vAX58qY2hkXgdCiQOQphDACezmsJizslZn4EHnA4lU/gdknIlg==}
+  gunshi@0.26.3:
+    resolution: {integrity: sha512-x/CaxovzDA3KMkrjqow7M1dnsO1CxGMNabBaeGTGdVNtjOMN1G/eK7vjKeJ+zHdFIsWHmo47YQ2DQIESUut2+A==}
     engines: {node: '>= 20'}
 
   has-flag@4.0.0:
@@ -2268,7 +2268,7 @@ snapshots:
 
   argparse@2.0.1: {}
 
-  args-tokens@0.12.0: {}
+  args-tokens@0.20.1: {}
 
   assertion-error@2.0.1: {}
 
@@ -2588,9 +2588,9 @@ snapshots:
 
   graphemer@1.4.0: {}
 
-  gunshi@0.10.4:
+  gunshi@0.26.3:
     dependencies:
-      args-tokens: 0.12.0
+      args-tokens: 0.20.1
 
   has-flag@4.0.0: {}
 
